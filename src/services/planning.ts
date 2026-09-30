@@ -179,3 +179,9 @@ export async function deleteNote(id: string): Promise<void> {
     await db.notes.delete(id);
   });
 }
+
+/** Notes created by "new note" and left empty. */
+export async function deleteEmptyNotes(): Promise<void> {
+  const empty = (await db.notes.toArray()).filter((n) => !n.title.trim() && !n.body.trim() && !n.attachmentIds.length && !n.links.length);
+  await db.notes.bulkDelete(empty.map((n) => n.id));
+}

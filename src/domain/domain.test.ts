@@ -74,7 +74,7 @@ describe('sprints', () => {
   const mk = (startDate: string): Sprint => ({ id: startDate, createdAt: T0, updatedAt: T0, name: sprintName(startDate), ...sprintRange(startDate) });
   it('R-SPR-1: Sunday–Saturday, named by week', () => {
     expect(sprintRange(TODAY)).toEqual({ startDate: '2026-09-27', endDate: '2026-10-03' });
-    expect(sprintName('2026-09-27')).toBe('שבוע 40 · 27/9–3/10');
+    expect(sprintName('2026-09-27')).toBe('שבוע 40 · \u206627/9–3/10\u2069');
     expect(missingSprintWeeks([mk('2026-09-27')], TODAY)).toEqual(['2026-10-04']);
     expect(missingSprintWeeks([], TODAY)).toEqual(['2026-09-27', '2026-10-04']);
   });
@@ -229,7 +229,10 @@ describe('today', () => {
     expect(s.kind === 'suggestion' && s.task.id).toBe('top2');
     expect(s.kind === 'suggestion' && s.source).toBe('top3');
     expect(nowCard([plain], TODAY, m('14:10')).kind).toBe('suggestion');
-    expect(nowCard([], TODAY, m('14:10')).kind).toBe('empty');
+    expect(nowCard([], TODAY, m('14:10'))).toEqual({ kind: 'empty', hasLater: false });
+    // a top-3 task scheduled later is left for "next", not suggested now
+    const laterTop = task({ id: 'lt', dueDate: TODAY, top3Date: TODAY, top3Order: 1, startTime: '18:00' });
+    expect(nowCard([laterTop], TODAY, m('14:10'))).toEqual({ kind: 'empty', hasLater: true });
   });
   it('R-TOD-3: next scheduled after now', () => {
     expect(nextTask(all, TODAY, m('08:40'))?.id).toBe('web');

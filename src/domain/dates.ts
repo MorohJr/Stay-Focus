@@ -14,6 +14,11 @@ export function parseISODate(iso: string): Date {
   return new Date(y!, m! - 1, d!);
 }
 
+/** The local calendar date of an ISO timestamp (not its UTC date). */
+export function localDate(isoTimestamp: string): string {
+  return toISODate(new Date(isoTimestamp));
+}
+
 export function todayISO(now: Date = new Date()): string {
   return toISODate(now);
 }

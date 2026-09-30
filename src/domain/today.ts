@@ -64,7 +64,7 @@ function scheduledOpen(tasks: Task[], today: string): { task: Task; start: numbe
 export type NowCard =
   | { kind: 'scheduled'; task: Task; start: number; end: number; minutesLeft: number; progress: number }
   | { kind: 'suggestion'; task: Task; source: 'top3' | 'today' }
-  | { kind: 'empty' };
+  | { kind: 'empty'; hasLater: boolean };
 
 /** R-TOD-2 */
 export function nowCard(tasks: Task[], today: string, nowMin: number): NowCard {
@@ -80,11 +80,13 @@ export function nowCard(tasks: Task[], today: string, nowMin: number): NowCard {
       progress: Math.round(((nowMin - cur.start) / (cur.end - cur.start)) * 100),
     };
   }
-  const fromTop = top3(tasks, today).find(isOpen);
+  // A task scheduled later today is shown in "next", not suggested now.
+  const later = (t: Task) => !!t.startTime && minutesOf(t.startTime) > nowMin;
+  const fromTop = top3(tasks, today).find((t) => isOpen(t) && !later(t));
   if (fromTop) return { kind: 'suggestion', task: fromTop, source: 'top3' };
-  const fromToday = moreToday(tasks, today).find(isOpen);
+  const fromToday = moreToday(tasks, today).find((t) => isOpen(t) && !later(t));
   if (fromToday) return { kind: 'suggestion', task: fromToday, source: 'today' };
-  return { kind: 'empty' };
+  return { kind: 'empty', hasLater: scheduledOpen(tasks, today).some((s) => s.start > nowMin) };
 }
 
 /** R-TOD-3 */

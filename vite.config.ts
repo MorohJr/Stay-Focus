@@ -7,6 +7,8 @@ const base = process.env.BASE_PATH || '/';
 
 export default defineConfig({
   base,
+  // One offline bundle (~170KB gzipped) is fine for a PWA; no need to split.
+  build: { chunkSizeWarningLimit: 800 },
   define: { __APP_VERSION__: JSON.stringify(process.env.npm_package_version ?? '0.0.0') },
   plugins: [
     react(),

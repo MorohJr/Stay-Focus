@@ -17,9 +17,9 @@ export function sprintRange(date: string): { startDate: string; endDate: string 
   return { startDate, endDate: addDays(startDate, 6) };
 }
 
-/** "שבוע 40 · 27/9–3/10" */
+/** "שבוע 40 · 27/9–3/10". The range is a left-to-right isolate so it doesn't flip in RTL. */
 export function sprintName(startDate: string): string {
-  return `שבוע ${weekNumber(startDate)} · ${formatShort(startDate)}–${formatShort(addDays(startDate, 6))}`;
+  return `שבוע ${weekNumber(startDate)} · \u2066${formatShort(startDate)}–${formatShort(addDays(startDate, 6))}\u2069`;
 }
 
 /** R-SPR-2: status derived from dates. */
