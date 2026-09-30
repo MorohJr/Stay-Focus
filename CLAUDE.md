@@ -51,4 +51,9 @@ export PATH="$HOME/.local/node/bin:$PATH"
 
 ## מצב
 
-- 30/09/2026: אפיון 1.0 אושר (שלוש סקיצות ב-`Claude outputs/`, הסופית `dashboard-v3.html`). מתחילים בנייה של כל השלבים ברצף.
+- 30/09/2026: אפיון 1.0 אושר (שלוש סקיצות ב-`Claude outputs/`, הסופית `dashboard-v3.html`).
+- 01/10/2026: כל השלבים 0–8 נבנו ונבדקו בדפדפן בגודל אייפון. 45 בדיקות יחידה עוברות, lint ו-build נקיים.
+- מבנה UI: `src/ui/App.tsx` (ניתוב), `screens/` (Today, Tasks, Task, Sprint, Projects+Goals, Notes, Habits = אתגרים/שגרות/חוזרות/כרטיסי מידע, More = חיפוש/גיבוי/מזג אוויר/הגדרות/תחומים/תבניות), `components/` (common, tasks, edit, Icon).
+- טקסט שהמשתמש מקליד מוצג עם `unicode-bidi: plaintext` כדי שעברית ואנגלית מעורבות לא יתהפכו. תאריך מחותמת זמן: תמיד `localDate()`, לעולם לא `slice(0, 10)`.
+- הרצה מקומית בתצוגה המקדימה: `.claude/launch.json` (פורט 5174, לא ב-git).
+- עוד לא פורסם: צריך ליצור מאגר `MorohJr/Stay-Focus` ב-GitHub ולהפעיל Pages (Source: GitHub Actions).
