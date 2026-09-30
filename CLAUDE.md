@@ -56,4 +56,4 @@ export PATH="$HOME/.local/node/bin:$PATH"
 - מבנה UI: `src/ui/App.tsx` (ניתוב), `screens/` (Today, Tasks, Task, Sprint, Projects+Goals, Notes, Habits = אתגרים/שגרות/חוזרות/כרטיסי מידע, More = חיפוש/גיבוי/מזג אוויר/הגדרות/תחומים/תבניות), `components/` (common, tasks, edit, Icon).
 - טקסט שהמשתמש מקליד מוצג עם `unicode-bidi: plaintext` כדי שעברית ואנגלית מעורבות לא יתהפכו. תאריך מחותמת זמן: תמיד `localDate()`, לעולם לא `slice(0, 10)`.
 - הרצה מקומית בתצוגה המקדימה: `.claude/launch.json` (פורט 5174, לא ב-git).
-- עוד לא פורסם: צריך ליצור מאגר `MorohJr/Stay-Focus` ב-GitHub ולהפעיל Pages (Source: GitHub Actions).
+- פורסם 01/10/2026: https://morohjr.github.io/Stay-Focus/ (מאגר MorohJr/Stay-Focus).
