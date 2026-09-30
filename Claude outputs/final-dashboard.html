@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Stay Focus · דשבורד לאישור</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&family=Rubik:wght@500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root { --page: #e9eaee; --pink: #1b1d22; --pmuted: #5f6572; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--pink); font-family: 'Heebo', -apple-system, sans-serif; }
+  .wrap { max-width: 1560px; margin: 0 auto; padding: 0 16px 60px; }
+  header.top { padding: 28px 0 6px; }
+  h1 { margin: 0 0 6px; font-size: 1.7rem; }
+  header.top p { margin: 0; color: var(--pmuted); max-width: 860px; line-height: 1.55; }
+  .blues { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 4px; align-items: center; }
+  .blues b { margin-inline-end: 4px; }
+  .blues button { font: inherit; font-size: .9rem; padding: 8px 12px; border-radius: 12px; border: 1px solid #c9ccd4; background: #fff; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+  .blues button.on { border-color: #1b1d22; box-shadow: 0 0 0 2px #1b1d22; }
+  .blues .dot { width: 16px; height: 16px; border-radius: 50%; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 30px 18px; padding: 18px 0; }
+  .opt h3 { margin: 0; font-size: 1.1rem; text-align: center; }
+  .opt .sub { color: var(--pmuted); font-size: .88rem; text-align: center; margin: 2px auto 10px; max-width: 330px; min-height: 2.9em; line-height: 1.45; }
+  .rules { background: #fff; border-radius: 16px; padding: 16px 20px; max-width: 900px; line-height: 1.6; font-size: .95rem; }
+  .rules h2 { margin: 0 0 6px; font-size: 1.15rem; }
+  .rules ol { margin: 0; padding-inline-start: 20px; }
+  .rules li { margin: 3px 0; }
+  .rules .q { margin-top: 10px; padding: 10px 12px; background: #fff7e0; border-radius: 10px; }
+
+  /* ---------- טלפון ---------- */
+  .phone { width: 100%; max-width: 350px; height: 750px; margin: 0 auto; border-radius: 46px; padding: 9px; background: #111; box-shadow: 0 18px 44px rgba(0,0,0,.22); }
+  .screen {
+    --bg: #ffffff; --surface: #ffffff; --surface2: #f5f5f4; --line: #ececea; --ink: #111111; --muted: #7a7a74; --track: #efefec; --track2: #cfcfca;
+    --blue: #1f4fd1;
+    --soft: color-mix(in srgb, var(--blue) 10%, white);
+    --blueText: var(--blue);
+    --blueLight: color-mix(in srgb, var(--blue) 42%, white);
+    position: relative; height: 100%; border-radius: 37px; overflow: hidden; background: var(--bg); color: var(--ink); font-family: 'Heebo';
+  }
+  .scroll { height: 100%; overflow-y: auto; padding: 50px 15px 120px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .status { position: absolute; top: 0; inset-inline: 0; height: 44px; display: flex; justify-content: space-between; align-items: center; padding: 0 28px; font-size: 13px; font-weight: 600; z-index: 3; direction: ltr; background: rgba(255,255,255,.92); }
+  .notch { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 96px; height: 27px; border-radius: 20px; background: #000; z-index: 4; }
+  .ico { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .ico.sm { width: 16px; height: 16px; }
+  .num { font-family: 'Rubik'; font-variant-numeric: tabular-nums; }
+  .ltr { direction: ltr; unicode-bidi: isolate; }
+  .muted { color: var(--muted); }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 13px; margin-bottom: 11px; }
+  .card h4 { margin: 0 0 9px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+  .card h4 .t { display: inline-flex; align-items: center; gap: 6px; }
+  .card h4 small { font-weight: 500; font-size: 11.5px; color: var(--muted); }
+
+  /* כותרת */
+  .hdr { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 14px; }
+  .hdr .date { font-size: 12.5px; color: var(--muted); }
+  .hdr .hello { margin: 3px 0 0; font-size: 25px; font-weight: 800; letter-spacing: -.3px; line-height: 1.15; }
+  .pills { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+  .pill { display: inline-flex; align-items: center; justify-content: center; gap: 5px; font-size: 12.5px; font-weight: 600; padding: 5px 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); white-space: nowrap; }
+
+  /* עכשיו */
+  .hero { border-radius: 24px; padding: 16px; margin-bottom: 10px; background: #111; color: #fff; position: relative; overflow: hidden; }
+  .hero::after { content: ''; position: absolute; inset-inline-end: -46px; top: -46px; width: 150px; height: 150px; border-radius: 50%; background: color-mix(in srgb, var(--blue) 55%, transparent); filter: blur(2px); opacity: .55; }
+  .hero > * { position: relative; z-index: 1; }
+  .hero .k { font-size: 12px; font-weight: 600; color: color-mix(in srgb, var(--blue) 35%, white); }
+  .hero .ttl { font-size: 24px; font-weight: 800; margin: 5px 0 3px; }
+  .hero .meta { font-size: 12.5px; color: #b9b9b4; }
+  .hero .prog { height: 5px; border-radius: 9px; background: rgba(255,255,255,.14); margin-top: 12px; overflow: hidden; }
+  .hero .prog i { display: block; height: 100%; width: 62%; background: var(--blue); border-radius: 9px; }
+  .hero .btns { display: flex; gap: 8px; margin-top: 12px; }
+  .hero .btns span { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 13px; font-size: 13.5px; font-weight: 700; background: rgba(255,255,255,.14); color: #fff; }
+  .hero .btns span.done { background: var(--blue); }
+  .hero.empty { background: var(--surface2); color: var(--ink); }
+  .hero.empty::after { display: none; }
+  .hero.empty .k, .hero.empty .meta { color: var(--muted); }
+  .next { display: flex; align-items: center; gap: 10px; padding: 11px 13px; font-size: 13.5px; }
+  .next .when { margin-inline-start: auto; font-size: 12px; color: var(--muted); }
+
+  /* שגרה */
+  .rout { display: flex; flex-wrap: wrap; gap: 6px; }
+  .rout span { font-size: 12.5px; padding: 6px 11px; border-radius: 999px; background: var(--surface2); }
+  .rout span.ok { background: var(--soft); color: var(--blueText); font-weight: 600; }
+  .rbar { height: 5px; border-radius: 9px; background: var(--track); margin: 11px 0 0; overflow: hidden; }
+  .rbar i { display: block; height: 100%; background: var(--blue); border-radius: 9px; }
+  .rhint { font-size: 11.5px; color: var(--muted); margin-top: 7px; display: flex; align-items: center; gap: 5px; }
+
+  /* משימות */
+  .todo { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 14px; }
+  .todo + .todo { border-top: 1px solid var(--line); }
+  .box { width: 21px; height: 21px; flex: none; border-radius: 50%; border: 2px solid var(--track2); display: grid; place-items: center; }
+  .box svg { width: 13px; height: 13px; stroke-width: 3; }
+  .done .box { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .done .txt { text-decoration: line-through; opacity: .45; }
+  .star { color: var(--blue); display: inline-flex; }
+  .star svg { fill: var(--blue); }
+  .tag { margin-inline-start: auto; font-size: 10.5px; padding: 3px 8px; border-radius: 99px; background: var(--soft); color: var(--blueText); white-space: nowrap; }
+  .tag.g { background: var(--surface2); color: var(--muted); }
+  .sep { font-size: 11px; color: var(--muted); padding: 8px 0 2px; border-top: 1px solid var(--line); }
+
+  /* טבעות */
+  .rings { display: flex; align-items: center; gap: 14px; }
+  .ringwrap { position: relative; display: grid; place-items: center; }
+  .ringwrap .c { position: absolute; text-align: center; }
+  .legend { flex: 1; font-size: 13px; display: grid; gap: 9px; }
+  .legend b { display: inline-flex; align-items: center; gap: 6px; }
+  .legend b i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+  /* ניווט */
+  .nav { position: absolute; inset-inline: 0; bottom: 0; height: 80px; padding-bottom: 18px; z-index: 5; display: flex; justify-content: space-around; align-items: center; background: rgba(255,255,255,.94); border-top: 1px solid var(--line); backdrop-filter: blur(16px); color: #a3a39d; }
+  .nav a { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10px; }
+  .nav a.on { color: var(--ink); font-weight: 700; }
+  .nav a.on .ico { color: var(--blue); }
+  .fab { position: absolute; z-index: 6; bottom: 94px; inset-inline-start: 16px; width: 54px; height: 54px; border-radius: 18px; display: grid; place-items: center; background: #111; color: #fff; box-shadow: 0 10px 24px rgba(0,0,0,.22); }
+  .fab .ico { width: 25px; height: 25px; stroke-width: 2.4; color: #fff; }
+  .clockbadge { position: absolute; z-index: 7; top: 52px; left: 50%; transform: translateX(-50%); background: var(--blue); color: #fff; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 99px; display: none; }
+
+  /* הגדרות */
+  .setTitle { display: flex; align-items: center; gap: 8px; margin: 4px 0 14px; }
+  .setTitle h2 { margin: 0; font-size: 22px; }
+  .field { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; font-size: 14px; }
+  .field + .field { border-top: 1px solid var(--line); }
+  .field .val { font-family: 'Rubik'; font-size: 14px; padding: 6px 12px; border-radius: 10px; background: var(--surface2); }
+  .field .sw { width: 44px; height: 26px; border-radius: 99px; background: var(--blue); position: relative; }
+  .field .sw::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; }
+  .item { display: flex; align-items: center; gap: 10px; padding: 9px 0; font-size: 14px; }
+  .item + .item { border-top: 1px solid var(--line); }
+  .item .grip { color: #c4c4be; font-size: 14px; letter-spacing: -2px; }
+  .item .x { margin-inline-start: auto; color: var(--muted); font-size: 12px; }
+  .addrow { color: var(--blue); font-weight: 600; font-size: 14px; padding-top: 10px; display: flex; gap: 6px; align-items: center; }
+  .note { font-size: 11.5px; color: var(--muted); line-height: 1.5; margin: 2px 2px 12px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-today" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/><circle cx="12" cy="15" r="1.6"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-tasks" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1.3 1.3L7 5M3.5 12l1.3 1.3L7 11M3.5 18l1.3 1.3L7 17"/></symbol>
+  <symbol id="i-sprint" viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="9.5" y="4" width="5" height="11" rx="1.5"/><rect x="16" y="4" width="5" height="7" rx="1.5"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/></symbol>
+  <symbol id="i-moonw" viewBox="0 0 24 24"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5z"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M3.5 13.5l2.6-7.4A2 2 0 0 1 8 4.8h8a2 2 0 0 1 1.9 1.3l2.6 7.4V18a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><path d="M3.5 13.5H8l1.5 2.5h5l1.5-2.5h4.5"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.8l2.5 5.1 5.6.8-4 3.9 1 5.6-5.1-2.7-5 2.7 1-5.6-4.1-3.9 5.6-.8z"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M14.5 6l-6 6 6 6"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M9.5 6l6 6-6 6"/></symbol>
+  <symbol id="i-sunrise" viewBox="0 0 24 24"><path d="M4 18h16M7 18a5 5 0 0 1 10 0M12 4v4M5.5 9.5l1.5 1.5M18.5 9.5L17 11"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5z"/></symbol>
+  <symbol id="i-snooze" viewBox="0 0 24 24"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 1.5M4 5l3-2.5M20 5l-3-2.5"/></symbol>
+  <symbol id="i-door" viewBox="0 0 24 24"><path d="M5 20V5a1.5 1.5 0 0 1 1.5-1.5h8A1.5 1.5 0 0 1 16 5v15M3 20h18M12.5 12h.01"/></symbol>
+</svg>
+
+<div class="wrap">
+  <header class="top">
+    <h1>דשבורד "היום": הגרסה המשולבת לאישור</h1>
+    <p>רקע לבן, שחור-לבן עם כחול כהה במקום הליים. אותו מסך בשלוש שעות ביום כדי להראות איך השגרה מתחלפת לבד, ובסוף מסך ההגדרות של השגרה. אפשר לגלול בתוך כל טלפון.</p>
+    <div class="blues" id="blues"><b>גוון הכחול:</b></div>
+  </header>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="rules">
+    <h2>איך השגרה מופיעה ונעלמת</h2>
+    <ol>
+      <li><b>שגרת בוקר</b> מופיעה מההשכמה ועד "יוצא מהבית" (בדוגמה 06:00 עד 09:30).</li>
+      <li>אחרי השעה הזאת היא נעלמת מהמסך. מה שלא סימנת נשמר כ"לא בוצע" לאותו יום, וזה נכנס לטבעת "שגרה" ולרצף.</li>
+      <li><b>שגרת ערב</b> מופיעה בשעות שהגדרת לה (בדוגמה 18:00 עד 22:30), ונעלמת אחריהן.</li>
+      <li>בין השגרות (צהריים) אין כרטיס שגרה בכלל, והמסך מתחיל ישר מ"משימות להיום" אחרי "עכשיו" ו"הבא".</li>
+      <li>אם סיימת את כל השגרה לפני הזמן, הכרטיס מתכווץ לשורה אחת "שגרת בוקר הושלמה ✓".</li>
+      <li>את השעות ואת הפריטים של כל שגרה עורכים במסך ההגדרות (טלפון 4). אפשר גם שעות שונות לשישי ושבת.</li>
+    </ol>
+    <div class="q"><b>שתי שאלות קטנות:</b> (1) "3 החשובים היום" שבחרת קודם: שמתי אותם בראש "משימות להיום" עם כוכב כחול, בלי כרטיס נפרד. זה בסדר? (2) כשאין שום משימה מתוזמנת לשעה הנוכחית, כרטיס "עכשיו" מציע את המשימה הבאה מ-3 החשובים (כמו בטלפון 2). מתאים?</div>
+  </div>
+</div>
+
+<script>
+const ic = (id, c = '') => `<svg class="ico ${c}"><use href="#i-${id}"/></svg>`;
+const todo = (t, tag, d, star, g) => `<div class="todo ${d ? 'done' : ''}"><span class="box">${d ? ic('check') : ''}</span>${star ? `<span class="star">${ic('star', 'sm')}</span>` : ''}<span class="txt">${t}</span>${tag ? `<span class="tag ${g ? 'g' : ''}">${tag}</span>` : ''}</div>`;
+
+function ring(pcts, colors, size = 132) {
+  const sw = 12, gap = 4;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${pcts.map((p, i) => {
+    const r = size / 2 - sw / 2 - i * (sw + gap), c = 2 * Math.PI * r;
+    return `<circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="var(--track)" stroke-width="${sw}"/><circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="${colors[i]}" stroke-width="${sw}" stroke-linecap="round" stroke-dasharray="${c * p / 100} ${c}" transform="rotate(-90 ${size / 2} ${size / 2})"/>`;
+  }).join('')}</svg>`;
+}
+
+const header = (hello) => `<div class="hdr">
+  <div><div class="date">יום רביעי · 30 בספטמבר</div><h1 class="hello">${hello}</h1></div>
+  <div class="pills"><span class="pill">${ic('sun', 'sm')}<span class="num ltr">24°</span> בהיר</span><span class="pill">${ic('cal', 'sm')}שבוע <span class="num">40/52</span></span></div>
+</div>`;
+
+const hero = (h) => h.empty
+  ? `<div class="hero empty"><div class="k">אין משהו מתוזמן עכשיו · הצעה מ-3 החשובים</div><div class="ttl">${h.title}</div><div class="meta">${h.meta}</div><div class="btns"><span class="done" style="color:#fff">${ic('check', 'sm')} סיימתי</span><span style="background:#e9e9e6;color:#111">${ic('snooze', 'sm')} דחה</span></div></div>`
+  : `<div class="hero"><div class="k">עכשיו · <span class="ltr num">${h.time}</span></div><div class="ttl">${h.title}</div><div class="meta">${h.meta}</div><div class="prog"><i style="width:${h.prog}%"></i></div><div class="btns"><span class="done">${ic('check', 'sm')} סיימתי</span><span>${ic('snooze', 'sm')} דחה</span></div></div>`;
+
+const next = (n) => `<div class="card next">${ic('clock', 'sm')}<span>הבא: <b>${n.title}</b></span><span class="when ltr num">${n.time}</span></div>`;
+
+const routine = (r) => !r ? '' : `<section class="card"><h4><span class="t">${ic(r.icon, 'sm')} ${r.name}</span><small class="num">${r.done}/${r.items.length}</small></h4>
+  <div class="rout">${r.items.map((x, i) => `<span class="${i < r.done ? 'ok' : ''}">${i < r.done ? '✓ ' : ''}${x}</span>`).join('')}</div>
+  <div class="rbar"><i style="width:${Math.round(r.done / r.items.length * 100)}%"></i></div>
+  <div class="rhint">${ic('clock', 'sm')} ${r.hint}</div></section>`;
+
+const tasks = (t) => `<section class="card"><h4><span>משימות להיום</span><small>${t.count}</small></h4>
+  ${todo('לסיים את דף הנחיתה', 'עבודה', t.d1, 1)}${todo('להתקשר למוסך', 'בית', t.d2, 1)}${todo('אימון בית', 'גוף', t.d3, 1)}
+  <div class="sep">עוד היום</div>
+  ${todo('לשלם על הבלנדר', 'בית', 0, 0, 1)}${todo('לפתוח פרופיל LinkedIn', 'עבודה', 0, 0, 1)}${todo('להכין ספרינט חדש', '', t.d6)}</section>`;
+
+const rings = (g) => `<section class="card"><h4><span>ההתקדמות שלי</span><small>היום</small></h4><div class="rings">
+  <div class="ringwrap">${ring([g.s, g.r, g.c], ['var(--blue)', 'var(--ink)', 'var(--blueLight)'])}<div class="c"><div class="num" style="font-size:19px;font-weight:800">${Math.round((g.s + g.r + g.c) / 3)}%</div><div class="muted" style="font-size:11px">ממוצע</div></div></div>
+  <div class="legend">
+    <div><b><i style="background:var(--blue)"></i>ספרינט</b><div class="muted num">${g.sT}</div></div>
+    <div><b><i style="background:var(--ink)"></i>שגרה היום</b><div class="muted num">${g.rT}</div></div>
+    <div><b><i style="background:var(--blueLight)"></i>חוקי האתגר</b><div class="muted num">${g.cT}</div></div>
+  </div></div></section>`;
+
+const inbox = () => `<section class="card next">${ic('inbox', 'sm')}<span><b class="num">4</b> פריטים בדואר הנכנס</span><span class="when" style="display:inline-flex;align-items:center;gap:4px;color:var(--blue);font-weight:600">לסדר ${ic('chev', 'sm')}</span></section>`;
+
+const nav = () => `<div class="fab">${ic('plus')}</div><nav class="nav"><a class="on">${ic('today')}היום</a><a>${ic('tasks')}משימות</a><a>${ic('sprint')}ספרינט</a><a>${ic('target')}פרויקטים</a><a>${ic('more')}עוד</a></nav>`;
+const status = (t) => `<div class="status"><span>${t}</span><span>●●● ▮</span></div><div class="notch"></div>`;
+
+const MORNING = ['השכמה', 'צחצוח שיניים', 'מקלחת', 'לקרוא את החוקים', 'אימון בית', 'להתכונן ליציאה'];
+const EVENING = ['מקלחת', 'צחצוח שיניים', 'לקרוא ספר', 'עדכון תכנון למחר', 'לישון עד 23:30'];
+
+const STATES = [
+  { key: 'm', title: '1. בוקר, 08:30', sub: 'שגרת בוקר מוצגת, כי עוד לא עברה שעת היציאה מהבית (09:30).', clock: '8:30', hello: 'בוקר טוב, אלכס',
+    hero: { time: '08:30–09:00', title: 'תכנון היום', meta: 'בלי פרויקט · נשארו 20 דק׳', prog: 33 },
+    next: { title: 'עבודה על האתר', time: '10:00' },
+    routine: { name: 'שגרת בוקר', icon: 'sunrise', items: MORNING, done: 4, hint: 'מוצג עד 09:30 (יציאה מהבית)' },
+    tasks: { count: 6, d1: 0, d2: 0, d3: 0, d6: 0 },
+    rings: { s: 58, r: 36, c: 50, sT: '17/29 משימות · 58%', rT: '4/11 · 36%', cT: '4/8 · 🔥 12 ימים' } },
+  { key: 'd', title: '2. צהריים, 14:10', sub: 'בין השגרות: אין כרטיס שגרה. אין משימה מתוזמנת עכשיו, אז מוצעת המשימה הבאה מ-3 החשובים.', clock: '14:10', hello: 'צהריים טובים, אלכס',
+    hero: { empty: true, title: 'אימון בית', meta: 'מתוך 3 החשובים · גוף' },
+    next: { title: 'להכין ספרינט חדש', time: '21:00' },
+    routine: null,
+    tasks: { count: 6, d1: 1, d2: 1, d3: 0, d6: 0 },
+    rings: { s: 65, r: 55, c: 75, sT: '19/29 משימות · 65%', rT: '6/11 · 55%', cT: '6/8 · 🔥 12 ימים' } },
+  { key: 'e', title: '3. ערב, 21:15', sub: 'שגרת ערב מופיעה לבד בשעות שהוגדרו לה (18:00 עד 22:30).', clock: '21:15', hello: 'ערב טוב, אלכס',
+    hero: { time: '21:00–21:45', title: 'להכין ספרינט חדש', meta: 'ספרינט · נשארו 30 דק׳', prog: 33 },
+    next: { title: 'לישון', time: '23:30' },
+    routine: { name: 'שגרת ערב', icon: 'moon', items: EVENING, done: 2, hint: 'מוצג עד 22:30' },
+    tasks: { count: 6, d1: 1, d2: 1, d3: 1, d6: 0 },
+    rings: { s: 72, r: 73, c: 88, sT: '21/29 משימות · 72%', rT: '8/11 · 73%', cT: '7/8 · 🔥 12 ימים' } },
+];
+
+const dash = (s) => `<div class="phone"><div class="screen">${status(s.clock)}<div class="scroll">
+  ${header(s.hello)}${hero(s.hero)}${next(s.next)}${routine(s.routine)}${tasks(s.tasks)}${rings(s.rings)}${inbox()}
+</div>${nav()}</div></div>`;
+
+const settings = () => `<div class="phone"><div class="screen">${status('9:41')}<div class="scroll">
+  <div class="setTitle">${ic('back', 'sm')}<h2>שגרות</h2></div>
+  <section class="card"><h4><span class="t">${ic('sunrise', 'sm')} שגרת בוקר</span></h4>
+    <div class="field">מתחילה ב-<span class="val ltr">06:00</span></div>
+    <div class="field"><span style="display:inline-flex;gap:6px;align-items:center">${ic('door', 'sm')} יוצא מהבית ב-</span><span class="val ltr">09:30</span></div>
+    <div class="field">שעות אחרות בשישי-שבת<span class="sw"></span></div>
+    <div class="field" style="padding-inline-start:12px;color:var(--muted)">שישי-שבת: יציאה ב-<span class="val ltr">11:00</span></div>
+  </section>
+  <p class="note">אחרי שעת היציאה הכרטיס נעלם מדף הבית. מה שלא סומן נספר כ"לא בוצע".</p>
+  <section class="card"><h4><span>פריטים בשגרת בוקר</span><small>גרור לשינוי סדר</small></h4>
+    ${MORNING.map(x => `<div class="item"><span class="grip">⋮⋮</span>${x}<span class="x">✕</span></div>`).join('')}
+    <div class="addrow">${ic('plus', 'sm')} הוסף פריט</div>
+  </section>
+  <section class="card"><h4><span class="t">${ic('moon', 'sm')} שגרת ערב</span></h4>
+    <div class="field">מופיעה מ-<span class="val ltr">18:00</span></div>
+    <div class="field">עד<span class="val ltr">22:30</span></div>
+  </section>
+</div></div></div>`;
+
+document.getElementById('grid').innerHTML = STATES.map(s => `<div class="opt"><h3>${s.title}</h3><p class="sub">${s.sub}</p>${dash(s)}</div>`).join('')
+  + `<div class="opt"><h3>4. הגדרות שגרה</h3><p class="sub">עורכים את השעות ואת הפריטים. הדשבורד מתנהג לפי זה.</p>${settings()}</div>`;
+
+const BLUES = [
+  ['#1f4fd1', 'רויאל'], ['#2563eb', 'קובלט בהיר'], ['#3346c4', 'אינדיגו'], ['#1d5fa6', 'כחול ים'],
+];
+const bl = document.getElementById('blues');
+bl.insertAdjacentHTML('beforeend', BLUES.map(([c, n], i) => `<button data-c="${c}" class="${i === 0 ? 'on' : ''}"><span class="dot" style="background:${c}"></span>${n} <span class="ltr" style="color:#888;font-size:.8rem">${c}</span></button>`).join(''));
+bl.onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  document.querySelectorAll('.screen').forEach(s => s.style.setProperty('--blue', b.dataset.c));
+  bl.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+};
+</script>
+</body>
+</html>

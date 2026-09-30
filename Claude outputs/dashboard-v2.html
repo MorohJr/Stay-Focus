@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Stay Focus · דשבורד גרסה 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&family=Rubik:wght@500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root { --page: #e9eaee; --pink: #1b1d22; --pmuted: #5f6572; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--pink); font-family: 'Heebo', -apple-system, sans-serif; }
+  .wrap { max-width: 1560px; margin: 0 auto; padding: 0 16px 60px; }
+  header.top { padding: 28px 0 6px; }
+  h1 { margin: 0 0 6px; font-size: 1.7rem; }
+  header.top p { margin: 0; color: var(--pmuted); max-width: 860px; line-height: 1.55; }
+  .blues { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 4px; align-items: center; }
+  .blues b { margin-inline-end: 4px; }
+  .blues button { font: inherit; font-size: .9rem; padding: 8px 12px; border-radius: 12px; border: 1px solid #c9ccd4; background: #fff; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+  .blues button.on { border-color: #1b1d22; box-shadow: 0 0 0 2px #1b1d22; }
+  .blues .dot { width: 16px; height: 16px; border-radius: 50%; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 30px 18px; padding: 18px 0; }
+  .opt h3 { margin: 0; font-size: 1.1rem; text-align: center; }
+  .opt .sub { color: var(--pmuted); font-size: .88rem; text-align: center; margin: 2px auto 10px; max-width: 330px; min-height: 2.9em; line-height: 1.45; }
+  .rules { background: #fff; border-radius: 16px; padding: 16px 20px; max-width: 900px; line-height: 1.6; font-size: .95rem; }
+  .rules h2 { margin: 0 0 6px; font-size: 1.15rem; }
+  .rules ol { margin: 0; padding-inline-start: 20px; }
+  .rules li { margin: 3px 0; }
+  .rules .q { margin-top: 10px; padding: 10px 12px; background: #fff7e0; border-radius: 10px; }
+
+  /* ---------- טלפון ---------- */
+  .phone { width: 100%; max-width: 350px; height: 750px; margin: 0 auto; border-radius: 46px; padding: 9px; background: #111; box-shadow: 0 18px 44px rgba(0,0,0,.22); }
+  .screen {
+    --bg: #ffffff; --surface: #ffffff; --surface2: #f5f5f4; --line: #ececea; --ink: #111111; --muted: #7a7a74; --track: #efefec; --track2: #cfcfca;
+    --blue: #1f4fd1;
+    --soft: color-mix(in srgb, var(--blue) 10%, white);
+    --blueText: var(--blue);
+    --blueLight: color-mix(in srgb, var(--blue) 42%, white);
+    position: relative; height: 100%; border-radius: 37px; overflow: hidden; background: var(--bg); color: var(--ink); font-family: 'Heebo';
+  }
+  .scroll { height: 100%; overflow-y: auto; padding: 50px 15px 120px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .status { position: absolute; top: 0; inset-inline: 0; height: 44px; display: flex; justify-content: space-between; align-items: center; padding: 0 28px; font-size: 13px; font-weight: 600; z-index: 3; direction: ltr; background: rgba(255,255,255,.92); }
+  .notch { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 96px; height: 27px; border-radius: 20px; background: #000; z-index: 4; }
+  .ico { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .ico.sm { width: 16px; height: 16px; }
+  .num { font-family: 'Rubik'; font-variant-numeric: tabular-nums; }
+  .ltr { direction: ltr; unicode-bidi: isolate; }
+  .muted { color: var(--muted); }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 13px; margin-bottom: 11px; }
+  .card h4 { margin: 0 0 9px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+  .card h4 .t { display: inline-flex; align-items: center; gap: 6px; }
+  .card h4 small { font-weight: 500; font-size: 11.5px; color: var(--muted); }
+
+  /* כותרת */
+  .hdr { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 14px; }
+  .hdr .date { font-size: 12.5px; color: var(--muted); }
+  .hdr .hello { margin: 3px 0 0; font-size: 25px; font-weight: 800; letter-spacing: -.3px; line-height: 1.15; }
+  .pills { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+  .pill { display: inline-flex; align-items: center; justify-content: center; gap: 5px; font-size: 12.5px; font-weight: 600; padding: 5px 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); white-space: nowrap; }
+
+  /* עכשיו */
+  .hero { border-radius: 24px; padding: 16px; margin-bottom: 10px; background: #111; color: #fff; position: relative; overflow: hidden; }
+  .hero::after { content: ''; position: absolute; inset-inline-end: -46px; top: -46px; width: 150px; height: 150px; border-radius: 50%; background: color-mix(in srgb, var(--blue) 55%, transparent); filter: blur(2px); opacity: .55; }
+  .hero > * { position: relative; z-index: 1; }
+  .hero .k { font-size: 12px; font-weight: 600; color: color-mix(in srgb, var(--blue) 35%, white); }
+  .hero .ttl { font-size: 24px; font-weight: 800; margin: 5px 0 3px; }
+  .hero .meta { font-size: 12.5px; color: #b9b9b4; }
+  .hero .prog { height: 5px; border-radius: 9px; background: rgba(255,255,255,.14); margin-top: 12px; overflow: hidden; }
+  .hero .prog i { display: block; height: 100%; width: 62%; background: var(--blue); border-radius: 9px; }
+  .hero .btns { display: flex; gap: 8px; margin-top: 12px; }
+  .hero .btns span { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 13px; font-size: 13.5px; font-weight: 700; background: rgba(255,255,255,.14); color: #fff; }
+  .hero .btns span.done { background: var(--blue); }
+  .hero.empty { background: var(--surface2); color: var(--ink); }
+  .hero.empty::after { display: none; }
+  .hero.empty .k, .hero.empty .meta { color: var(--muted); }
+  .next { display: flex; align-items: center; gap: 10px; padding: 11px 13px; font-size: 13.5px; }
+  .next .when { margin-inline-start: auto; font-size: 12px; color: var(--muted); }
+
+  /* שגרה */
+  .rout { display: flex; flex-wrap: wrap; gap: 6px; }
+  .rout span { font-size: 12.5px; padding: 6px 11px; border-radius: 999px; background: var(--surface2); }
+  .rout span.ok { background: var(--soft); color: var(--blueText); font-weight: 600; }
+  .rbar { height: 5px; border-radius: 9px; background: var(--track); margin: 11px 0 0; overflow: hidden; }
+  .rbar i { display: block; height: 100%; background: var(--blue); border-radius: 9px; }
+  .rhint { font-size: 11.5px; color: var(--muted); margin-top: 7px; display: flex; align-items: center; gap: 5px; }
+
+  /* משימות */
+  .todo { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 14px; }
+  .todo + .todo { border-top: 1px solid var(--line); }
+  .box { width: 21px; height: 21px; flex: none; border-radius: 50%; border: 2px solid var(--track2); display: grid; place-items: center; }
+  .box svg { width: 13px; height: 13px; stroke-width: 3; }
+  .done .box { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .done .txt { text-decoration: line-through; opacity: .45; }
+  .star { color: var(--blue); display: inline-flex; }
+  .star svg { fill: var(--blue); }
+  .tag { margin-inline-start: auto; font-size: 10.5px; padding: 3px 8px; border-radius: 99px; background: var(--soft); color: var(--blueText); white-space: nowrap; }
+  .tag.g { background: var(--surface2); color: var(--muted); }
+  .sep { font-size: 11px; color: var(--muted); padding: 8px 0 2px; border-top: 1px solid var(--line); }
+
+  /* טבעות */
+  .rings { display: flex; align-items: center; gap: 14px; }
+  .ringwrap { position: relative; display: grid; place-items: center; }
+  .ringwrap .c { position: absolute; text-align: center; }
+  .legend { flex: 1; font-size: 13px; display: grid; gap: 9px; }
+  .legend b { display: inline-flex; align-items: center; gap: 6px; }
+  .legend b i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+  /* ניווט */
+  .nav { position: absolute; inset-inline: 0; bottom: 0; height: 80px; padding-bottom: 18px; z-index: 5; display: flex; justify-content: space-around; align-items: center; background: rgba(255,255,255,.94); border-top: 1px solid var(--line); backdrop-filter: blur(16px); color: #a3a39d; }
+  .nav a { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10px; }
+  .nav a.on { color: var(--ink); font-weight: 700; }
+  .nav a.on .ico { color: var(--blue); }
+  .fab { position: absolute; z-index: 6; bottom: 94px; inset-inline-start: 16px; width: 54px; height: 54px; border-radius: 18px; display: grid; place-items: center; background: #111; color: #fff; box-shadow: 0 10px 24px rgba(0,0,0,.22); }
+  .fab .ico { width: 25px; height: 25px; stroke-width: 2.4; color: #fff; }
+  .clockbadge { position: absolute; z-index: 7; top: 52px; left: 50%; transform: translateX(-50%); background: var(--blue); color: #fff; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 99px; display: none; }
+
+  /* הגדרות */
+  .setTitle { display: flex; align-items: center; gap: 8px; margin: 4px 0 14px; }
+  .setTitle h2 { margin: 0; font-size: 22px; }
+  .field { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; font-size: 14px; }
+  .field + .field { border-top: 1px solid var(--line); }
+  .field .val { font-family: 'Rubik'; font-size: 14px; padding: 6px 12px; border-radius: 10px; background: var(--surface2); }
+  .field .sw { width: 44px; height: 26px; border-radius: 99px; background: var(--blue); position: relative; }
+  .field .sw::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; }
+  .item { display: flex; align-items: center; gap: 10px; padding: 9px 0; font-size: 14px; }
+  .item + .item { border-top: 1px solid var(--line); }
+  .item .grip { color: #c4c4be; font-size: 14px; letter-spacing: -2px; }
+  .item .x { margin-inline-start: auto; color: var(--muted); font-size: 12px; }
+  .addrow { color: var(--blue); font-weight: 600; font-size: 14px; padding-top: 10px; display: flex; gap: 6px; align-items: center; }
+  .note { font-size: 11.5px; color: var(--muted); line-height: 1.5; margin: 2px 2px 12px; }
+  /* v2 */
+  .screen { --blue: #3346c4; }
+  .num1 { width: 21px; height: 21px; flex: none; display: grid; place-items: center; font-family: 'Rubik'; font-size: 11px; font-weight: 700; color: var(--muted); }
+  .more { background: var(--surface2); border: 0; }
+  .more .row { display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 13px; padding: 10px 11px; font-size: 13.5px; }
+  .more .row + .row { margin-top: 6px; }
+  .more .sq { width: 18px; height: 18px; flex: none; border-radius: 6px; border: 1.8px solid var(--track2); }
+  .more .meta { margin-inline-start: auto; font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .more .add { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); padding: 10px 4px 2px; }
+  .slot { position: relative; outline: 2px dashed var(--blue); outline-offset: 5px; border-radius: 20px; margin: 22px 0 18px; }
+  .slot::before { content: attr(data-l); position: absolute; top: -21px; inset-inline-start: 6px; font-size: 10.5px; font-weight: 700; color: #fff; background: var(--blue); padding: 1px 8px; border-radius: 99px; z-index: 2; }
+  .slot > .card { margin-bottom: 0; }
+  /* 1 באיחור */
+  .late .row { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 13.5px; }
+  .late .row + .row { border-top: 1px solid var(--line); }
+  .late .d { font-size: 11px; color: #c2410c; background: #fff1e8; padding: 2px 7px; border-radius: 99px; white-space: nowrap; }
+  .late .acts { margin-inline-start: auto; display: flex; gap: 5px; }
+  .late .acts span { font-size: 11px; padding: 4px 8px; border-radius: 8px; background: var(--surface2); white-space: nowrap; }
+  .late .acts span.p { background: var(--soft); color: var(--blue); font-weight: 600; }
+  /* 2 חוקים */
+  .rulegrid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .rulegrid span { font-size: 12px; padding: 8px 9px; border-radius: 11px; background: var(--surface2); display: flex; align-items: center; gap: 6px; }
+  .rulegrid span.ok { background: var(--soft); color: var(--blue); font-weight: 600; }
+  .rulegrid span.no { background: #fdecec; color: #b42318; }
+  /* 3 קבועים */
+  .fixed .row { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 13.5px; }
+  .fixed .row + .row { border-top: 1px solid var(--line); }
+  .fixed .rep { font-size: 11px; color: var(--muted); display: inline-flex; align-items: center; gap: 3px; margin-inline-start: auto; white-space: nowrap; }
+  /* 4 ציר מיני */
+  .strip { position: relative; height: 38px; border-radius: 10px; background: var(--surface2); margin: 4px 0 6px; overflow: hidden; }
+  .strip b { position: absolute; top: 5px; bottom: 5px; border-radius: 6px; background: var(--track2); }
+  .strip b.r { background: color-mix(in srgb, var(--ink) 16%, transparent); top: 3px; bottom: 3px; }
+  .strip b.a, .strip b.t { z-index: 1; }
+  .strip b.t { background: var(--ink); }
+  .lg { display: flex; gap: 10px; font-size: 10.5px; color: var(--muted); margin-top: 6px; }
+  .lg i { display: inline-block; width: 8px; height: 8px; border-radius: 3px; margin-inline-end: 4px; vertical-align: -1px; }
+  .strip b.a { background: var(--blue); }
+  .strip .now { position: absolute; top: 0; bottom: 0; width: 2px; background: #ef4444; }
+  .strip .now::before { content: ''; position: absolute; top: -1px; left: -3px; width: 8px; height: 8px; border-radius: 50%; background: #ef4444; }
+  .hours { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); direction: ltr; }
+  .free { font-size: 12px; margin-top: 8px; display: flex; gap: 6px; align-items: center; }
+  .free b { color: var(--blue); }
+  /* 5 מטרה */
+  .goal .gt { font-size: 17px; font-weight: 800; margin: 2px 0 4px; }
+  .goal .bar2 { height: 8px; border-radius: 9px; background: var(--track); overflow: hidden; margin: 8px 0 6px; }
+  .goal .bar2 i { display: block; height: 100%; background: var(--blue); border-radius: 9px; }
+  .goal .sub2 { font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; }
+  .goal .projs { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .goal .projs span { font-size: 11.5px; padding: 5px 9px; border-radius: 99px; background: var(--surface2); }
+  .goal .projs span b { color: var(--blue); }
+  .qa { background: #fff; border-radius: 16px; padding: 16px 20px; max-width: 900px; line-height: 1.6; font-size: .95rem; margin-top: 10px; }
+  .qa h2 { margin: 0 0 6px; font-size: 1.15rem; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-today" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/><circle cx="12" cy="15" r="1.6"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-tasks" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1.3 1.3L7 5M3.5 12l1.3 1.3L7 11M3.5 18l1.3 1.3L7 17"/></symbol>
+  <symbol id="i-sprint" viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="9.5" y="4" width="5" height="11" rx="1.5"/><rect x="16" y="4" width="5" height="7" rx="1.5"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/></symbol>
+  <symbol id="i-moonw" viewBox="0 0 24 24"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5z"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M3.5 13.5l2.6-7.4A2 2 0 0 1 8 4.8h8a2 2 0 0 1 1.9 1.3l2.6 7.4V18a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><path d="M3.5 13.5H8l1.5 2.5h5l1.5-2.5h4.5"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.8l2.5 5.1 5.6.8-4 3.9 1 5.6-5.1-2.7-5 2.7 1-5.6-4.1-3.9 5.6-.8z"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M14.5 6l-6 6 6 6"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M9.5 6l6 6-6 6"/></symbol>
+  <symbol id="i-sunrise" viewBox="0 0 24 24"><path d="M4 18h16M7 18a5 5 0 0 1 10 0M12 4v4M5.5 9.5l1.5 1.5M18.5 9.5L17 11"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M19 14.5A7.5 7.5 0 0 1 9.5 5a7.5 7.5 0 1 0 9.5 9.5z"/></symbol>
+  <symbol id="i-snooze" viewBox="0 0 24 24"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 1.5M4 5l3-2.5M20 5l-3-2.5"/></symbol>
+  <symbol id="i-door" viewBox="0 0 24 24"><path d="M5 20V5a1.5 1.5 0 0 1 1.5-1.5h8A1.5 1.5 0 0 1 16 5v15M3 20h18M12.5 12h.01"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5M12 16h.01"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.5l7 3v5.5c0 4.2-3 7.3-7 8.5-4-1.2-7-4.3-7-8.5V6.5z"/><path d="M9 12l2.2 2.2L15.5 10"/></symbol>
+  <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M17 3.5l3 3-3 3M4 11.5v-1a4 4 0 0 1 4-4h12M7 20.5l-3-3 3-3M20 12.5v1a4 4 0 0 1-4 4H4"/></symbol>
+  <symbol id="i-mountain" viewBox="0 0 24 24"><path d="M3 19.5l6.5-11 4 6.5 2.5-4 5 8.5z"/><path d="M8 11l1.5 1.5L11 11"/></symbol>
+</svg>
+<div class="wrap">
+  <header class="top">
+    <h1>דשבורד "היום": גרסה 2</h1>
+    <p>אינדיגו (#3346C4). "3 החשובים" בכרטיס משלהם בלי כוכב, ממוספרים 1-3. "עוד להיום" בכרטיס נפרד בעיצוב אחר: רקע אפור, שורות לבנות עם ריבוע סימון קטן ופרטים בצד. בין שני הכרטיסים יש מקום מסומן בקו מקווקו, ובכל טלפון הצעה אחרת למה לשים בו. כל טלפון כבר גלול למקום הזה, ואפשר לגלול למעלה ולמטה.</p>
+  </header>
+  <div class="grid" id="grid"></div>
+  <div class="qa">
+    <h2>5 ההצעות למקום שבין "3 החשובים" ל"עוד להיום"</h2>
+    <ol>
+      <li><b>באיחור:</b> משימות מימים קודמים שלא בוצעו (כמו התצוגה "up to today" ב-Notion), עם "להיום" או "לדחות". אם אין כאלה, הכרטיס לא מוצג.</li>
+      <li><b>חוקי האתגר של היום:</b> סימון מהיר של כל חוק (שמרתי / לא שמרתי). זה המקום שבו ממלאים את טבעת האתגר.</li>
+      <li><b>הקבועים של היום:</b> המשימות החוזרות שנופלות היום, למשל ברביעי "לתת כביסה" ו"לישון אצל אמא", בשישי ניקיון ובישול.</li>
+      <li><b>היום בפס אחד:</b> ציר זמן מקוצר של כל היום עם קו "עכשיו", וכמה זמן פנוי נשאר לך היום.</li>
+      <li><b>מטרה בפוקוס:</b> מטרה גדולה אחת (מתחלפת כל שבוע או לבחירתך), כמה התקדמת בה, ואילו פרויקטים מקדמים אותה.</li>
+    </ol>
+    <p style="margin:8px 0 0;color:#5f6572">אפשר לבחור יותר מאחת. למשל "באיחור" (מופיע רק כשצריך) ומתחתיו "חוקי האתגר".</p>
+  </div>
+</div>
+
+<script>
+const ic = (id, c = '') => `<svg class="ico ${c}"><use href="#i-${id}"/></svg>`;
+const circ = (t, tag, d, n) => `<div class="todo ${d ? 'done' : ''}"><span class="box">${d ? ic('check') : ''}</span><span class="txt">${t}</span>${tag ? `<span class="tag">${tag}</span>` : ''}</div>`;
+function ring(pcts, colors, size = 132) {
+  const sw = 12, gap = 4;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${pcts.map((p, i) => {
+    const r = size / 2 - sw / 2 - i * (sw + gap), c = 2 * Math.PI * r;
+    return `<circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="var(--track)" stroke-width="${sw}"/><circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="${colors[i]}" stroke-width="${sw}" stroke-linecap="round" stroke-dasharray="${c * p / 100} ${c}" transform="rotate(-90 ${size / 2} ${size / 2})"/>`;
+  }).join('')}</svg>`;
+}
+const MORNING = ['השכמה', 'צחצוח שיניים', 'מקלחת', 'לקרוא את החוקים', 'אימון בית', 'להתכונן ליציאה'];
+
+const topPart = () => `<div class="hdr">
+  <div><div class="date">יום רביעי · 30 בספטמבר</div><h1 class="hello">בוקר טוב, אלכס</h1></div>
+  <div class="pills"><span class="pill">${ic('sun', 'sm')}<span class="num ltr">24°</span> בהיר</span><span class="pill">${ic('cal', 'sm')}שבוע <span class="num">40/52</span></span></div></div>
+  <div class="hero"><div class="k">עכשיו · <span class="ltr num">08:30–09:00</span></div><div class="ttl">תכנון היום</div><div class="meta">בלי פרויקט · נשארו 20 דק׳</div><div class="prog"><i style="width:33%"></i></div><div class="btns"><span class="done">${ic('check', 'sm')} סיימתי</span><span>${ic('snooze', 'sm')} דחה</span></div></div>
+  <div class="card next">${ic('clock', 'sm')}<span>הבא: <b>עבודה על האתר</b></span><span class="when ltr num">10:00</span></div>
+  <section class="card"><h4><span class="t">${ic('sunrise', 'sm')} שגרת בוקר</span><small class="num">4/6</small></h4>
+    <div class="rout">${MORNING.map((x, i) => `<span class="${i < 4 ? 'ok' : ''}">${i < 4 ? '✓ ' : ''}${x}</span>`).join('')}</div>
+    <div class="rbar"><i style="width:67%"></i></div><div class="rhint">${ic('clock', 'sm')} מוצג עד 09:30 (יציאה מהבית)</div></section>
+  <section class="card"><h4><span>3 החשובים היום</span><small>0 מתוך 3</small></h4>
+    ${circ('לסיים את דף הנחיתה', 'עבודה')}${circ('להתקשר למוסך', 'בית')}${circ('אימון בית', 'גוף')}</section>`;
+
+const moreToday = () => `<section class="card more"><h4><span>עוד להיום</span><small class="num">4</small></h4>
+  <div class="row"><span class="sq"></span>לשלם על הבלנדר<span class="meta">בית</span></div>
+  <div class="row"><span class="sq"></span>לפתוח פרופיל LinkedIn<span class="meta">עבודה</span></div>
+  <div class="row"><span class="sq"></span>להכין ספרינט חדש<span class="meta ltr num">21:00</span></div>
+  <div class="row"><span class="sq"></span>לשאול את אמא על המתנה<span class="meta">משפחה</span></div>
+  <div class="add">${ic('plus', 'sm')} הוסף משימה להיום</div></section>`;
+
+const bottom = () => `<section class="card"><h4><span>ההתקדמות שלי</span><small>היום</small></h4><div class="rings">
+  <div class="ringwrap">${ring([58, 36, 50], ['var(--blue)', 'var(--ink)', 'var(--blueLight)'])}<div class="c"><div class="num" style="font-size:19px;font-weight:800">48%</div><div class="muted" style="font-size:11px">ממוצע</div></div></div>
+  <div class="legend"><div><b><i style="background:var(--blue)"></i>ספרינט</b><div class="muted num">17/29 · 58%</div></div><div><b><i style="background:var(--ink)"></i>שגרה היום</b><div class="muted num">4/11 · 36%</div></div><div><b><i style="background:var(--blueLight)"></i>חוקי האתגר</b><div class="muted num">4/8 · 🔥 12 ימים</div></div></div></div></section>
+  <section class="card next">${ic('inbox', 'sm')}<span><b class="num">4</b> פריטים בדואר הנכנס</span><span class="when" style="display:inline-flex;align-items:center;gap:4px;color:var(--blue);font-weight:600">לסדר ${ic('chev', 'sm')}</span></section>`;
+
+const OPTS = [
+  { t: '1. באיחור', s: 'משימות מימים קודמים שלא בוצעו. מופיע רק כשיש כאלה.',
+    h: `<section class="card late"><h4><span class="t" style="color:#c2410c">${ic('alert', 'sm')} באיחור</span><small class="num">2</small></h4>
+      <div class="row"><span>לבדוק אילו תשלומים מיותרים</span><span class="d">אתמול</span><span class="acts"><span class="p">להיום</span><span>דחה</span></span></div>
+      <div class="row"><span>לשלם ארנונה</span><span class="d">לפני 3 ימים</span><span class="acts"><span class="p">להיום</span><span>דחה</span></span></div></section>` },
+  { t: '2. חוקי האתגר של היום', s: 'סימון מהיר של כל חוק. מזין את טבעת האתגר והרצף.',
+    h: `<section class="card"><h4><span class="t">${ic('shield', 'sm')} חוקי האתגר · יום 18</span><small class="num">4/8 · 🔥 12</small></h4>
+      <div class="rulegrid"><span class="ok">✓ רק מים</span><span class="ok">✓ בלי סוכר</span><span class="ok">✓ בלי גלוטן</span><span class="ok">✓ אימון</span><span class="no">✕ פחות עישון</span><span>לקרוא 10 דק׳</span><span>רשתות רק לעבודה</span><span>סרטון של דוד</span></div></section>` },
+  { t: '3. הקבועים של היום', s: 'משימות שחוזרות קבוע ונופלות היום (רביעי).',
+    h: `<section class="card fixed"><h4><span class="t">${ic('repeat', 'sm')} הקבועים של רביעי</span><small class="num">0/2</small></h4>
+      <div class="row"><span class="box"></span>לתת כביסה<span class="rep">${ic('repeat', 'sm')} כל רביעי</span></div>
+      <div class="row"><span class="box"></span>לישון אצל אמא<span class="rep">${ic('repeat', 'sm')} כל שבועיים</span></div></section>` },
+  { t: '4. היום בפס אחד', s: 'כל היום בפס אחד מ-06:00 עד 24:00, עם קו "עכשיו" וכמה זמן פנוי נשאר.',
+    h: (() => { const x = (a, b, c = '') => `<b class="${c}" style="right:${(a - 6) / 18 * 100}%;width:${(b - a) / 18 * 100}%"></b>`;
+      return `<section class="card"><h4><span class="t">${ic('clock', 'sm')} היום שלך</span><small>6 פריטים</small></h4>
+      <div class="strip">${x(6, 9.5, 'r')}${x(8.5, 9, 'a')}${x(10, 12, 'a')}${x(13, 13.3, 't')}${x(18, 19, 't')}${x(18, 22.5, 'r')}${x(21, 21.75, 'a')}<span class="now" style="right:${(8.5 - 6) / 18 * 100}%"></span></div>
+      <div class="hours"><span>24</span><span>21</span><span>18</span><span>15</span><span>12</span><span>9</span><span>6</span></div>
+      <div class="lg"><span><i style="background:color-mix(in srgb,#111 16%,transparent)"></i>שגרה</span><span><i style="background:var(--blue)"></i>3 החשובים</span><span><i style="background:#111"></i>משימות</span></div>
+      <div class="free">${ic('clock', 'sm')} נשארו היום <b class="num">6.5 שעות</b> פנויות</div></section>`; })() },
+  { t: '5. מטרה בפוקוס', s: 'מטרה גדולה אחת, ההתקדמות בה והפרויקטים שמקדמים אותה.',
+    h: `<section class="card goal"><h4><span class="t">${ic('mountain', 'sm')} מטרה בפוקוס</span><small>גיל 30-35</small></h4>
+      <div class="gt">500K₪ / 130K$</div>
+      <div class="bar2"><i style="width:28%"></i></div>
+      <div class="sub2"><span>28% · 3 פרויקטים</span><span>עד 12/2033</span></div>
+      <div class="projs"><span>Powerful Websites <b>40%</b></span><span>תבניות Notion <b>25%</b></span><span>ללמוד SaaS <b>10%</b></span></div></section>` },
+];
+
+const nav = () => `<div class="fab">${ic('plus')}</div><nav class="nav"><a class="on">${ic('today')}היום</a><a>${ic('tasks')}משימות</a><a>${ic('sprint')}ספרינט</a><a>${ic('target')}פרויקטים</a><a>${ic('more')}עוד</a></nav>`;
+const phone = (o) => `<div class="phone"><div class="screen"><div class="status"><span>8:30</span><span>●●● ▮</span></div><div class="notch"></div><div class="scroll">
+  ${topPart()}<div class="slot" data-l="${o.t}">${o.h}</div>${moreToday()}${bottom()}
+</div>${nav()}</div></div>`;
+
+document.getElementById('grid').innerHTML = OPTS.map(o => `<div class="opt"><h3>${o.t}</h3><p class="sub">${o.s}</p>${phone(o)}</div>`).join('');
+requestAnimationFrame(() => document.querySelectorAll('.scroll').forEach(sc => {
+  const slot = sc.querySelector('.slot');
+  sc.scrollTop = slot.offsetTop - 300;
+}));
+</script>
+</body>
+</html>

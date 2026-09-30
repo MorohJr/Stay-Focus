@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Stay Focus · כיווני עיצוב</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800;900&family=Rubik:wght@400;500;600;700;800;900&family=Assistant:wght@400;600;700;800&family=Secular+One&family=Varela+Round&display=swap" rel="stylesheet" />
+<style>
+  :root { --page: #e9eaee; --ink: #1b1d22; --muted: #666c78; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font-family: 'Heebo', -apple-system, sans-serif; }
+  header.top { max-width: 1900px; margin: 0 auto; padding: 28px 16px 8px; }
+  header.top h1 { margin: 0 0 6px; font-size: 1.7rem; }
+  header.top p { margin: 0; color: var(--muted); max-width: 780px; line-height: 1.55; }
+  .grid { max-width: 1900px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 32px 20px; }
+  .option > h2 { margin: 0 0 2px; font-size: 1.25rem; text-align: center; }
+  .option > .sub { color: var(--muted); font-size: .92rem; margin: 0 auto 12px; min-height: 2.8em; line-height: 1.45; max-width: 360px; text-align: center; }
+  .phone { width: 100%; max-width: 360px; height: 760px; margin: 0 auto; border-radius: 46px; padding: 10px; background: #111; box-shadow: 0 20px 50px rgba(0,0,0,.25); }
+  .screen { position: relative; height: 100%; border-radius: 36px; overflow: hidden; }
+  .scroll { height: 100%; overflow-y: auto; padding: 50px 16px 120px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .status { position: absolute; top: 0; inset-inline: 0; height: 42px; display: flex; justify-content: space-between; align-items: center; padding: 0 28px; font-size: 13px; font-weight: 600; z-index: 3; direction: ltr; }
+  .notch { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 98px; height: 27px; border-radius: 20px; background: #000; z-index: 4; }
+  .ico { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .ico.sm { width: 16px; height: 16px; }
+  .num, .t { font-variant-numeric: tabular-nums; }
+  .ltr { direction: ltr; unicode-bidi: isolate; }
+  .kit { max-width: 360px; margin: 14px auto 0; display: flex; gap: 8px; justify-content: center; }
+  .kit span { width: 34px; height: 34px; border-radius: 10px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
+  .notes { max-width: 360px; margin: 12px auto 0; font-size: .88rem; line-height: 1.55; color: var(--muted); }
+  .notes b { color: var(--ink); }
+
+  /* ---------- מבנה משותף ---------- */
+  .hdr { margin-bottom: 14px; }
+  .hdr .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .date { font-size: 13px; }
+  .hello { margin: 2px 0 0; font-size: 27px; line-height: 1.15; }
+  .wx { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; padding: 6px 10px; border-radius: 999px; white-space: nowrap; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+  .stat { padding: 10px; }
+  .stat .k { font-size: 11px; }
+  .stat .v { font-size: 17px; font-weight: 800; margin: 2px 0 6px; }
+  .bar { height: 6px; border-radius: 99px; overflow: hidden; }
+  .bar i { display: block; height: 100%; border-radius: 99px; margin-inline-start: 0; }
+  .card { padding: 14px; margin-bottom: 12px; }
+  .card h3 { margin: 0 0 10px; font-size: 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .card h3 small { font-weight: 500; font-size: 12px; }
+  .todo { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 14.5px; }
+  .todo + .todo { border-top: 1px solid var(--line); }
+  .box { width: 22px; height: 22px; flex: none; display: grid; place-items: center; }
+  .box svg { width: 14px; height: 14px; stroke-width: 3; }
+  .todo.done .txt { text-decoration: line-through; opacity: .5; }
+  .todo .tag { margin-inline-start: auto; font-size: 11px; padding: 3px 8px; border-radius: 99px; white-space: nowrap; }
+  .tl { display: flex; gap: 10px; align-items: stretch; padding: 6px 0; font-size: 14px; }
+  .tl .t { width: 42px; font-size: 12px; padding-top: 2px; flex: none; }
+  .tl .slot { flex: 1; padding: 8px 10px; border-radius: 12px; display: flex; justify-content: space-between; gap: 6px; }
+  .tl .slot small { font-size: 11.5px; white-space: nowrap; }
+  .row2 { display: grid; gap: 12px; }
+  .ch .big { font-size: 34px; font-weight: 800; line-height: 1; }
+  .ch .lbl { font-size: 12px; margin-top: 4px; }
+  .dots { display: flex; gap: 5px; margin-top: 10px; }
+  .dots i { width: 100%; height: 8px; border-radius: 4px; }
+  .inb .big { font-size: 34px; font-weight: 800; line-height: 1; }
+  .inb .lbl { font-size: 12px; margin-top: 4px; }
+  .nav { position: absolute; z-index: 5; display: flex; justify-content: space-around; align-items: center; }
+  .nav a { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10.5px; text-decoration: none; color: inherit; }
+  .fab { position: absolute; z-index: 6; width: 54px; height: 54px; border-radius: 18px; display: grid; place-items: center; }
+  .fab .ico { width: 26px; height: 26px; stroke-width: 2.4; }
+
+  /* ============ א. מיקוד לילי ============ */
+  .A { --line: rgba(255,255,255,.07); }
+  .A .screen { background: radial-gradient(110% 55% at 100% -5%, #2a2f6b 0%, transparent 55%), radial-gradient(80% 45% at -10% 35%, #11324a 0%, transparent 60%), #0a0c14; color: #eef0f6; font-family: 'Heebo'; }
+  .A .status { color: #fff; }
+  .A .date, .A .stat .k, .A .card h3 small, .A .tl .t, .A .ch .lbl, .A .inb .lbl, .A .tl .slot small { color: #8a90a6; }
+  .A .hello { font-weight: 800; letter-spacing: -.3px; }
+  .A .wx { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1); }
+  .A .stat, .A .card { background: rgba(255,255,255,.045); border: 1px solid rgba(255,255,255,.08); border-radius: 18px; backdrop-filter: blur(14px); }
+  .A .bar { background: rgba(255,255,255,.08); }
+  .A .bar i { background: linear-gradient(90deg, #6ee7f9, #8b9cff); }
+  .A .box { border-radius: 50%; border: 2px solid #4b5170; }
+  .A .done .box { background: #8b9cff; border-color: #8b9cff; color: #0a0c14; }
+  .A .todo .tag { background: rgba(139,156,255,.14); color: #aab6ff; }
+  .A .tl .slot { background: rgba(255,255,255,.04); }
+  .A .tl .slot.now { background: linear-gradient(90deg, rgba(110,231,249,.16), rgba(139,156,255,.2)); box-shadow: inset 0 0 0 1px rgba(139,156,255,.35); }
+  .A .row2 { grid-template-columns: 1fr 1fr; }
+  .A .ch .big { background: linear-gradient(90deg,#6ee7f9,#8b9cff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .A .dots i { background: rgba(255,255,255,.1); } .A .dots i.on { background: #8b9cff; }
+  .A .nav { inset-inline: 14px; bottom: 16px; height: 64px; border-radius: 24px; background: rgba(20,23,36,.72); backdrop-filter: blur(18px); border: 1px solid rgba(255,255,255,.09); color: #7d8399; }
+  .A .nav a.on { color: #fff; } .A .nav a.on .ico { color: #8b9cff; }
+  .A .fab { bottom: 94px; inset-inline-start: 22px; background: linear-gradient(135deg,#6ee7f9,#8b9cff); color: #0a0c14; box-shadow: 0 10px 30px rgba(139,156,255,.4); border-radius: 50%; }
+
+  /* ============ ב. נייר נקי ============ */
+  .B { --line: #eeece8; }
+  .B .screen { background: #f7f6f3; color: #1f1e1c; font-family: 'Assistant'; }
+  .B .status { color: #1f1e1c; }
+  .B .date, .B .stat .k, .B .card h3 small, .B .tl .t, .B .ch .lbl, .B .inb .lbl, .B .tl .slot small { color: #8b8983; }
+  .B .hello { font-weight: 800; font-size: 29px; }
+  .B .wx { background: #fff; border: 1px solid #e7e5e0; }
+  .B .stat, .B .card { background: #fff; border: 1px solid #e7e5e0; border-radius: 12px; }
+  .B .card h3 { text-transform: none; font-size: 12.5px; color: #8b8983; font-weight: 700; letter-spacing: .2px; }
+  .B .bar { background: #efede8; height: 5px; }
+  .B .bar i { background: #e8590c; }
+  .B .box { border-radius: 6px; border: 1.8px solid #c9c6bf; }
+  .B .done .box { background: #1f1e1c; border-color: #1f1e1c; color: #fff; }
+  .B .todo .tag { background: #fbeee6; color: #c2410c; }
+  .B .tl .slot { background: #f7f6f3; }
+  .B .tl .slot.now { background: #fff4ec; box-shadow: inset -3px 0 0 #e8590c; }
+  .B .row2 { grid-template-columns: 1fr 1fr; }
+  .B .ch .big, .B .inb .big { color: #1f1e1c; }
+  .B .dots i { background: #efede8; } .B .dots i.on { background: #e8590c; }
+  .B .nav { inset-inline: 0; bottom: 0; height: 82px; padding-bottom: 18px; background: rgba(255,255,255,.94); border-top: 1px solid #e7e5e0; color: #a3a09a; }
+  .B .nav a.on { color: #1f1e1c; font-weight: 700; }
+  .B .fab { bottom: 96px; inset-inline-start: 18px; background: #1f1e1c; color: #fff; border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,.18); }
+
+  /* ============ ג. בלתי ניתן לעצירה ============ */
+  .C { --line: #232323; }
+  .C .screen { background: #0b0b0b; color: #f5f5f5; font-family: 'Rubik'; }
+  .C .status { color: #fff; }
+  .C .date, .C .stat .k, .C .card h3 small, .C .tl .t, .C .inb .lbl, .C .tl .slot small { color: #8d8d8d; }
+  .C .hello { font-family: 'Secular One'; font-weight: 400; font-size: 30px; }
+  .C .wx { background: #1a1a1a; }
+  .C .hero { border-radius: 26px; padding: 18px; margin-bottom: 12px; background: linear-gradient(135deg,#ff3d1f 0%,#ff7a1a 60%,#ffb01f 100%); color: #140800; position: relative; overflow: hidden; }
+  .C .hero::after { content: ''; position: absolute; inset-inline-end: -30px; top: -30px; width: 140px; height: 140px; border-radius: 50%; background: rgba(255,255,255,.18); }
+  .C .hero .big { font-family: 'Secular One'; font-size: 58px; line-height: .95; }
+  .C .hero .lbl { font-weight: 700; font-size: 14px; opacity: .85; }
+  .C .hero .dots i { background: rgba(0,0,0,.18); } .C .hero .dots i.on { background: #140800; }
+  .C .stat, .C .card { background: #161616; border-radius: 20px; }
+  .C .stat .v { font-family: 'Secular One'; font-weight: 400; }
+  .C .bar { background: #2a2a2a; }
+  .C .bar i { background: #ff6a1a; }
+  .C .card h3 { font-size: 15px; font-weight: 800; }
+  .C .box { border-radius: 8px; border: 2px solid #444; }
+  .C .done .box { background: #ff6a1a; border-color: #ff6a1a; color: #0b0b0b; }
+  .C .todo .tag { background: #2a1a10; color: #ff8a3d; }
+  .C .tl .slot { background: #1f1f1f; }
+  .C .tl .slot.now { background: #ff6a1a; color: #140800; } .C .tl .slot.now small { color: #3a1500; }
+  .C .row2 { grid-template-columns: 1fr; }
+  .C .ch { display: none; }
+  .C .inb .big { color: #ff6a1a; font-family: 'Secular One'; font-weight: 400; }
+  .C .nav { inset-inline: 0; bottom: 0; height: 84px; padding-bottom: 20px; background: #0b0b0b; border-top: 1px solid #1f1f1f; color: #6b6b6b; }
+  .C .nav a.on { color: #ff6a1a; }
+  .C .fab { bottom: 98px; inset-inline-start: 18px; background: #ff6a1a; color: #0b0b0b; border-radius: 18px; box-shadow: 0 10px 28px rgba(255,106,26,.45); }
+
+  /* ============ ד. בנטו רך ============ */
+  .D { --line: rgba(0,0,0,.06); }
+  .D .screen { background: #f3f1ec; color: #22212a; font-family: 'Rubik'; }
+  .D .status { color: #22212a; }
+  .D .date, .D .stat .k, .D .card h3 small, .D .tl .t, .D .ch .lbl, .D .inb .lbl, .D .tl .slot small { color: #6f6c78; }
+  .D .hello { font-family: 'Varela Round'; font-weight: 400; font-size: 28px; }
+  .D .wx { background: #fff2c2; }
+  .D .stat { border-radius: 22px; padding: 12px; }
+  .D .stat:nth-child(1) { background: #d7f0e4; } .D .stat:nth-child(2) { background: #e4e0ff; } .D .stat:nth-child(3) { background: #ffe1cf; }
+  .D .bar { background: rgba(0,0,0,.08); }
+  .D .bar i { background: #22212a; }
+  .D .card { background: #fff; border-radius: 26px; }
+  .D .top3 { background: #22212a; color: #fff; --line: rgba(255,255,255,.1); }
+  .D .top3 h3 small { color: #a9a6b4; }
+  .D .top3 .box { border-color: #6b6878; }
+  .D .top3 .done .box { background: #d7f0e4; border-color: #d7f0e4; color: #22212a; }
+  .D .top3 .todo .tag { background: rgba(255,255,255,.1); color: #fff; }
+  .D .box { border-radius: 50%; border: 2px solid #c9c6d2; }
+  .D .done .box { background: #22212a; border-color: #22212a; color: #fff; }
+  .D .todo .tag { background: #f3f1ec; color: #6f6c78; }
+  .D .tl .slot { background: #f6f5f1; }
+  .D .tl .slot.now { background: #e4e0ff; }
+  .D .row2 { grid-template-columns: 1fr 1fr; }
+  .D .row2 .card.ch { background: #ffe1cf; } .D .row2 .card.inb { background: #d7f0e4; }
+  .D .dots i { background: rgba(0,0,0,.1); } .D .dots i.on { background: #22212a; }
+  .D .nav { inset-inline: 20px; bottom: 18px; height: 62px; border-radius: 999px; background: #fff; box-shadow: 0 10px 30px rgba(34,33,42,.12); color: #9a97a3; }
+  .D .nav a { font-size: 0; gap: 0; width: 44px; height: 44px; justify-content: center; border-radius: 50%; }
+  .D .nav a.on { background: #22212a; color: #fff; }
+  .D .fab { bottom: 92px; inset-inline-start: 26px; background: #ffe1cf; color: #22212a; border-radius: 50%; box-shadow: 0 8px 22px rgba(34,33,42,.15); }
+
+  /* ============ ה. זריחה ============ */
+  .E { --line: #eef1f7; }
+  .E .screen { background: #f4f7fc; color: #172033; font-family: 'Heebo'; }
+  .E .status { color: #fff; }
+  .E .scroll { padding-top: 0; }
+  .E .hdr { margin: 0 -16px 0; padding: 56px 18px 64px; background: linear-gradient(155deg,#2f6bff 0%,#3b8cff 45%,#18c3b5 100%); color: #fff; border-radius: 0 0 32px 32px; }
+  .E .date { color: rgba(255,255,255,.8); }
+  .E .hello { font-weight: 800; }
+  .E .wx { background: rgba(255,255,255,.2); color: #fff; }
+  .E .stats { margin-top: -46px; padding: 0 2px; }
+  .E .stat, .E .card { background: #fff; border-radius: 20px; box-shadow: 0 8px 24px rgba(30,60,120,.08); }
+  .E .stat .k, .E .card h3 small, .E .tl .t, .E .ch .lbl, .E .inb .lbl, .E .tl .slot small { color: #7b8599; }
+  .E .bar { background: #eaf0fb; }
+  .E .bar i { background: linear-gradient(90deg,#18c3b5,#2f6bff); }
+  .E .box { border-radius: 50%; border: 2px solid #c8d2e4; }
+  .E .done .box { background: #18c3b5; border-color: #18c3b5; color: #fff; }
+  .E .todo .tag { background: #eaf1ff; color: #2f6bff; }
+  .E .tl .slot { background: #f4f7fc; box-shadow: inset -3px 0 0 #c8d2e4; }
+  .E .tl .slot.now { background: #eaf1ff; box-shadow: inset -3px 0 0 #2f6bff; }
+  .E .tl .slot.r { box-shadow: inset -3px 0 0 #18c3b5; }
+  .E .row2 { grid-template-columns: 1fr 1fr; }
+  .E .ch .big { color: #2f6bff; } .E .inb .big { color: #18c3b5; }
+  .E .dots i { background: #eaf0fb; } .E .dots i.on { background: #2f6bff; }
+  .E .nav { inset-inline: 0; bottom: 0; height: 84px; padding-bottom: 20px; background: #fff; box-shadow: 0 -6px 24px rgba(30,60,120,.06); color: #9aa4b8; }
+  .E .nav a.on { color: #2f6bff; font-weight: 700; }
+  .E .fab { bottom: 98px; inset-inline-start: 18px; background: linear-gradient(135deg,#2f6bff,#18c3b5); color: #fff; border-radius: 50%; box-shadow: 0 10px 26px rgba(47,107,255,.35); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-today" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/><circle cx="12" cy="15" r="1.6"/></symbol>
+  <symbol id="i-tasks" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1.3 1.3L7 5M3.5 12l1.3 1.3L7 11M3.5 18l1.3 1.3L7 17"/></symbol>
+  <symbol id="i-sprint" viewBox="0 0 24 24"><rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="9.5" y="4" width="5" height="11" rx="1.5"/><rect x="16" y="4" width="5" height="7" rx="1.5"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 21c4 0 6.5-2.6 6.5-6.2 0-3.7-3-6.2-4.3-9.8-1.9 1.6-2.4 3.7-2.2 5.2-1.1-.6-1.9-1.8-2-3.2C7.4 9 5.5 11.6 5.5 14.8 5.5 18.4 8 21 12 21z"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24"><path d="M3.5 13.5l2.6-7.4A2 2 0 0 1 8 4.8h8a2 2 0 0 1 1.9 1.3l2.6 7.4V18a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><path d="M3.5 13.5H8l1.5 2.5h5l1.5-2.5h4.5"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.8l2.5 5.1 5.6.8-4 3.9 1 5.6-5.1-2.7-5 2.7 1-5.6-4.1-3.9 5.6-.8z"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+</svg>
+
+<header class="top">
+  <h1>Stay Focus: חמישה כיווני עיצוב</h1>
+  <p>כל הטלפונים מציגים את אותו מסך "היום" עם אותו תוכן: שעון ומזג אוויר, פסי התקדמות (שבוע בשנה, ספרינט, אתגר), 3 החשובים של היום, לו"ז לפי שעות, רצף האתגר ותיבת הדואר הנכנס. הכפתור הצף (+) הוא רישום מהיר לתיבת הדואר הנכנס. אפשר לגלול בתוך כל טלפון. תבחר כיוון אחד, ואפשר גם לשלב (למשל צבעים של אחד ומבנה של אחר).</p>
+</header>
+
+<main class="grid" id="grid"></main>
+
+<script>
+const ic = (id, cls = '') => `<svg class="ico ${cls}"><use href="#i-${id}"/></svg>`;
+const todo = (txt, tag, done) => `<div class="todo ${done ? 'done' : ''}"><span class="box">${done ? ic('check') : ''}</span><span class="txt">${txt}</span>${tag ? `<span class="tag">${tag}</span>` : ''}</div>`;
+const slot = (t, txt, note, cls = '') => `<div class="tl"><span class="t ltr">${t}</span><div class="slot ${cls}"><span>${txt}</span><small>${note}</small></div></div>`;
+const dots = (n, on) => `<div class="dots">${Array.from({ length: n }, (_, i) => `<i class="${i < on ? 'on' : ''}"></i>`).join('')}</div>`;
+const stat = (k, v, pct) => `<div class="stat"><div class="k">${k}</div><div class="v num">${v}</div><div class="bar"><i style="width:${pct}%"></i></div></div>`;
+
+function screen(key) {
+  const hero = key === 'C'
+    ? `<div class="hero">${ic('flame')}<div class="big num">12</div><div class="lbl">ימים ברצף באתגר · היום 6 מתוך 8 חוקים</div>${dots(7, 6)}</div>`
+    : '';
+  return `
+  <div class="status"><span>9:41</span><span>●●● ▮</span></div><div class="notch"></div>
+  <div class="scroll">
+    <div class="hdr">
+      <div class="row"><span class="date">יום רביעי · 1 באוקטובר</span><span class="wx">${ic('sun', 'sm')}<span class="num ltr">24°</span> בהיר</span></div>
+      <h1 class="hello">בוקר טוב, אלכס</h1>
+    </div>
+    ${hero}
+    <div class="stats">
+      ${stat('שבוע בשנה', '40/52', 76)}
+      ${stat('ספרינט', '62%', 62)}
+      ${stat('אתגר', 'יום 18', 20)}
+    </div>
+    <section class="card top3">
+      <h3><span>3 החשובים היום</span><small>1 מתוך 3</small></h3>
+      ${todo('לסיים את דף הנחיתה', 'עבודה', true)}
+      ${todo('להתקשר למוסך', 'בית')}
+      ${todo('אימון בית', 'גוף')}
+    </section>
+    <section class="card">
+      <h3><span>הלו"ז של היום</span><small>5 פריטים</small></h3>
+      ${slot('07:00', 'שגרת בוקר', '4/6 ✓', 'r')}
+      ${slot('10:00', 'עבודה על האתר', 'עכשיו', 'now')}
+      ${slot('13:00', 'להתקשר למוסך', '15 דק׳')}
+      ${slot('18:00', 'אימון בית', 'שעה')}
+      ${slot('21:00', 'שגרת ערב', '0/5', 'r')}
+    </section>
+    <div class="row2">
+      <section class="card ch">
+        <h3><span>אתגר</span>${ic('flame', 'sm')}</h3>
+        <div class="big num">12</div><div class="lbl">ימים ברצף · היום 6/8</div>
+        ${dots(7, 6)}
+      </section>
+      <section class="card inb">
+        <h3><span>תיבת דואר נכנס</span>${ic('inbox', 'sm')}</h3>
+        <div class="big num">4</div><div class="lbl">פריטים לסידור</div>
+      </section>
+    </div>
+  </div>
+  <div class="fab">${ic('plus')}</div>
+  <nav class="nav">
+    <a class="on">${ic('today')}היום</a>
+    <a>${ic('tasks')}משימות</a>
+    <a>${ic('sprint')}ספרינט</a>
+    <a>${ic('target')}פרויקטים</a>
+    <a>${ic('more')}עוד</a>
+  </nav>`;
+}
+
+const OPTIONS = [
+  { key: 'A', name: 'א. מיקוד לילי', sub: 'כהה ורגוע, כרטיסי זכוכית ונגיעות סגול-טורקיז. מרגיש כמו מצב ריכוז.', kit: ['#0a0c14', '#1a1e30', '#8b9cff', '#6ee7f9', '#eef0f6'],
+    notes: '<b>מתאים אם:</b> אתה עובד הרבה בערב, ורוצה משהו שקט שלא "צועק". יש גם גרסה בהירה.' },
+  { key: 'B', name: 'ב. נייר נקי', sub: 'הכי קרוב ל-Notion: לבן-שמנת, טקסט שחור, צבע כתום אחד בלבד (כמו האייקונים בתבנית שלך).', kit: ['#f7f6f3', '#ffffff', '#e7e5e0', '#e8590c', '#1f1e1c'],
+    notes: '<b>מתאים אם:</b> אתה אוהב את התחושה של Notion ורוצה מינימום הסחות. מצב כהה אפשרי.' },
+  { key: 'C', name: 'ג. בלתי ניתן לעצירה', sub: 'שחור וכתום-אש, כותרות עבות, רצף האתגר ענק בראש המסך. בהשראת תמונת ה-Unstoppable שלך.', kit: ['#0b0b0b', '#161616', '#ff3d1f', '#ff7a1a', '#ffb01f'],
+    notes: '<b>מתאים אם:</b> אתה רוצה שהאפליקציה תדחוף אותך. האתגר והרצף הם הדבר הראשון שרואים.' },
+  { key: 'D', name: 'ד. בנטו רך', sub: 'אריחים בצבעי פסטל (מנטה, לבנדר, אפרסק), פינות עגולות מאוד, ניווט צף בצורת גלולה.', kit: ['#f3f1ec', '#d7f0e4', '#e4e0ff', '#ffe1cf', '#22212a'],
+    notes: '<b>מתאים אם:</b> אתה רוצה משהו כיפי ושמח. כל אזור צבוע אחרת, קל לסרוק בעין.' },
+  { key: 'E', name: 'ה. זריחה', sub: 'בהיר ורענן, כותרת בגרדיאנט כחול-טורקיז, כרטיסים לבנים מרחפים, לו"ז עם פסי צבע.', kit: ['#f4f7fc', '#ffffff', '#2f6bff', '#18c3b5', '#172033'],
+    notes: '<b>מתאים אם:</b> אתה רוצה מראה של אפליקציה "מוכנה ל-App Store", נקי אבל עם צבע. יש גם גרסה כהה.' },
+];
+
+document.getElementById('grid').innerHTML = OPTIONS.map(o => `
+  <section class="option ${o.key}">
+    <h2>${o.name}</h2>
+    <p class="sub">${o.sub}</p>
+    <div class="phone"><div class="screen">${screen(o.key)}</div></div>
+    <div class="kit">${o.kit.map(c => `<span style="background:${c}" title="${c}"></span>`).join('')}</div>
+    <p class="notes">${o.notes}</p>
+  </section>`).join('');
+</script>
+</body>
+</html>
