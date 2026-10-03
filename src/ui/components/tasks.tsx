@@ -44,25 +44,46 @@ export function TaskRow({ task, projects, today, meta, end }: { task: Task; proj
   if (proj) bits.push(proj);
   if (task.attachmentIds.length) bits.push('📷');
   if (task.links.length) bits.push('🔗');
+  // SPEC 5.0: a dense row — #id, status icon, one-line title, small meta.
   return (
-    <div className={`todo ${task.status === 'done' ? 'done' : ''}`}>
-      <Box status={task.status} onClick={() => void toggleDone(task.id)} label={`סמן ${task.title}`} />
-      <button type="button" className="txt" onClick={() => go(`/task/${task.id}`)}>
-        {task.title || 'ללא שם'}
-        {isStuck(task) && <span title={`נדחתה ${task.postponeCount} פעמים`}> 🐢</span>}
-        {(meta ?? bits.length > 0) && <span className="sub">{meta ?? bits.join(' · ')}</span>}
+    <div className={`drow ${task.status}`}>
+      <span className="id num">#{task.seq}</span>
+      <StatusDot status={task.status} onClick={() => void toggleDone(task.id)} label={`סמן ${task.title}`} />
+      <button type="button" className="t" onClick={() => go(`/task/${task.id}`)}>
+        <span className="tt">{task.title || 'ללא שם'}</span>
+        {isStuck(task) && <span className="badge" title={`נדחתה ${task.postponeCount} פעמים`}>🐢{task.postponeCount}</span>}
         {task.waitingPersonId && isOpen(task) && <WaitingBadge personId={task.waitingPersonId} />}
+        {(meta ?? bits.length > 0) && <span className="m">{meta ?? bits.join(' · ')}</span>}
       </button>
       {end}
     </div>
   );
 }
 
-/** R-WAI: "⏳ ממתין ל-<שם>" */
+/** R-WAI: "⏳ <שם>" */
 function WaitingBadge({ personId }: { personId: string }) {
   const p = useLive(() => Q.person(personId), [personId]);
   if (!p) return null;
-  return <span className="sub" style={{ color: 'var(--blue-text)' }}>⏳ ממתין ל{p.name}</span>;
+  return <span className="badge blue">⏳ {p.name}</span>;
+}
+
+/** Small status icon for dense rows: empty, half (doing), check (done), recycle (archived). Tap toggles done. */
+export function StatusDot({ status, onClick, label }: { status: Task['status']; onClick: () => void; label: string }) {
+  return (
+    <button
+      type="button"
+      className={`sdot ${status}`}
+      aria-label={label}
+      aria-pressed={status === 'done'}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+    >
+      {status === 'done' && <Icon name="check" />}
+      {status === 'archived' && '♲'}
+    </button>
+  );
 }
 
 // ---------------------------------------------------------------------------

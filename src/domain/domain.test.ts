@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import * as D from './dates';
-import { activeBlockers, completion, isInbox, quadrantOf, withStatus } from './tasks';
+import { activeBlockers, completion, isInbox, quadrantOf, taskTabsOrder, withStatus } from './tasks';
 import { missingSprintWeeks, sprintName, sprintNeedingReview, sprintRange, sprintStatus } from './sprints';
 import { describeRule, occursOn } from './recurring';
 import { activeRoutineWindow, routineCard, routineDayStats } from './routine';
@@ -61,6 +61,10 @@ describe('tasks', () => {
     const a = { id: 'a', status: 'active', blockedByIds: ['b', 'c'] } as Project;
     const all = [a, { id: 'b', status: 'done', blockedByIds: [] }, { id: 'c', status: 'planning', blockedByIds: [] }] as Project[];
     expect(activeBlockers(a, all).map((p) => p.id)).toEqual(['c']);
+  });
+  it('R-TAB-1: inbox first only when it has items; calendar before the end', () => {
+    expect(taskTabsOrder(3)).toEqual(['inbox', 'projects', 'matrix', 'waiting', 'someday', 'done', 'calendar']);
+    expect(taskTabsOrder(0)).toEqual(['projects', 'matrix', 'waiting', 'someday', 'done', 'calendar', 'inbox']);
   });
   it('matrix quadrants', () => {
     expect(quadrantOf({ urgent: true, important: true })).toBe('do');

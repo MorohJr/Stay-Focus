@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { addDays, formatLong, formatRelative, formatShort, HE_DAYS_SHORT, HE_MONTHS, parseISODate, toISODate, weekStart, localDate } from '../../domain/dates';
 import type { Task } from '../../domain/schemas';
 import { sprintStatus } from '../../domain/sprints';
-import { compareForDay, isActiveOpen, isInbox, isOpen, quadrantOf, QUADRANT_LABEL, type Quadrant } from '../../domain/tasks';
+import { compareForDay, isActiveOpen, isInbox, isOpen, quadrantOf, QUADRANT_LABEL, taskTabsOrder, type Quadrant, type TaskTab } from '../../domain/tasks';
+import { overdue } from '../../domain/today';
 import { occurrencesBetween } from '../../services/planning';
 import { Q } from '../../services/queries';
 import { deleteTask, restoreTasks, setSomeday, setWaiting, updateTask } from '../../services/tasks';
@@ -13,32 +14,40 @@ import { ProjectIcon } from '../components/ProjectIcon';
 import { useClock, useLive } from '../hooks';
 import { go, replace } from '../router';
 
-type Tab = 'inbox' | 'calendar' | 'projects' | 'matrix' | 'waiting' | 'someday' | 'done';
+type Tab = TaskTab;
 
-export function TasksScreen({ tab = 'inbox' }: { tab?: string }) {
-  const t = (['inbox', 'calendar', 'projects', 'matrix', 'waiting', 'someday', 'done'].includes(tab) ? tab : 'inbox') as Tab;
-  const tasks = useLive(Q.tasks) ?? [];
+const TAB_LABEL: Record<Tab, string> = { inbox: 'דואר נכנס', projects: 'לפי פרויקט', matrix: 'מטריצה', waiting: 'ממתין', someday: 'אולי פעם', done: 'הושלמו', calendar: 'יומן' };
+
+export function TasksScreen({ tab }: { tab?: string }) {
+  const all = useLive(Q.tasks);
+  const { today } = useClock();
+  const tasks = all ?? [];
   const inboxCount = tasks.filter(isInbox).length;
+  const order = taskTabsOrder(inboxCount);
+  // R-TAB-1: opening "Tasks" lands on the first tab (the inbox only when it has something).
+  const t = (tab && (order as string[]).includes(tab) ? tab : order[0]) as Tab;
+  const counts: Partial<Record<Tab, number>> = {
+    inbox: inboxCount,
+    waiting: tasks.filter((x) => isActiveOpen(x) && x.waitingPersonId).length,
+    someday: tasks.filter((x) => isOpen(x) && x.someday).length,
+  };
+  const open = tasks.filter((x) => isActiveOpen(x) && !x.parentId);
   return (
     <div className="page">
-      <TopBar title="משימות">
+      <TopBar
+        title="משימות"
+        stats={[
+          { v: open.length, k: 'פתוחות' },
+          { v: open.filter((x) => x.dueDate === today).length, k: 'להיום' },
+          { v: overdue(tasks, today).length, k: 'באיחור' },
+          { v: inboxCount, k: 'בדואר נכנס' },
+        ]}
+      >
         <button type="button" className="iconbtn" aria-label="חיפוש" onClick={() => go('/search')}>
           <Icon name="search" />
         </button>
       </TopBar>
-      <Tabs
-        value={t}
-        onChange={(v) => replace(`/tasks/${v}`)}
-        items={[
-          { id: 'inbox', label: 'דואר נכנס', count: inboxCount },
-          { id: 'calendar', label: 'יומן' },
-          { id: 'projects', label: 'לפי פרויקט' },
-          { id: 'matrix', label: 'מטריצה' },
-          { id: 'waiting', label: 'ממתין', count: tasks.filter((x) => isActiveOpen(x) && x.waitingPersonId).length },
-          { id: 'someday', label: 'אולי פעם', count: tasks.filter((x) => isOpen(x) && x.someday).length },
-          { id: 'done', label: 'הושלמו' },
-        ]}
-      />
+      {all && <Tabs value={t} onChange={(v) => replace(`/tasks/${v}`)} items={order.map((id) => ({ id, label: TAB_LABEL[id], count: counts[id] }))} />}
       {t === 'inbox' && <InboxTab tasks={tasks} />}
       {t === 'calendar' && <CalendarTab tasks={tasks} />}
       {t === 'projects' && <ByProjectTab tasks={tasks} />}
@@ -77,7 +86,7 @@ export function InboxTab({ tasks }: { tasks: Task[] }) {
         {list.map((t) => (
           <div key={t.id}>
             <TaskRow task={t} today={today} meta={`נרשם ${formatRelative(localDate(t.createdAt), today)}`} />
-            <div className="chips tight" style={{ margin: '0 32px 10px 0' }}>
+            <div className="chips tight scroll" style={{ margin: '0 54px 8px 0', paddingBottom: 2 }}>
               <label className="chip out" style={{ position: 'relative' }}>
                 <Icon name="cal" size="xs" /> תאריך
                 <input type="date" aria-label="תאריך" style={{ position: 'absolute', inset: 0, opacity: 0 }} onChange={(e) => e.target.value && void updateTask(t.id, { dueDate: e.target.value })} />

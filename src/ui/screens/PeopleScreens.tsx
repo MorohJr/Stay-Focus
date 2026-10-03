@@ -27,7 +27,15 @@ export function PeopleScreen() {
   const list = [...people].sort((a, b) => a.name.localeCompare(b.name, 'he'));
   return (
     <div className="page">
-      <TopBar title="אנשים" backTo="/more" />
+      <TopBar
+        title="אנשים"
+        backTo="/more"
+        stats={[
+          { v: people.length, k: 'אנשים' },
+          { v: agenda.filter((a) => !a.doneAt).length, k: 'נושאים פתוחים' },
+          { v: tasks.filter((t) => t.waitingPersonId && isOpen(t)).length, k: 'ממתינות' },
+        ]}
+      />
       <p className="muted small" style={{ margin: '0 4px 10px' }}>
         לכל אדם: על מה לדבר איתו בפעם הבאה, ומה ממתין לו.
       </p>
@@ -92,7 +100,19 @@ export function PersonScreen({ id }: { id: string }) {
   const waiting = tasks.filter((t) => t.waitingPersonId === p.id && isOpen(t));
   return (
     <div className="page sub">
-      <TopBar title="" backTo="/people">
+      <TopBar
+        backTo="/people"
+        lead={
+          <button type="button" style={{ fontSize: 26, width: 50, height: 50, borderRadius: 16, background: 'rgba(255,255,255,.12)', display: 'grid', placeItems: 'center', flex: 'none' }} onClick={() => setEmojiOpen(true)} aria-label="אימוג'י">
+            {p.emoji}
+          </button>
+        }
+        title={<DraftInput className="title-input" value={p.name} onSave={(v) => v.trim() && void updatePerson(p.id, { name: v.trim() })} ariaLabel="שם" />}
+        stats={[
+          { v: agenda.filter((a) => !a.doneAt).length, k: 'לדבר על' },
+          { v: waiting.length, k: 'ממתין לו' },
+        ]}
+      >
         <button
           type="button"
           className="iconbtn"
@@ -106,12 +126,6 @@ export function PersonScreen({ id }: { id: string }) {
           <Icon name="trash" />
         </button>
       </TopBar>
-      <div className="row">
-        <button type="button" className="ic" style={{ fontSize: 26, width: 50, height: 50, borderRadius: 16, background: 'var(--surface2)', display: 'grid', placeItems: 'center', flex: 'none' }} onClick={() => setEmojiOpen(true)} aria-label="אימוג'י">
-          {p.emoji}
-        </button>
-        <DraftInput className="title-input" value={p.name} onSave={(v) => v.trim() && void updatePerson(p.id, { name: v.trim() })} />
-      </div>
 
       <div className="section-title">
         <span>לדבר על זה בפעם הבאה</span>
@@ -272,7 +286,7 @@ function CleanupRun({ ids: initial, tasks, today }: { ids: string[]; tasks: Task
   const age = t ? diffDays(localDate(t.keptAt ?? t.createdAt), today) : 0;
   return (
     <div className="page sub">
-      <TopBar title="ניקוי משימות" backTo="/more" />
+      <TopBar title="ניקוי משימות" sub="להשאיר, לאולי פעם, לארכיון או למחוק" backTo="/more" stats={[{ v: ids.length, k: 'לסידור' }, { v: Math.min(i, ids.length), k: 'טופלו' }]} />
       {!ids.length ? (
         <Empty icon="✨">
           אין משימות ישנות לסדר.

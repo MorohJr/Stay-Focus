@@ -36,7 +36,7 @@ export function MoreScreen() {
   );
   return (
     <div className="page">
-      <TopBar title="עוד" />
+      <TopBar title="עוד" stats={[{ v: counts.notes, k: 'פתקים' }, { v: counts.people, k: 'אנשים' }, { v: counts.challenges, k: 'אתגרים' }]} />
       <section className="card">
         {row('/notes', 'note', 'פתקים', counts.notes ? String(counts.notes) : undefined, true)}
         {row('/people', 'users', 'אנשים', counts.people ? String(counts.people) : undefined, true)}
@@ -173,7 +173,11 @@ export function BackupScreen() {
 
   return (
     <div className="page sub">
-      <TopBar title="גיבוי וסנכרון" backTo="/more" />
+      <TopBar
+        title="גיבוי וסנכרון"
+        backTo="/more"
+        stats={[{ v: settings?.lastBackupAt ? (days ? `לפני ${days} ימים` : 'היום') : 'אף פעם', k: 'גיבוי אחרון' }]}
+      />
       {demo && <div className="banner warn">אתה במצב הדגמה. גיבוי ושחזור חסומים עד שתחזיר את הנתונים שלך.</div>}
       <section className="card">
         <h4>
@@ -257,7 +261,7 @@ export function WeatherScreen() {
   const cache = settings?.weatherCache;
   return (
     <div className="page sub">
-      <TopBar title="מזג אוויר" backTo="/more" />
+      <TopBar title="מזג אוויר" sub={settings?.weather?.placeName ?? 'לא נבחר מיקום'} backTo="/more" stats={cache ? [{ v: <span className="ltr">{cache.tempC}°</span>, k: describeWeather(cache.code).text }] : undefined} />
       {settings?.weather && (
         <section className="card">
           <h4>

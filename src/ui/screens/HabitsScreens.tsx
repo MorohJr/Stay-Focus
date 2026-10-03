@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { challengeDay, challengeLength, challengePhase, dayMark, dayStats, ruleValue, streak } from '../../domain/challenge';
 import { addDays, formatDMY, HE_DAYS } from '../../domain/dates';
-import { describeRule } from '../../domain/recurring';
+import { describeRule, occursOn } from '../../domain/recurring';
 import type { RecurrenceRule, Recurring, RoutineKind, RoutineSettings } from '../../domain/schemas';
 import { ROUTINE_LABEL } from '../../domain/routine';
 import { getSettings, updateSettings } from '../../services/entity';
@@ -25,7 +25,15 @@ export function ChallengesScreen() {
   const phaseLabel = { active: 'פעיל', future: 'עתידי', ended: 'הסתיים' };
   return (
     <div className="page">
-      <TopBar title="אתגרים" backTo="/more">
+      <TopBar
+        title="אתגרים"
+        backTo="/more"
+        stats={[
+          { v: list.filter((c) => challengePhase(c, today) === 'active').length, k: 'פעילים' },
+          { v: list.filter((c) => challengePhase(c, today) === 'ended').length, k: 'הסתיימו' },
+          ...list.filter((c) => challengePhase(c, today) === 'active').slice(0, 1).map((c) => ({ v: `🔥 ${streak(c, logs, today)}`, k: 'רצף נוכחי' })),
+        ]}
+      >
         <button type="button" className="iconbtn" aria-label="אתגר חדש" onClick={() => go('/challenge/new')}>
           <Icon name="plus" />
         </button>
@@ -153,8 +161,18 @@ function ChallengeDetail({ id, today }: { id: string; today: string }) {
   const s = dayStats(c, logs, markDate);
   return (
     <div className="page sub">
-      <TopBar title="" backTo="/challenges">
-        <button type="button" className="iconbtn" aria-label="ערוך" onClick={() => setEditing(!editing)} style={{ color: editing ? 'var(--blue)' : undefined }}>
+      <TopBar
+        backTo="/challenges"
+        title={<DraftInput className="title-input" value={c.name} onSave={(v) => void updateChallenge(c.id, { name: v })} ariaLabel="שם האתגר" />}
+        sub={`${formatDMY(c.startDate)} עד ${formatDMY(c.endDate)} · ${c.rules.length} חוקים`}
+        stats={[
+          { v: <span className="ltr">{ph === 'future' ? 0 : Math.min(challengeDay(c, today), len)}/{len}</span>, k: 'יום' },
+          { v: `🔥 ${streak(c, logs, today)}`, k: 'רצף' },
+          { v: `${past.length ? Math.round((clean / past.length) * 100) : 0}%`, k: 'ימים נקיים' },
+          { v: <span className="ltr">{s.kept}/{s.total}</span>, k: markDate === today ? 'היום' : 'ביום האחרון' },
+        ]}
+      >
+        <button type="button" className="iconbtn" aria-label="ערוך" onClick={() => setEditing(!editing)} style={{ background: editing ? 'var(--blue)' : undefined }}>
           <Icon name="edit" />
         </button>
         <button
@@ -170,23 +188,6 @@ function ChallengeDetail({ id, today }: { id: string; today: string }) {
           <Icon name="trash" />
         </button>
       </TopBar>
-      <DraftInput className="title-input" value={c.name} onSave={(v) => void updateChallenge(c.id, { name: v })} />
-      <div className="stats3" style={{ margin: '12px 0' }}>
-        <div className="stat">
-          <div className="k">יום</div>
-          <div className="v">
-            {ph === 'future' ? 0 : Math.min(challengeDay(c, today), len)}/{len}
-          </div>
-        </div>
-        <div className="stat">
-          <div className="k">רצף</div>
-          <div className="v">🔥 {streak(c, logs, today)}</div>
-        </div>
-        <div className="stat">
-          <div className="k">ימים נקיים</div>
-          <div className="v">{past.length ? Math.round((clean / past.length) * 100) : 0}%</div>
-        </div>
-      </div>
 
       {ph !== 'future' && (
         <>
@@ -287,7 +288,15 @@ export function RoutinesScreen() {
   );
   return (
     <div className="page sub">
-      <TopBar title="שגרות" backTo="/more" />
+      <TopBar
+        title="שגרות"
+        sub={`בוקר ${r.morningStart}–${r.morningEnd} · ערב ${r.eveningStart}–${r.eveningEnd}`}
+        backTo="/more"
+        stats={[
+          { v: items.filter((i) => i.routine === 'morning' && i.active).length, k: 'בבוקר' },
+          { v: items.filter((i) => i.routine === 'evening' && i.active).length, k: 'בערב' },
+        ]}
+      />
       <section className="card">
         <h4>
           <span className="t">
@@ -366,9 +375,17 @@ function ItemsCard({ kind, items }: { kind: RoutineKind; items: { id: string; ti
 
 export function RecurringListScreen() {
   const list = useLive(Q.recurring) ?? [];
+  const { today } = useClock();
   return (
     <div className="page">
-      <TopBar title="משימות חוזרות" backTo="/more">
+      <TopBar
+        title="משימות חוזרות"
+        backTo="/more"
+        stats={[
+          { v: list.filter((r) => r.active).length, k: 'פעילות' },
+          { v: list.filter((r) => occursOn(r, today)).length, k: 'נופלות היום' },
+        ]}
+      >
         <button type="button" className="iconbtn" aria-label="חדשה" onClick={() => go('/recurring/new')}>
           <Icon name="plus" />
         </button>

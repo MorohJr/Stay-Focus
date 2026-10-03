@@ -345,3 +345,77 @@ dialog.sheet::backdrop { background: rgba(0,0,0,.32); }
 .gt, .hero .ttl, .todo .txt, .mrow .txt, .kc .grow > span:first-child, .qt, .pcard .name, .listrow .grow, .title-input, .late .lrow > button, .nextcard b { unicode-bidi: plaintext; text-align: right; }
 .chips.tight { gap: 5px; }
 .chips.tight .chip { font-size: 12px; padding: 5px 9px; }
+
+/* =========================================================================
+   SPEC 5.0 — inner screens: black header (style 8) + dense rows (style 4).
+   Today does not use these classes, so it stays exactly as approved.
+   ========================================================================= */
+.shead { position: relative; overflow: hidden; background: #111 center / cover no-repeat; color: #fff; margin: calc(-1 * (var(--safe-t) + 14px)) -15px 6px; padding: calc(var(--safe-t) + 10px) 16px 38px; }
+.shead::before { content: ''; position: absolute; inset-inline-end: -46px; top: -46px; width: 170px; height: 170px; border-radius: 50%; background: var(--blue); opacity: .45; filter: blur(4px); pointer-events: none; }
+.shead.cover::before { display: none; }
+.shead::after { content: ''; position: absolute; inset-inline: 0; bottom: -1px; height: 22px; background: var(--bg); border-radius: 22px 22px 0 0; }
+.shead > * { position: relative; z-index: 1; }
+.shead-bar { display: flex; align-items: center; gap: 6px; min-height: 40px; margin-bottom: 4px; }
+.shead .hbtn, .shead .iconbtn { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; color: #fff; background: rgba(255,255,255,.1); }
+.shead .hbtn:active, .shead .iconbtn:active { background: rgba(255,255,255,.22); }
+.shead .minibtn { background: rgba(255,255,255,.14); color: #fff; }
+.shead .minibtn.dark, .shead .minibtn.p { background: #fff; color: #111; }
+.shead-title { display: flex; align-items: center; gap: 12px; }
+.shead h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -.3px; line-height: 1.15; overflow-wrap: anywhere; }
+.shead-sub { font-size: 12.5px; color: #b9b9b4; margin-top: 3px; }
+.shead-stats { display: flex; gap: 20px; margin-top: 14px; font-size: 11px; color: #b9b9b4; flex-wrap: wrap; }
+.shead-stats b { display: block; color: #fff; font-family: var(--font-num); font-size: 19px; font-weight: 700; line-height: 1.2; }
+.shead .title-input { color: #fff; caret-color: #fff; font-size: 24px; padding: 0; }
+.shead .title-input::placeholder { color: #8a8a85; }
+.shead .linkbtn { color: #c9cff7; }
+.shead .tag { background: rgba(255,255,255,.14); color: #fff; }
+
+/* dense rows */
+.drow { display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 6px 2px; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+.drow:last-child { border-bottom: 0; }
+.drow .id { font-size: 10.5px; color: #b0b0aa; width: 30px; flex: none; text-align: start; }
+.drow .t { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; text-align: start; }
+.drow .tt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; unicode-bidi: plaintext; text-align: right; flex: 0 1 auto; min-width: 0; }
+.drow .m { margin-inline-start: auto; font-size: 10.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 42%; flex: none; }
+.drow .badge { font-size: 10px; padding: 1px 6px; border-radius: 99px; background: var(--warn-soft); color: var(--warn); white-space: nowrap; flex: none; }
+.drow .badge.blue { background: var(--blue-soft); color: var(--blue-text); }
+.drow.done .tt, .drow.archived .tt { text-decoration: line-through; opacity: .45; }
+.drow .minibtn { padding: 4px 8px; font-size: 11px; }
+.sdot { width: 16px; height: 16px; flex: none; border-radius: 50%; border: 1.7px solid var(--track2); display: grid; place-items: center; font-size: 10px; color: var(--muted); }
+.sdot.doing { border-color: var(--blue); background: linear-gradient(90deg, transparent 50%, var(--blue) 50%); }
+.sdot.done { background: var(--ink); border-color: var(--ink); color: #fff; }
+.sdot.done .ico { width: 10px; height: 10px; stroke-width: 3.2; }
+.sdot.archived { border-style: dashed; }
+
+/* inner screens: flatter, denser building blocks (App wraps them in .inner) */
+.inner .card { border: 0; border-radius: 0; padding: 0; margin-bottom: 6px; background: transparent; }
+.inner .card.flat, .inner .card.boxed { background: var(--surface2); border-radius: 14px; padding: 10px 12px; }
+.inner .card h4 { font-size: 12.5px; margin: 6px 0 4px; }
+.inner .section-title { font-size: 11px; font-weight: 700; letter-spacing: .3px; color: var(--muted); margin: 18px 2px 4px; padding-bottom: 4px; border-bottom: 2px solid var(--ink); }
+.inner .section-title button { font-weight: 700; }
+.inner .listrow { padding: 9px 2px; font-size: 14px; border-bottom: 1px solid var(--line); }
+.inner .listrow + .listrow { border-top: 0; }
+.inner .listrow .ic { width: 30px; height: 30px; border-radius: 9px; font-size: 15px; }
+.inner .field { min-height: 40px; font-size: 14px; border-bottom: 1px solid var(--line); }
+.inner .field + .field { border-top: 0; }
+.inner .tabs button { padding: 6px 11px; border-radius: 8px; font-size: 12.5px; }
+.inner .tabs { margin-bottom: 10px; }
+.inner .todo { font-size: 13.5px; padding: 7px 0; }
+.inner .chip { font-size: 12px; padding: 5px 10px; }
+.inner .textarea { font-size: 15px; }
+.inner .kanban .col { border-radius: 12px; }
+.inner .kc { padding: 8px; font-size: 13px; border-radius: 10px; }
+.inner .addrow .input { padding: 8px 11px; font-size: 14px; }
+.inner .empty { padding: 22px 12px; }
+/* project rows (style 4) */
+.prow { display: flex; align-items: center; gap: 10px; padding: 9px 2px; border-bottom: 1px solid var(--line); width: 100%; text-align: start; }
+.prow .grow { min-width: 0; }
+.prow .name { font-weight: 600; font-size: 14px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; unicode-bidi: plaintext; text-align: right; }
+.prow .m { font-size: 10.5px; color: var(--muted); display: flex; gap: 6px; align-items: center; margin-top: 2px; flex-wrap: wrap; }
+.prow .pct { font-family: var(--font-num); font-weight: 700; font-size: 13px; width: 40px; text-align: left; flex: none; }
+.prow .minibar { width: 54px; height: 4px; border-radius: 4px; background: var(--track); overflow: hidden; flex: none; }
+.prow .minibar i { display: block; height: 100%; background: var(--blue); }
+.chips.scroll { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+.chips.scroll::-webkit-scrollbar { display: none; }
+.chips.scroll .chip { flex: none; }
+.inner .chips.tight .chip { padding: 4px 9px; font-size: 11.5px; }

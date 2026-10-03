@@ -29,7 +29,16 @@ export function NotesScreen() {
     .sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.updatedAt.localeCompare(a.updatedAt));
   return (
     <div className="page">
-      <TopBar title="פתקים" backTo="/more">
+      <TopBar
+        title="פתקים"
+        backTo="/more"
+        stats={[
+          { v: notes.filter((x) => x.title.trim() || x.body.trim()).length, k: 'פתקים' },
+          { v: notes.filter((x) => x.kinds.includes('idea')).length, k: 'רעיונות' },
+          { v: notes.filter((x) => x.kinds.includes('meeting')).length, k: 'פגישות' },
+          { v: notes.filter((x) => x.pinned).length, k: 'נעוצים' },
+        ]}
+      >
         <button type="button" className="iconbtn" aria-label="פתק חדש" onClick={() => go('/note/new')}>
           <Icon name="plus" />
         </button>
@@ -100,6 +109,7 @@ export function NewNoteScreen({ preset }: { preset?: string }) {
 
 export function NoteScreen({ id }: { id: string }) {
   const n = useLive(() => Q.note(id), [id]);
+  const { today } = useClock();
   const projects = useLive(Q.projects) ?? [];
   const [pick, setPick] = useState(false);
   if (n === undefined) return <div className="page sub" />;
@@ -115,8 +125,12 @@ export function NoteScreen({ id }: { id: string }) {
   const linked = projects.filter((p) => n.projectIds.includes(p.id));
   return (
     <div className="page sub">
-      <TopBar title="" backTo="/notes">
-        <button type="button" className="iconbtn" aria-label={n.pinned ? 'בטל נעיצה' : 'נעץ'} onClick={() => set({ pinned: !n.pinned })} style={{ color: n.pinned ? 'var(--blue)' : undefined }}>
+      <TopBar
+        backTo="/notes"
+        title={<DraftInput className="title-input" value={n.title} onSave={(v) => set({ title: v })} placeholder="כותרת" autoFocus={!n.title && !n.body} ariaLabel="כותרת" />}
+        sub={`עודכן ${formatRelative(localDate(n.updatedAt), today)}${n.pinned ? ' · 📌 נעוץ' : ''}`}
+      >
+        <button type="button" className="iconbtn" aria-label={n.pinned ? 'בטל נעיצה' : 'נעץ'} onClick={() => set({ pinned: !n.pinned })} style={{ background: n.pinned ? 'var(--blue)' : undefined }}>
           <Icon name="pin" />
         </button>
         <button
@@ -132,7 +146,6 @@ export function NoteScreen({ id }: { id: string }) {
           <Icon name="trash" />
         </button>
       </TopBar>
-      <DraftInput className="title-input" value={n.title} onSave={(v) => set({ title: v })} placeholder="כותרת" autoFocus={!n.title && !n.body} />
       <div className="chips" style={{ margin: '10px 0 12px' }}>
         {KINDS.map((k) => (
           <button key={k} type="button" className={`chip ${n.kinds.includes(k) ? 'on' : 'out'}`} onClick={() => set({ kinds: n.kinds.includes(k) ? n.kinds.filter((x) => x !== k) : [...n.kinds, k] })}>

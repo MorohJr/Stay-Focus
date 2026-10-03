@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { formatDMY, localDate } from '../../domain/dates';
+import { formatDMY, formatRelative, localDate } from '../../domain/dates';
 import { describeRule } from '../../domain/recurring';
 import type { Priority, Task, TaskStatus } from '../../domain/schemas';
 import { sprintStatus, SPRINT_STATUS_LABEL } from '../../domain/sprints';
@@ -60,18 +60,33 @@ export function TaskScreen({ id }: { id: string }) {
 
   return (
     <div className="page sub">
-      <TopBar title={<span className="muted num" style={{ fontSize: 15, fontWeight: 600 }}>משימה #{task.seq}</span>} backTo="/tasks">
+      <TopBar
+        backTo="/tasks"
+        title={<DraftInput className="title-input" value={task.title} onSave={(v) => set({ title: v })} placeholder="שם המשימה" ariaLabel="שם המשימה" />}
+        sub={
+          <>
+            <span className="num">#{task.seq}</span> · {STATUS_EMOJI[task.status]} {STATUS_LABEL[task.status]}
+            {parent && (
+              <>
+                {' · '}
+                <button type="button" className="linkbtn" onClick={() => go(`/task/${parent.id}`)}>
+                  תת-משימה של {parent.title}
+                </button>
+              </>
+            )}
+          </>
+        }
+        stats={[
+          { v: task.dueDate ? formatRelative(task.dueDate, today) : '—', k: 'תאריך' },
+          { v: task.startTime ? <span className="ltr">{task.startTime}</span> : '—', k: 'שעה' },
+          { v: subs.length ? <span className="ltr">{subs.filter((x) => x.status === 'done').length}/{subs.length}</span> : '—', k: 'תת-משימות' },
+          ...(task.postponeCount ? [{ v: task.postponeCount, k: 'דחיות' }] : []),
+        ]}
+      >
         <button type="button" className="iconbtn" aria-label="מחק משימה" onClick={() => void remove()}>
           <Icon name="trash" />
         </button>
       </TopBar>
-
-      {parent && (
-        <button type="button" className="linkbtn" style={{ marginBottom: 6 }} onClick={() => go(`/task/${parent.id}`)}>
-          <Icon name="chevR" size="xs" /> תת-משימה של: {parent.title}
-        </button>
-      )}
-      <DraftInput className="title-input" value={task.title} onSave={(v) => set({ title: v })} placeholder="שם המשימה" ariaLabel="שם המשימה" />
 
       {isStuck(task) && (
         <section className="card" style={{ background: 'var(--warn-soft)', border: 0, marginTop: 10 }}>
@@ -317,7 +332,7 @@ export function NewTaskScreen({ preset }: { preset?: string }) {
   };
   return (
     <div className="page sub">
-      <TopBar title={`משימה חדשה ${label}`} backTo="/" />
+      <TopBar title="משימה חדשה" sub={label} backTo="/" />
       <form
         onSubmit={(e) => {
           e.preventDefault();

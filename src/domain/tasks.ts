@@ -19,6 +19,14 @@ export function isInbox(t: Task): boolean {
   return isActiveOpen(t) && !t.dueDate && t.projectIds.length === 0 && !t.sprintId && !t.parentId;
 }
 
+export type TaskTab = 'inbox' | 'projects' | 'matrix' | 'waiting' | 'someday' | 'done' | 'calendar';
+
+/** R-TAB-1: inbox first when it has items, last when empty; the calendar always just before the end. */
+export function taskTabsOrder(inboxCount: number): TaskTab[] {
+  const middle: TaskTab[] = ['projects', 'matrix', 'waiting', 'someday', 'done', 'calendar'];
+  return inboxCount > 0 ? ['inbox', ...middle] : [...middle, 'inbox'];
+}
+
 /** R-PRC: postponed 3 times or more. */
 export const STUCK_AT = 3;
 export function isStuck(t: Pick<Task, 'postponeCount' | 'status'>): boolean {

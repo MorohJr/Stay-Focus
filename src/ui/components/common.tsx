@@ -91,17 +91,45 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 // Small building blocks
 // ---------------------------------------------------------------------------
 
-export function TopBar({ title, backTo, children }: { title: ReactNode; backTo?: string | true; children?: ReactNode }) {
+export interface HeadStat {
+  v: ReactNode;
+  k: string;
+}
+
+/**
+ * SPEC 5.0: the black header of every inner screen — back, actions, a big title, the screen's key
+ * numbers, and white content rising over it. `cover` turns the block into the project's cover image.
+ */
+export function TopBar({ title, backTo, children, stats, sub, lead, cover }: { title: ReactNode; backTo?: string | true; children?: ReactNode; stats?: HeadStat[]; sub?: ReactNode; lead?: ReactNode; cover?: string }) {
   return (
-    <div className="topbar">
-      {backTo && (
-        <button type="button" className="backbtn" onClick={() => back(typeof backTo === 'string' ? backTo : '/')} aria-label="חזרה">
-          <Icon name="chevR" />
-        </button>
+    <header className={`shead ${cover ? 'cover' : ''}`} style={cover ? { backgroundImage: `linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.78)), url(${cover})` } : undefined}>
+      <div className="shead-bar">
+        {backTo && (
+          <button type="button" className="hbtn" onClick={() => back(typeof backTo === 'string' ? backTo : '/')} aria-label="חזרה">
+            <Icon name="chevR" />
+          </button>
+        )}
+        <span className="grow" />
+        {children}
+      </div>
+      <div className="shead-title">
+        {lead}
+        <div className="grow" style={{ minWidth: 0 }}>
+          <h1>{title}</h1>
+          {sub && <div className="shead-sub">{sub}</div>}
+        </div>
+      </div>
+      {stats && stats.length > 0 && (
+        <div className="shead-stats">
+          {stats.map((s, i) => (
+            <span key={i}>
+              <b>{s.v}</b>
+              {s.k}
+            </span>
+          ))}
+        </div>
       )}
-      <h1 className="ellipsis">{title}</h1>
-      {children}
-    </div>
+    </header>
   );
 }
 

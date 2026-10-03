@@ -124,7 +124,7 @@ export function App() {
       <div className="app">
         <UpdateBanner />
         <DemoBanner />
-        {screenFor(route)}
+        <div className={top === '' ? '' : 'inner'}>{screenFor(route)}</div>
         {main && (
           <>
             <button type="button" className="fab" aria-label="רישום מהיר" onClick={() => setCapture(true)}>

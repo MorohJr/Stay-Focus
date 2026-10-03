@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { formatDMY, localDate } from '../../domain/dates';
+import { formatDMY, formatShort, localDate } from '../../domain/dates';
 import { focusGoal, goalProgress, projectCompletion } from '../../domain/goals';
 import type { Area, Goal, Priority, Project, ProjectStatus, Task } from '../../domain/schemas';
 import { activeBlockers, compareForDay, isOpen, PRIORITY_LABEL } from '../../domain/tasks';
@@ -10,7 +10,7 @@ import { addMilestone, deleteMilestone, moveMilestone, toggleMilestone, updateMi
 import { isMilestoneLate, milestoneStats, nextMilestone } from '../../domain/review';
 import { removeProjectImage, setProjectImage } from '../../services/misc';
 import { shrinkImage } from '../../services/platform';
-import { ProjectCover, ProjectIcon } from '../components/ProjectIcon';
+import { ProjectCover, ProjectIcon, useBlobUrl } from '../components/ProjectIcon';
 import { Bar, confirmAction, Empty, Seg, Sheet, Tabs, TopBar } from '../components/common';
 import { DraftInput, DraftTextarea } from '../components/edit';
 import { Icon } from '../components/Icon';
@@ -31,7 +31,15 @@ export function ProjectsScreen({ tab = 'active' }: { tab?: string }) {
   const count = (s: ProjectStatus[]) => projects.filter((p) => s.includes(p.status)).length;
   return (
     <div className="page">
-      <TopBar title="פרויקטים">
+      <TopBar
+        title="פרויקטים"
+        stats={[
+          { v: count(['active']), k: 'בעבודה' },
+          { v: count(['planning']), k: 'בתכנון' },
+          { v: goals.filter((g) => g.status === 'active').length, k: 'מטרות' },
+          { v: count(['done']), k: 'הושלמו' },
+        ]}
+      >
         <button type="button" className="iconbtn" aria-label="חדש" onClick={() => go(t === 'goals' ? '/goal/new' : '/project/new')}>
           <Icon name="plus" />
         </button>
@@ -97,40 +105,36 @@ function ProjectCard({ p, all, tasks }: { p: Project; all: Project[]; tasks: Tas
   const nextMs = nextMilestone(ms);
   const c = projectCompletion(p, tasks);
   const blockers = activeBlockers(p, all);
+  // SPEC 5.0: a dense row; the cover (R-PRJ-3) is a thin strip above it.
   return (
-    <button type="button" className="card pcard" onClick={() => go(`/project/${p.id}`)} style={p.coverId ? { paddingTop: 0, overflow: 'hidden' } : undefined}>
+    <button type="button" style={{ display: 'block', width: '100%', textAlign: 'start' }} onClick={() => go(`/project/${p.id}`)}>
       {p.coverId && (
-        <div style={{ margin: '0 -13px 12px' }}>
-          <ProjectCover project={p} height={72} />
+        <div style={{ borderRadius: 10, overflow: 'hidden', marginTop: 8 }}>
+          <ProjectCover project={p} height={44} />
         </div>
       )}
-      <div className="top">
-        <ProjectIcon project={p} />
+      <div className="prow">
+        <ProjectIcon project={p} size={32} radius={9} />
         <span className="grow">
           <span className="name">{p.name}</span>
-          <span className="muted small" style={{ display: 'block' }}>
-            {c.total ? `${c.done}/${c.total} משימות` : 'אין משימות'}
-            {p.endDate ? ` · עד ${formatDMY(p.endDate)}` : ''}
+          <span className="m">
+            <span className="ltr">{c.total ? `${c.done}/${c.total}` : '0'}</span> משימות
+            {p.endDate && <span>· עד {formatDMY(p.endDate)}</span>}
+            {p.priority === 'high' && <span className="tag red">גבוהה</span>}
+            {blockers.length > 0 && <span className="tag g">🔒 {blockers[0]!.name}</span>}
+            {nextMs && (
+              <span>
+                · <Icon name="milestone" size="xs" /> {nextMs.title}
+                {isMilestoneLate(nextMs, today) && <span className="tag warn" style={{ marginInlineStart: 4 }}>באיחור</span>}
+              </span>
+            )}
           </span>
         </span>
-        <span className="num" style={{ fontWeight: 800 }}>
-          {c.pct}%
+        <span className="minibar">
+          <i style={{ width: `${c.pct}%` }} />
         </span>
+        <span className="pct">{c.pct}%</span>
       </div>
-      {nextMs && (
-        <div className="muted small" style={{ marginTop: 8 }}>
-          <Icon name="milestone" size="xs" /> הבא: {nextMs.title}
-          {nextMs.dueDate ? ` · ${formatDMY(nextMs.dueDate)}` : ''}
-          {isMilestoneLate(nextMs, today) && <span className="tag warn" style={{ marginInlineStart: 6 }}>באיחור</span>}
-        </div>
-      )}
-      {(p.priority || blockers.length > 0) && (
-        <div className="meta">
-          {p.priority && <span className={`tag ${p.priority === 'high' ? 'red' : p.priority === 'medium' ? 'warn' : 'ok'}`}>עדיפות {PRIORITY_LABEL[p.priority]}</span>}
-          {blockers.length > 0 && <span className="tag g">🔒 חסום ע"י {blockers.map((b) => b.name).join(', ')}</span>}
-        </div>
-      )}
-      <Bar pct={c.pct} />
     </button>
   );
 }
@@ -154,23 +158,19 @@ function GoalsList({ goals, projects, tasks }: { goals: Goal[]; projects: Projec
       {list.map((g) => {
         const pct = goalProgress(g, projects, tasks);
         return (
-          <button key={g.id} type="button" className="card pcard" onClick={() => go(`/goal/${g.id}`)} style={{ opacity: g.status === 'active' ? 1 : 0.6 }}>
-            <div className="top">
-              <span className="ic">{g.status === 'achieved' ? '🏆' : '🏔️'}</span>
-              <span className="grow">
-                <span className="name">{g.title}</span>
-                <span className="muted small" style={{ display: 'block' }}>
-                  {projects.filter((p) => p.goalId === g.id).length} פרויקטים{g.targetDate ? ` · עד ${formatDMY(g.targetDate)}` : ''}
-                </span>
+          <button key={g.id} type="button" className="prow" onClick={() => go(`/goal/${g.id}`)} style={{ opacity: g.status === 'active' ? 1 : 0.6 }}>
+            <span className="ic" style={{ width: 32, height: 32, borderRadius: 9, background: 'var(--surface2)', display: 'grid', placeItems: 'center', flex: 'none' }}>{g.status === 'achieved' ? '🏆' : '🏔️'}</span>
+            <span className="grow">
+              <span className="name">{g.title}</span>
+              <span className="m">
+                {projects.filter((p) => p.goalId === g.id).length} פרויקטים{g.targetDate ? ` · עד ${formatDMY(g.targetDate)}` : ''}
+                {focus?.id === g.id && <span className="tag">בפוקוס</span>}
               </span>
-              {focus?.id === g.id && <span className="tag">בפוקוס</span>}
-              <span className="num" style={{ fontWeight: 800 }}>
-                {pct}%
-              </span>
-            </div>
-            <div style={{ marginTop: 10 }}>
-              <Bar pct={pct} />
-            </div>
+            </span>
+            <span className="minibar">
+              <i style={{ width: `${pct}%` }} />
+            </span>
+            <span className="pct">{pct}%</span>
           </button>
         );
       })}
@@ -194,6 +194,9 @@ export function ProjectScreen({ id }: { id: string }) {
   const [iconOpen, setIconOpen] = useState(false);
   const [blockOpen, setBlockOpen] = useState(false);
   const [imgOpen, setImgOpen] = useState(false);
+  const coverUrl = useBlobUrl(p?.coverId);
+  const msList = useLive(() => Q.milestonesOf(id), [id]) ?? [];
+  const msStats = milestoneStats(msList, today);
   const logoRef = useRef<HTMLInputElement>(null);
   const coverRef = useRef<HTMLInputElement>(null);
   const [showDone, setShowDone] = useState(false);
@@ -215,7 +218,26 @@ export function ProjectScreen({ id }: { id: string }) {
   const blockers = activeBlockers(p, projects);
   return (
     <div className="page sub">
-      <TopBar title="" backTo="/projects">
+      <TopBar
+        backTo="/projects"
+        cover={coverUrl}
+        lead={
+          <button type="button" style={{ borderRadius: 16, border: '2px solid rgba(255,255,255,.85)', flex: 'none' }} onClick={() => setIconOpen(true)} aria-label="לוגו או אייקון">
+            <ProjectIcon project={p} size={50} radius={14} />
+          </button>
+        }
+        title={<DraftInput className="title-input" value={p.name} onSave={(v) => set({ name: v })} placeholder="שם הפרויקט" ariaLabel="שם הפרויקט" />}
+        sub={[PROJECT_STATUS_LABEL[p.status], areas.find((a) => a.id === p.areaId)?.name, blockers.length ? `🔒 חסום ע"י ${blockers.map((b) => b.name).join(', ')}` : ''].filter(Boolean).join(' · ')}
+        stats={[
+          { v: `${c.pct}%`, k: 'הושלם' },
+          { v: <span className="ltr">{c.done}/{c.total}</span>, k: 'משימות' },
+          { v: <span className="ltr">{msStats.done}/{msStats.total}</span>, k: 'אבני דרך' },
+          ...(p.endDate ? [{ v: <span className="ltr">{formatShort(p.endDate)}</span>, k: 'סיום' }] : []),
+        ]}
+      >
+        <button type="button" className="iconbtn" aria-label={p.coverId ? 'החלף תמונת רקע' : 'הוסף תמונת רקע'} onClick={() => setImgOpen(true)}>
+          <Icon name="image" />
+        </button>
         <button
           type="button"
           className="iconbtn"
@@ -229,36 +251,9 @@ export function ProjectScreen({ id }: { id: string }) {
           <Icon name="trash" />
         </button>
       </TopBar>
-      {p.coverId ? (
-        <div style={{ margin: '0 -15px 0', position: 'relative' }}>
-          <ProjectCover project={p} height={150} />
-          <button type="button" className="minibtn" style={{ position: 'absolute', bottom: 10, insetInlineEnd: 12, background: 'rgba(255,255,255,.92)' }} onClick={() => setImgOpen(true)}>
-            <Icon name="image" size="xs" /> החלף רקע
-          </button>
-        </div>
-      ) : (
-        <button type="button" className="linkbtn" style={{ marginBottom: 8 }} onClick={() => setImgOpen(true)}>
-          <Icon name="image" size="xs" /> הוסף תמונת רקע
-        </button>
-      )}
-      <div className="row" style={{ alignItems: 'center', marginTop: p.coverId ? -26 : 0, position: 'relative' }}>
-        <button type="button" style={{ borderRadius: 16, border: '3px solid #fff', background: '#fff', flex: 'none' }} onClick={() => setIconOpen(true)} aria-label="לוגו או אייקון">
-          <ProjectIcon project={p} size={52} radius={14} />
-        </button>
-        <DraftInput className="title-input" value={p.name} onSave={(v) => set({ name: v })} placeholder="שם הפרויקט" />
+      <div style={{ margin: '0 2px 12px' }}>
+        <Bar pct={c.pct} />
       </div>
-      <section className="card" style={{ marginTop: 12 }}>
-        <div className="row" style={{ justifyContent: 'space-between' }}>
-          <b className="num" style={{ fontSize: 22 }}>{c.pct}%</b>
-          <span className="muted small">
-            {c.done}/{c.total} משימות
-          </span>
-        </div>
-        <div style={{ marginTop: 8 }}>
-          <Bar pct={c.pct} thick />
-        </div>
-        {blockers.length > 0 && <div className="tag g" style={{ marginTop: 10, display: 'inline-block' }}>🔒 חסום ע"י {blockers.map((b) => b.name).join(', ')}</div>}
-      </section>
       <Seg value={p.status} onChange={(status) => set({ status })} items={(['planning', 'active', 'done', 'archived'] as ProjectStatus[]).map((s) => ({ id: s, label: PROJECT_STATUS_LABEL[s] }))} />
       <section className="card" style={{ marginTop: 12 }}>
         <div className="field">
@@ -552,7 +547,22 @@ export function GoalScreen({ id }: { id: string }) {
   const focus = focusGoal(goals);
   return (
     <div className="page sub">
-      <TopBar title="" backTo="/projects/goals">
+      <TopBar
+        backTo="/projects/goals"
+        lead={<span style={{ fontSize: 30 }}>{g.status === 'achieved' ? '🏆' : '🏔️'}</span>}
+        title={<DraftInput className="title-input" value={g.title} onSave={(v) => set({ title: v })} placeholder="המטרה" ariaLabel="המטרה" />}
+        sub={focus?.id === g.id ? 'בפוקוס בדף הבית' : undefined}
+        stats={[
+          { v: `${pct}%`, k: g.progressMode === 'manual' ? 'התקדמות (ידני)' : 'התקדמות' },
+          { v: linked.length, k: 'פרויקטים' },
+          ...(g.targetDate ? [{ v: <span className="ltr">{formatDMY(g.targetDate)}</span>, k: 'יעד' }] : []),
+        ]}
+      >
+        {focus?.id !== g.id && (
+          <button type="button" className="minibtn p" onClick={() => void setFocusGoal(g.id)}>
+            שים בפוקוס
+          </button>
+        )}
         <button
           type="button"
           className="iconbtn"
@@ -566,22 +576,9 @@ export function GoalScreen({ id }: { id: string }) {
           <Icon name="trash" />
         </button>
       </TopBar>
-      <DraftInput className="title-input" value={g.title} onSave={(v) => set({ title: v })} placeholder="המטרה" />
-      <section className="card" style={{ marginTop: 12 }}>
-        <div className="row" style={{ justifyContent: 'space-between' }}>
-          <b className="num" style={{ fontSize: 26 }}>{pct}%</b>
-          {focus?.id === g.id ? (
-            <span className="tag">בפוקוס בדף הבית</span>
-          ) : (
-            <button type="button" className="minibtn p" onClick={() => void setFocusGoal(g.id)}>
-              שים בפוקוס
-            </button>
-          )}
-        </div>
-        <div style={{ marginTop: 8 }}>
-          <Bar pct={pct} thick />
-        </div>
-      </section>
+      <div style={{ margin: '0 2px 12px' }}>
+        <Bar pct={pct} />
+      </div>
       <section className="card">
         <div className="field">
           <span className="lab">סטטוס</span>

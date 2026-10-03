@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import type { Sprint, Task, TaskStatus } from '../../domain/schemas';
 import { sprintNeedingReview, sprintStatus, SPRINT_STATUS_LABEL } from '../../domain/sprints';
-import { compareForDay, completion, isActiveOpen, isOpen, isStuck, STATUS_EMOJI, STATUS_LABEL } from '../../domain/tasks';
+import { compareForDay, completion, isActiveOpen, isInbox, isOpen, isStuck, STATUS_EMOJI, STATUS_LABEL } from '../../domain/tasks';
 import { isMilestoneLate, stuckForReview } from '../../domain/review';
-import { addDays, formatDMY, formatRelative } from '../../domain/dates';
+import { addDays, diffDays, formatDMY, formatRelative } from '../../domain/dates';
 import { setWeeklyGoals } from '../../services/people';
 import { InboxTab } from './TasksScreen';
 import { reviewSprint, type ReviewMove } from '../../services/planning';
@@ -30,7 +30,16 @@ export function SprintScreen({ tab = 'board' }: { tab?: string }) {
   const c = completion(tasks.filter((x) => cur && x.sprintId === cur.id));
   return (
     <div className="page">
-      <TopBar title="ספרינט">
+      <TopBar
+        title={cur ? cur.name.split(' · ')[0] : 'ספרינט'}
+        sub={cur ? `ספרינט נוכחי · ${formatDMY(cur.startDate)} עד ${formatDMY(cur.endDate)}` : undefined}
+        stats={cur ? [
+          { v: `${c.pct}%`, k: 'הושלם' },
+          { v: <span className="ltr">{c.done}/{c.total}</span>, k: 'משימות' },
+          { v: tasks.filter((x) => x.sprintId === cur.id && x.status === 'doing').length, k: 'בתהליך' },
+          { v: diffDays(today, cur.endDate) + 1, k: 'ימים נשארו' },
+        ] : undefined}
+      >
         <button type="button" className="minibtn dark" onClick={() => go(review ? `/review/${review.id}` : '/review')}>
           סקירה שבועית
         </button>
@@ -43,19 +52,10 @@ export function SprintScreen({ tab = 'board' }: { tab?: string }) {
         </button>
       )}
       {cur && (
-        <section className="card">
-          <h4>
-            <span>{cur.name}</span>
-            <small className="num">
-              {c.done}/{c.total}
-            </small>
-          </h4>
-          <Bar pct={c.pct} thick />
-          <div className="muted small" style={{ marginTop: 6 }}>
-            {c.pct}% הושלם · {formatDMY(cur.startDate)} עד {formatDMY(cur.endDate)}
-          </div>
+        <div style={{ margin: '0 2px 12px' }}>
+          <Bar pct={c.pct} />
           {cur.weeklyGoals.length > 0 && (
-            <div style={{ marginTop: 10, borderTop: '1px solid var(--line)', paddingTop: 8 }}>
+            <div className="card boxed" style={{ marginTop: 10 }}>
               <div className="muted small" style={{ fontWeight: 700, marginBottom: 4 }}>יעדי השבוע</div>
               {cur.weeklyGoals.map((g, i) => (
                 <div key={i} className="small" style={{ padding: '2px 0' }}>
@@ -64,7 +64,7 @@ export function SprintScreen({ tab = 'board' }: { tab?: string }) {
               ))}
             </div>
           )}
-        </section>
+        </div>
       )}
       <Tabs
         value={t}
@@ -252,13 +252,7 @@ export function SprintViewScreen({ id }: { id: string }) {
   const c = completion(list);
   return (
     <div className="page sub">
-      <TopBar title={s.name} backTo="/sprint/all" />
-      <section className="card">
-        <Bar pct={c.pct} thick />
-        <div className="muted small" style={{ marginTop: 6 }}>
-          {c.done}/{c.total} · {c.pct}% הושלם
-        </div>
-      </section>
+      <TopBar title={s.name.split(' · ')[0]} sub={`${formatDMY(s.startDate)} עד ${formatDMY(s.endDate)}`} backTo="/sprint/all" stats={[{ v: `${c.pct}%`, k: 'הושלם' }, { v: <span className="ltr">{c.done}/{c.total}</span>, k: 'משימות' }]} />
       <section className="card">
         {list.map((t) => (
           <TaskRow key={t.id} task={t} projects={projects} />
@@ -306,13 +300,7 @@ export function ReviewScreen({ id }: { id?: string }) {
 
   return (
     <div className="page sub">
-      <TopBar title="סקירה שבועית" backTo="/sprint" />
-      <div className="row" style={{ justifyContent: 'space-between', marginBottom: 6 }}>
-        <b>{STEPS[step]}</b>
-        <span className="muted small">
-          צעד <span className="num">{step + 1}</span> מתוך <span className="num">5</span>
-        </span>
-      </div>
+      <TopBar title="סקירה שבועית" sub={STEPS[step]} backTo="/sprint" stats={[{ v: <span className="ltr">{step + 1}/5</span>, k: 'צעד' }, { v: tasks.filter(isInbox).length, k: 'בדואר נכנס' }, { v: stuckForReview(tasks, today).length, k: 'תקועות' }]} />
       <div className="row" style={{ gap: 4, marginBottom: 14 }}>
         {STEPS.map((_, i) => (
           <i key={i} style={{ flex: 1, height: 5, borderRadius: 4, background: i <= step ? 'var(--blue)' : 'var(--track)' }} />
