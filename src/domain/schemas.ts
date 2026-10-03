@@ -42,6 +42,14 @@ export const Task = z.object({
   attachmentIds: z.array(z.string()).default([]),
   completedAt: z.string().optional(),
   sortOrder: z.number().default(0),
+  /** R-SMD */
+  someday: z.boolean().default(false),
+  /** R-WAI */
+  waitingPersonId: z.string().optional(),
+  /** R-PRC */
+  postponeCount: z.int().default(0),
+  /** R-CLN */
+  keptAt: z.string().optional(),
 });
 export type Task = z.infer<typeof Task>;
 
@@ -72,8 +80,21 @@ export const Sprint = z.object({
   startDate: isoDate,
   endDate: isoDate,
   reviewedAt: z.string().optional(),
+  /** R-REV step 5: up to 3 goals for the week. */
+  weeklyGoals: z.array(z.string()).default([]),
 });
 export type Sprint = z.infer<typeof Sprint>;
+
+/** 3.14 */
+export const Person = z.object({ ...base, name: z.string(), emoji: z.string().default('🙂'), body: z.string().default('') });
+export type Person = z.infer<typeof Person>;
+
+export const AgendaItem = z.object({ ...base, personId: z.string(), text: z.string(), doneAt: z.string().optional() });
+export type AgendaItem = z.infer<typeof AgendaItem>;
+
+/** 3.15 */
+export const Milestone = z.object({ ...base, projectId: z.string(), title: z.string(), dueDate: isoDate.optional(), doneAt: z.string().optional(), order: z.number() });
+export type Milestone = z.infer<typeof Milestone>;
 
 export const NoteKind = z.enum(['note', 'idea', 'meeting']);
 export type NoteKind = z.infer<typeof NoteKind>;

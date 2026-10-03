@@ -1,5 +1,5 @@
 import { db } from '../db/db';
-import type { Area, Attachment, Link, Template } from '../domain/schemas';
+import type { Area, Attachment, Link } from '../domain/schemas';
 import { nowIso, stamps } from './entity';
 
 // ---------------------------------------------------------------------------
@@ -20,19 +20,6 @@ export async function deleteArea(id: string): Promise<void> {
     await db.goals.bulkPut(goals.map((g) => ({ ...g, areaId: undefined })));
     await db.areas.delete(id);
   });
-}
-
-// ---------------------------------------------------------------------------
-// Templates (SPEC 3.12)
-// ---------------------------------------------------------------------------
-
-export async function saveTemplate(input: Partial<Template> & Pick<Template, 'kind' | 'name'>): Promise<void> {
-  const existing = input.id ? await db.templates.get(input.id) : undefined;
-  await db.templates.put(existing ? { ...existing, ...input, updatedAt: nowIso() } : { ...stamps(), title: '', body: '', subtasks: [], ...input });
-}
-
-export async function deleteTemplate(id: string): Promise<void> {
-  await db.templates.delete(id);
 }
 
 // ---------------------------------------------------------------------------

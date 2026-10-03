@@ -15,7 +15,7 @@ export async function ensureSprints(today: string): Promise<void> {
   await db.transaction('rw', db.sprints, async () => {
     const existing = await db.sprints.toArray();
     for (const start of missingSprintWeeks(existing, today)) {
-      await db.sprints.add({ ...stamps(), name: sprintName(start), ...sprintRange(start) });
+      await db.sprints.add({ ...stamps(), name: sprintName(start), ...sprintRange(start), weeklyGoals: [] });
     }
   });
 }
@@ -36,7 +36,7 @@ export async function reviewSprint(sprintId: string, moves: Record<string, Revie
 }
 
 export async function createSprintManually(startDate: string): Promise<Sprint> {
-  const s: Sprint = { ...stamps(), name: sprintName(startDate), ...sprintRange(startDate) };
+  const s: Sprint = { ...stamps(), name: sprintName(startDate), ...sprintRange(startDate), weeklyGoals: [] };
   await db.sprints.add(s);
   return s;
 }
@@ -77,6 +77,8 @@ export async function materializeRecurring(today: string): Promise<void> {
       links: [],
       attachmentIds: [],
       sortOrder: Date.now(),
+      someday: false,
+      postponeCount: 0,
     };
     await db.tasks.add(t);
   }
@@ -107,7 +109,7 @@ export async function createProject(input: Partial<Project> & { name: string }, 
   for (const title of templateSubtasks) {
     const seq = await nextSeq();
     await db.tasks.add({
-      ...stamps(), seq, title, body: '', status: 'todo', projectIds: [p.id], labels: [], urgent: false, important: false, links: [], attachmentIds: [], sortOrder: Date.now(),
+      ...stamps(), seq, title, body: '', status: 'todo', projectIds: [p.id], labels: [], urgent: false, important: false, links: [], attachmentIds: [], sortOrder: Date.now(), someday: false, postponeCount: 0,
     });
   }
   return p;
@@ -120,8 +122,9 @@ export async function updateProject(id: string, patch: Partial<Project>): Promis
 /** Deleting a project unlinks its tasks and notes (they are kept). */
 export async function deleteProject(id: string): Promise<void> {
   const now = nowIso();
-  await db.transaction('rw', db.projects, db.tasks, db.notes, db.attachments, async () => {
+  await db.transaction('rw', [db.projects, db.tasks, db.notes, db.attachments, db.milestones], async () => {
     await db.attachments.where('ownerId').equals(id).delete(); // R-PRJ-3: logo and cover
+    await db.milestones.where('projectId').equals(id).delete(); // R-MIL
     const tasks = await db.tasks.where('projectIds').equals(id).toArray();
     await db.tasks.bulkPut(tasks.map((t) => ({ ...t, projectIds: t.projectIds.filter((x) => x !== id), updatedAt: now })));
     const notes = await db.notes.where('projectIds').equals(id).toArray();

@@ -26,5 +26,11 @@ export const Q = {
   settings: () => db.settings.get(SETTINGS_ID),
   attachment: (id: string) => db.attachments.get(id).then((x) => x ?? null),
   attachmentsOf: (ownerId: string) => db.attachments.where('ownerId').equals(ownerId).toArray(),
+  people: () => db.people.toArray(),
+  person: (id: string) => db.people.get(id).then((x) => x ?? null),
+  agenda: () => db.agenda.toArray(),
+  agendaOf: (personId: string) => db.agenda.where('personId').equals(personId).toArray(),
+  milestones: () => db.milestones.toArray(),
+  milestonesOf: (projectId: string) => db.milestones.where('projectId').equals(projectId).toArray(),
   demo: () => isDemoMode(),
 };

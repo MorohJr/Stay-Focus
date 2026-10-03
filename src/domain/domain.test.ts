@@ -15,7 +15,7 @@ function task(p: Partial<Task> = {}): Task {
   n++;
   return {
     id: p.id ?? `t${n}`, createdAt: T0, updatedAt: T0, seq: n, title: `task ${n}`, body: '', status: 'todo', projectIds: [], labels: [],
-    urgent: false, important: false, links: [], attachmentIds: [], sortOrder: 0, ...p,
+    urgent: false, important: false, links: [], attachmentIds: [], sortOrder: 0, someday: false, postponeCount: 0, ...p,
   };
 }
 const TODAY = '2026-09-30'; // Wednesday
@@ -71,7 +71,7 @@ describe('tasks', () => {
 });
 
 describe('sprints', () => {
-  const mk = (startDate: string): Sprint => ({ id: startDate, createdAt: T0, updatedAt: T0, name: sprintName(startDate), ...sprintRange(startDate) });
+  const mk = (startDate: string): Sprint => ({ id: startDate, createdAt: T0, updatedAt: T0, name: sprintName(startDate), ...sprintRange(startDate), weeklyGoals: [] });
   it('R-SPR-1: Sunday–Saturday, named by week', () => {
     expect(sprintRange(TODAY)).toEqual({ startDate: '2026-09-27', endDate: '2026-10-03' });
     expect(sprintName('2026-09-27')).toBe('שבוע 40 · \u206627/9–3/10\u2069');

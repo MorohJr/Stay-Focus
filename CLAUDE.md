@@ -53,7 +53,10 @@ export PATH="$HOME/.local/node/bin:$PATH"
 
 - 30/09/2026: אפיון 1.0 אושר (שלוש סקיצות ב-`Claude outputs/`, הסופית `dashboard-v3.html`).
 - 01/10/2026: כל השלבים 0–8 נבנו ונבדקו בדפדפן בגודל אייפון. 45 בדיקות יחידה עוברות, lint ו-build נקיים.
-- מבנה UI: `src/ui/App.tsx` (ניתוב), `screens/` (Today, Tasks, Task, Sprint, Projects+Goals, Notes, Habits = אתגרים/שגרות/חוזרות/כרטיסי מידע, More = חיפוש/גיבוי/מזג אוויר/הגדרות/תחומים/תבניות), `components/` (common, tasks, edit, Icon).
+- מבנה UI: `src/ui/App.tsx` (ניתוב), `screens/` (Today, Tasks, Task, Sprint, Projects+Goals, Notes, Habits = אתגרים/שגרות/חוזרות, People = אנשים/ניקוי, More = חיפוש/גיבוי/מזג אוויר/הגדרות/תחומים), `components/` (common, tasks, edit, Icon).
 - טקסט שהמשתמש מקליד מוצג עם `unicode-bidi: plaintext` כדי שעברית ואנגלית מעורבות לא יתהפכו. תאריך מחותמת זמן: תמיד `localDate()`, לעולם לא `slice(0, 10)`.
 - הרצה מקומית בתצוגה המקדימה: `.claude/launch.json` (פורט 5174, לא ב-git).
 - פורסם 01/10/2026: https://morohjr.github.io/Stay-Focus/ (מאגר MorohJr/Stay-Focus).
+- 03/10/2026 (אפיון 1.2–1.3): כרטיסי מידע הוסרו; לוגו ותמונת רקע לפרויקט; הדגמה כללית ואקראית בלי כושר וכסף (R-DEM-1, אסור גם בעתיד); מסך התבניות הוסר; נוספו סקירה שבועית מודרכת, ממתין ל..., אולי פעם, גלאי דחיינות, אנשים, ניקוי משימות ישנות, אבני דרך. מסד גרסה 3. 57 בדיקות.
+- מחכה להחלטה: סגנון עיצוב למסכים הפנימיים (8 אפשרויות ב-`Claude outputs/inner-styles.html`). מסך היום לא משתנה.
+- קובץ ייבוא מ-Notion: `import/` (לא ב-git, נתונים אישיים, המאגר ציבורי).

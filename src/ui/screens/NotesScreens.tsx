@@ -94,9 +94,6 @@ export function NewNoteScreen({ preset }: { preset?: string }) {
           </button>
         ))}
       </section>
-      <button type="button" className="linkbtn" onClick={() => go('/templates')}>
-        עריכת תבניות
-      </button>
     </div>
   );
 }

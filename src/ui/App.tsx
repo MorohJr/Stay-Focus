@@ -12,7 +12,8 @@ import { QuickCapture } from './components/tasks';
 import { useClock, useLive } from './hooks';
 import { go, useRoute } from './router';
 import { ChallengeScreen, ChallengesScreen, RecurringListScreen, RecurringScreen, RoutinesScreen } from './screens/HabitsScreens';
-import { AreasScreen, BackupScreen, MoreScreen, SearchScreen, SettingsScreen, TemplatesScreen, WeatherScreen } from './screens/MoreScreens';
+import { AreasScreen, BackupScreen, MoreScreen, SearchScreen, SettingsScreen, WeatherScreen } from './screens/MoreScreens';
+import { CleanupScreen, PeopleScreen, PersonScreen } from './screens/PeopleScreens';
 import { NewNoteScreen, NoteScreen, NotesScreen } from './screens/NotesScreens';
 import { GoalScreen, NewProjectScreen, ProjectScreen, ProjectsScreen } from './screens/ProjectsScreen';
 import { ReviewScreen, SprintScreen, SprintViewScreen } from './screens/SprintScreen';
@@ -28,8 +29,8 @@ const TABS = [
   { id: 'more', label: 'עוד', icon: 'more' },
 ];
 /** Screens that show the bottom nav and the + button. */
-const MAIN = new Set(['', 'tasks', 'sprint', 'projects', 'more', 'notes', 'challenges', 'recurring']);
-const OWNER: Record<string, string> = { notes: 'more', challenges: 'more', recurring: 'more' };
+const MAIN = new Set(['', 'tasks', 'sprint', 'projects', 'more', 'notes', 'challenges', 'recurring', 'people']);
+const OWNER: Record<string, string> = { notes: 'more', challenges: 'more', recurring: 'more', people: 'more' };
 
 function screenFor(r: string[]): ReactNode {
   const [a = '', b, c] = r;
@@ -47,7 +48,7 @@ function screenFor(r: string[]): ReactNode {
     case 'sprint-view':
       return <SprintViewScreen id={b!} />;
     case 'review':
-      return <ReviewScreen id={b!} />;
+      return <ReviewScreen id={b} />;
     case 'projects':
       return <ProjectsScreen tab={b} />;
     case 'project':
@@ -70,8 +71,12 @@ function screenFor(r: string[]): ReactNode {
       return b ? <RecurringScreen id={b} /> : <RecurringListScreen />;
     case 'areas':
       return <AreasScreen />;
-    case 'templates':
-      return <TemplatesScreen />;
+    case 'people':
+      return <PeopleScreen />;
+    case 'person':
+      return <PersonScreen id={b!} />;
+    case 'cleanup':
+      return <CleanupScreen />;
     case 'search':
       return <SearchScreen />;
     case 'backup':

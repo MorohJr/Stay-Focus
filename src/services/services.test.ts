@@ -7,7 +7,8 @@ import { ensureSeed, getSettings } from './entity';
 import { addAttachment, removeProjectImage, setProjectImage } from './misc';
 import { createProject, deleteProject, ensureSprints, materializeRecurring, reviewSprint, setFocusGoal, createGoal } from './planning';
 import { cycleRule, createChallenge, toggleRoutineItem, saveRecurring } from './habits';
-import { addToTop3, createTask, deleteTask, moveTop3, postponeAllOverdue, postponeTask, restoreTasks, updateTask } from './tasks';
+import { addToTop3, createTask, deleteTask, moveTop3, postponeAllOverdue, postponeTask, resolveStuck, restoreTasks, setSomeday, setWaiting, updateTask } from './tasks';
+import { addAgenda, addMilestone, createPerson, deletePerson } from './people';
 
 const TODAY = '2026-09-30';
 
@@ -68,6 +69,70 @@ describe('tasks service', () => {
     await createTask({ title: 'late2', dueDate: '2026-09-29' });
     await postponeAllOverdue(TODAY);
     expect((await db.tasks.where('dueDate').equals('2026-10-01').count())).toBe(3);
+  });
+});
+
+describe('1.3 features', () => {
+  it('R-PRC: every postponement counts, time shifts do not', async () => {
+    const t = await createTask({ title: 't', dueDate: '2026-09-28', startTime: '10:00' });
+    await postponeTask(t.id, 'plus30', TODAY);
+    expect((await db.tasks.get(t.id))!.postponeCount).toBe(0);
+    await postponeTask(t.id, 'tomorrow', TODAY);
+    await updateTask(t.id, { dueDate: '2026-09-29' }); // moving back is not a postponement
+    await postponeAllOverdue(TODAY);
+    expect((await db.tasks.get(t.id))!.postponeCount).toBe(2);
+    await updateTask(t.id, { dueDate: '2026-10-08' }); // overdue → later date counts
+    expect((await db.tasks.get(t.id))!.postponeCount).toBe(3);
+    await resolveStuck(t.id, 'today', TODAY);
+    const after = (await db.tasks.get(t.id))!;
+    expect(after.postponeCount).toBe(0);
+    expect(after.dueDate).toBe(TODAY);
+    expect(after.top3Date).toBe(TODAY);
+  });
+
+  it('R-SMD: someday clears date, sprint and top 3', async () => {
+    const t = await createTask({ title: 't', dueDate: TODAY, sprintId: 's', top3Date: TODAY, top3Order: 1, postponeCount: 4 });
+    await setSomeday(t.id, true);
+    const x = (await db.tasks.get(t.id))!;
+    expect([x.someday, x.dueDate, x.sprintId, x.top3Date, x.postponeCount]).toEqual([true, undefined, undefined, undefined, 0]);
+    await setSomeday(t.id, false);
+    expect((await db.tasks.get(t.id))!.someday).toBe(false);
+  });
+
+  it('R-PPL/R-WAI: deleting a person keeps tasks but removes waiting and agenda', async () => {
+    const p = await createPerson('אמא');
+    const t = await createTask({ title: 't' });
+    await setWaiting(t.id, p.id);
+    await addAgenda(p.id, 'לשאול על המתנה');
+    await deletePerson(p.id);
+    expect((await db.tasks.get(t.id))!.waitingPersonId).toBeUndefined();
+    expect(await db.agenda.count()).toBe(0);
+  });
+
+  it('R-MIL: milestones go with the project', async () => {
+    const p = await createProject({ name: 'p' });
+    await addMilestone(p.id, 'גרסה ראשונה', '2026-10-10');
+    await addMilestone(p.id, '  ');
+    expect(await db.milestones.count()).toBe(1);
+    await deleteProject(p.id);
+    expect(await db.milestones.count()).toBe(0);
+  });
+
+  it('migrates a v2 backup to v3', async () => {
+    await createTask({ title: 'ישן' });
+    const file = JSON.parse(await exportBackup());
+    file.schemaVersion = 2;
+    delete file.data.people;
+    delete file.data.agenda;
+    delete file.data.milestones;
+    for (const t of file.data.tasks) {
+      delete t.someday;
+      delete t.postponeCount;
+    }
+    const parsed = await parseBackup(JSON.stringify(file));
+    await restoreBackup(parsed);
+    const t = (await db.tasks.toArray())[0]!;
+    expect([t.someday, t.postponeCount]).toEqual([false, 0]);
   });
 });
 
@@ -187,6 +252,8 @@ describe('backup and demo', () => {
     expect(await db.tasks.count()).toBeGreaterThan(70);
     expect(await db.projects.count()).toBe(12);
     expect(await db.challenges.count()).toBe(2);
+    expect(await db.people.count()).toBe(5);
+    expect(await db.milestones.count()).toBeGreaterThan(5);
     // R-DEM-1: nothing about fitness or money
     const text = JSON.stringify(await db.tasks.toArray()) + JSON.stringify(await db.projects.toArray()) + JSON.stringify(await db.notes.toArray());
     for (const word of ['אימון', 'כושר', 'תזונה', 'חלבון', 'תקציב', 'משכורת', 'השקע', 'חיסכון', 'מניות']) expect(text).not.toContain(word);

@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { addDays, formatRelative, formatShort } from '../../domain/dates';
 import type { Project, Sprint, Task } from '../../domain/schemas';
 import { sprintStatus, SPRINT_STATUS_LABEL } from '../../domain/sprints';
-import { isOpen } from '../../domain/tasks';
+import { isActiveOpen, isOpen, isStuck } from '../../domain/tasks';
 import { createNote } from '../../services/planning';
 import { Q } from '../../services/queries';
 import { createTask, postponeTask, toggleDone, type Postpone } from '../../services/tasks';
@@ -49,11 +49,20 @@ export function TaskRow({ task, projects, today, meta, end }: { task: Task; proj
       <Box status={task.status} onClick={() => void toggleDone(task.id)} label={`סמן ${task.title}`} />
       <button type="button" className="txt" onClick={() => go(`/task/${task.id}`)}>
         {task.title || 'ללא שם'}
+        {isStuck(task) && <span title={`נדחתה ${task.postponeCount} פעמים`}> 🐢</span>}
         {(meta ?? bits.length > 0) && <span className="sub">{meta ?? bits.join(' · ')}</span>}
+        {task.waitingPersonId && isOpen(task) && <WaitingBadge personId={task.waitingPersonId} />}
       </button>
       {end}
     </div>
   );
+}
+
+/** R-WAI: "⏳ ממתין ל-<שם>" */
+function WaitingBadge({ personId }: { personId: string }) {
+  const p = useLive(() => Q.person(personId), [personId]);
+  if (!p) return null;
+  return <span className="sub" style={{ color: 'var(--blue-text)' }}>⏳ ממתין ל{p.name}</span>;
 }
 
 // ---------------------------------------------------------------------------
@@ -163,7 +172,7 @@ export function TaskPickerSheet({ open, onClose, onPick, exclude, title }: { ope
   const [q, setQ] = useState('');
   const groups = (() => {
     const cur = sprints.find((s) => sprintStatus(s, today) === 'current');
-    const pool = tasks.filter((t) => isOpen(t) && !t.parentId && !exclude.includes(t.id) && (!q || t.title.toLowerCase().includes(q.toLowerCase())));
+    const pool = tasks.filter((t) => isActiveOpen(t) && !t.parentId && !exclude.includes(t.id) && (!q || t.title.toLowerCase().includes(q.toLowerCase())));
     const seen = new Set<string>();
     const take = (f: (t: Task) => boolean) => pool.filter((t) => !seen.has(t.id) && f(t)).map((t) => (seen.add(t.id), t));
     return [

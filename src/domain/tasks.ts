@@ -9,9 +9,20 @@ export function isOpen(t: Pick<Task, 'status'>): boolean {
   return t.status === 'todo' || t.status === 'doing';
 }
 
-/** R-INB-1: open, no date, no project, no sprint, not a sub-task. */
+/** Open and not parked in "someday" (R-SMD): what the normal lists work with. */
+export function isActiveOpen(t: Pick<Task, 'status' | 'someday'>): boolean {
+  return isOpen(t) && !t.someday;
+}
+
+/** R-INB-1: open, no date, no project, no sprint, not a sub-task, not "someday". */
 export function isInbox(t: Task): boolean {
-  return isOpen(t) && !t.dueDate && t.projectIds.length === 0 && !t.sprintId && !t.parentId;
+  return isActiveOpen(t) && !t.dueDate && t.projectIds.length === 0 && !t.sprintId && !t.parentId;
+}
+
+/** R-PRC: postponed 3 times or more. */
+export const STUCK_AT = 3;
+export function isStuck(t: Pick<Task, 'postponeCount' | 'status'>): boolean {
+  return isOpen(t) && t.postponeCount >= STUCK_AT;
 }
 
 /** R-TSK-1: completedAt follows the done status. */

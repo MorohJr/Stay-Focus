@@ -28,6 +28,9 @@ const ROW_SCHEMAS: Record<TableName, z.ZodType> = {
   attachments: BackupAttachment,
   templates: S.Template,
   settings: S.Settings,
+  people: S.Person,
+  agenda: S.AgendaItem,
+  milestones: S.Milestone,
 };
 
 type BackupData = Partial<Record<string, unknown[]>>;
@@ -97,6 +100,8 @@ export async function markBackupDone(): Promise<void> {
 export const MIGRATIONS: Record<number, (data: BackupData) => BackupData> = {
   // v1 → v2: info cards were removed (SPEC 1.2).
   1: ({ infoCards: _gone, ...rest }) => rest,
+  // v2 → v3: people, agenda and milestones are new; new task fields get Zod defaults.
+  2: (data) => ({ ...data, people: data.people ?? [], agenda: data.agenda ?? [], milestones: data.milestones ?? [] }),
 };
 
 function migrate(data: BackupData, fromVersion: number): BackupData {

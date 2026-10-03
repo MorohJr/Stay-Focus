@@ -1,5 +1,5 @@
 import { db } from '../db/db';
-import { addDays, hhmmOf, minutesOf } from '../domain/dates';
+import { addDays, hhmmOf, minutesOf, todayISO } from '../domain/dates';
 import type { Attachment, Task, TaskStatus } from '../domain/schemas';
 import { withStatus } from '../domain/tasks';
 import { overdue, top3 } from '../domain/today';
@@ -30,6 +30,8 @@ export async function createTask(input: NewTask): Promise<Task> {
     ...parentBits,
     ...input,
     title: input.title.trim(),
+    someday: input.someday ?? false,
+    postponeCount: input.postponeCount ?? 0,
   };
   if (t.status === 'done' && !t.completedAt) t.completedAt = nowIso();
   await db.tasks.add(t);
@@ -41,6 +43,10 @@ export async function updateTask(id: string, patch: Partial<Task>): Promise<void
     const cur = await db.tasks.get(id);
     if (!cur) return;
     let next: Task = { ...cur, ...patch, updatedAt: nowIso() };
+    // R-PRC: moving an overdue task's date forward counts as a postponement.
+    if (patch.postponeCount === undefined && patch.dueDate && cur.dueDate && cur.dueDate < todayISO() && patch.dueDate > cur.dueDate) {
+      next.postponeCount = cur.postponeCount + 1;
+    }
     if (patch.status && patch.status !== cur.status) next = withStatus({ ...next, status: cur.status }, patch.status, nowIso());
     if (next.startTime && !next.durationMin) next.durationMin = 30;
     await db.tasks.put(next);
@@ -137,7 +143,7 @@ export async function postponeTask(id: string, how: Postpone, today: string): Pr
   const date = how === 'tomorrow' ? addDays(today, 1) : how.date;
   // A top-3 slot belongs to a day: moving the task away frees it.
   const clearTop3 = t.top3Date && t.top3Date !== date ? { top3Date: undefined, top3Order: undefined } : {};
-  await updateTask(id, { dueDate: date, ...clearTop3 });
+  await updateTask(id, { dueDate: date, ...clearTop3, postponeCount: t.postponeCount + 1 }); // R-PRC
 }
 
 /** R-TOD-5 "להיום" */
@@ -151,7 +157,7 @@ export async function postponeAllOverdue(today: string): Promise<void> {
   const late = overdue(all, today);
   const now = nowIso();
   const tomorrow = addDays(today, 1);
-  await db.tasks.bulkPut(late.map((t) => ({ ...t, dueDate: tomorrow, updatedAt: now })));
+  await db.tasks.bulkPut(late.map((t) => ({ ...t, dueDate: tomorrow, postponeCount: t.postponeCount + 1, updatedAt: now }))); // R-PRC
 }
 
 export async function addToSprint(ids: string[], sprintId: string | undefined): Promise<void> {
@@ -160,4 +166,28 @@ export async function addToSprint(ids: string[], sprintId: string | undefined): 
     const list = (await db.tasks.bulkGet(ids)).filter((t): t is Task => !!t);
     await db.tasks.bulkPut(list.map((t) => ({ ...t, sprintId, updatedAt: now })));
   });
+}
+
+/** R-SMD: park a task in "someday" (clears date, time, sprint and top-3) or bring it back. */
+export async function setSomeday(id: string, on: boolean): Promise<void> {
+  await updateTask(id, on
+    ? { someday: true, dueDate: undefined, startTime: undefined, sprintId: undefined, top3Date: undefined, top3Order: undefined, postponeCount: 0 }
+    : { someday: false, keptAt: nowIso() });
+}
+
+/** R-PRC: the four ways out of a stuck task. Delete is handled by deleteTask. */
+export async function resolveStuck(id: string, action: 'today' | 'split' | 'someday', today: string): Promise<void> {
+  if (action === 'someday') return setSomeday(id, true);
+  await updateTask(id, { postponeCount: 0, ...(action === 'today' ? { dueDate: today } : {}) });
+  if (action === 'today') await addToTop3(id, today);
+}
+
+/** R-CLN "להשאיר". */
+export function keepTask(id: string) {
+  return updateTask(id, { keptAt: nowIso() });
+}
+
+/** R-WAI */
+export function setWaiting(id: string, personId: string | undefined) {
+  return updateTask(id, { waitingPersonId: personId });
 }

@@ -53,6 +53,10 @@ const P: Record<string, string> = {
   location: 'M12 21s7-6.2 7-11.5a7 7 0 0 0-14 0C5 14.8 12 21 12 21zM12 7a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z',
   bolt: 'M13 3L5 13.5h6L10 21l8-10.5h-6z',
   play: 'M8 5.5v13l10-6.5z',
+  users: 'M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM3 20a6 6 0 0 1 12 0M16 4.3a3.5 3.5 0 0 1 0 6.4M17.5 14a5.5 5.5 0 0 1 3.5 6',
+  hourglass: 'M7 3.5h10M7 20.5h10M8 3.5c0 4 8 5 8 8.5s-8 4.5-8 8.5M16 3.5c0 4-8 5-8 8.5s8 4.5 8 8.5',
+  turtle: 'M4 15.5c0-4 3.6-7 8-7s8 3 8 7zM20 13l2-1M7 15.5l-1 3M17 15.5l1 3M9 12h6',
+  milestone: 'M5 21V4M5 4h10l-2 3.5 2 3.5H5M5 14.5h14',
 };
 
 export type IconName = keyof typeof P;

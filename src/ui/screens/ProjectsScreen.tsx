@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
-import { formatDMY } from '../../domain/dates';
+import { formatDMY, localDate } from '../../domain/dates';
 import { focusGoal, goalProgress, projectCompletion } from '../../domain/goals';
 import type { Area, Goal, Priority, Project, ProjectStatus, Task } from '../../domain/schemas';
 import { activeBlockers, compareForDay, isOpen, PRIORITY_LABEL } from '../../domain/tasks';
 import { createGoal, createProject, deleteGoal, deleteProject, noteTitle, setFocusGoal, updateGoal, updateProject } from '../../services/planning';
 import { Q } from '../../services/queries';
 import { createTask } from '../../services/tasks';
+import { addMilestone, deleteMilestone, moveMilestone, toggleMilestone, updateMilestone } from '../../services/people';
+import { isMilestoneLate, milestoneStats, nextMilestone } from '../../domain/review';
 import { removeProjectImage, setProjectImage } from '../../services/misc';
 import { shrinkImage } from '../../services/platform';
 import { ProjectCover, ProjectIcon } from '../components/ProjectIcon';
@@ -90,6 +92,9 @@ function ProjectGroups({ projects, all, tasks, areas, empty }: { projects: Proje
 }
 
 function ProjectCard({ p, all, tasks }: { p: Project; all: Project[]; tasks: Task[] }) {
+  const ms = useLive(() => Q.milestonesOf(p.id), [p.id]) ?? [];
+  const { today } = useClock();
+  const nextMs = nextMilestone(ms);
   const c = projectCompletion(p, tasks);
   const blockers = activeBlockers(p, all);
   return (
@@ -112,6 +117,13 @@ function ProjectCard({ p, all, tasks }: { p: Project; all: Project[]; tasks: Tas
           {c.pct}%
         </span>
       </div>
+      {nextMs && (
+        <div className="muted small" style={{ marginTop: 8 }}>
+          <Icon name="milestone" size="xs" /> הבא: {nextMs.title}
+          {nextMs.dueDate ? ` · ${formatDMY(nextMs.dueDate)}` : ''}
+          {isMilestoneLate(nextMs, today) && <span className="tag warn" style={{ marginInlineStart: 6 }}>באיחור</span>}
+        </div>
+      )}
       {(p.priority || blockers.length > 0) && (
         <div className="meta">
           {p.priority && <span className={`tag ${p.priority === 'high' ? 'red' : p.priority === 'medium' ? 'warn' : 'ok'}`}>עדיפות {PRIORITY_LABEL[p.priority]}</span>}
@@ -298,6 +310,8 @@ export function ProjectScreen({ id }: { id: string }) {
         </div>
       </section>
 
+      <Milestones projectId={p.id} />
+
       <div className="section-title">תיאור</div>
       <DraftTextarea value={p.body} onSave={(v) => set({ body: v })} placeholder="מה המטרה של הפרויקט? איך ייראה 'הושלם'?" rows={4} />
 
@@ -441,17 +455,14 @@ export function ProjectScreen({ id }: { id: string }) {
   );
 }
 
-/** /project/new: name + template (SPEC 5.4). */
+/** /project/new (SPEC 5.4). */
 export function NewProjectScreen() {
-  const templates = (useLive(Q.templates) ?? []).filter((t) => t.kind === 'project');
   const areas = useLive(Q.areas) ?? [];
   const [name, setName] = useState('');
-  const [tpl, setTpl] = useState<string>('');
   const [areaId, setAreaId] = useState('');
   const [status, setStatus] = useState<ProjectStatus>('planning');
   const ref = useRef<HTMLInputElement>(null);
   useEffect(() => ref.current?.focus(), []);
-  const template = templates.find((t) => t.id === tpl);
   return (
     <div className="page sub">
       <TopBar title="פרויקט חדש" backTo="/projects" />
@@ -459,7 +470,7 @@ export function NewProjectScreen() {
         onSubmit={async (e) => {
           e.preventDefault();
           if (!name.trim()) return;
-          const p = await createProject({ name: name.trim(), areaId: areaId || undefined, status, body: template?.body ?? '' }, template?.subtasks ?? []);
+          const p = await createProject({ name: name.trim(), areaId: areaId || undefined, status });
           replace(`/project/${p.id}`);
         }}
       >
@@ -481,17 +492,6 @@ export function NewProjectScreen() {
             <select id="ns" className="mini-input" value={status} onChange={(e) => setStatus(e.target.value as ProjectStatus)}>
               <option value="planning">תכנון</option>
               <option value="active">בעבודה</option>
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="nt">תבנית</label>
-            <select id="nt" className="mini-input" value={tpl} onChange={(e) => setTpl(e.target.value)}>
-              <option value="">ריק</option>
-              {templates.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
             </select>
           </div>
         </section>
@@ -658,5 +658,71 @@ export function GoalScreen({ id }: { id: string }) {
           })}
       </Sheet>
     </div>
+  );
+}
+
+/** R-MIL: milestones inside a project. */
+function Milestones({ projectId }: { projectId: string }) {
+  const list = (useLive(() => Q.milestonesOf(projectId), [projectId]) ?? []).sort((a, b) => a.order - b.order);
+  const { today } = useClock();
+  const [title, setTitle] = useState('');
+  const [date, setDate] = useState('');
+  const st = milestoneStats(list, today);
+  return (
+    <>
+      <div className="section-title">
+        <span>
+          <Icon name="milestone" size="xs" /> אבני דרך
+        </span>
+        {st.total > 0 && (
+          <span className="num">
+            {st.done} מתוך {st.total} · {st.onTime} בזמן
+          </span>
+        )}
+      </div>
+      <section className="card">
+        {st.total > 0 && (
+          <div style={{ marginBottom: 6 }}>
+            <Bar pct={(st.done / st.total) * 100} />
+          </div>
+        )}
+        {list.map((m, i) => {
+          const late = isMilestoneLate(m, today);
+          return (
+            <div key={m.id} className={`todo ${m.doneAt ? 'done' : ''}`}>
+              <button type="button" className={`box ${m.doneAt ? 'checked' : ''}`} style={{ borderRadius: 7 }} aria-label={`סמן ${m.title}`} onClick={() => void toggleMilestone(m.id)}>
+                {m.doneAt && <Icon name="check" />}
+              </button>
+              <span className="txt">
+                {m.title}
+                <span className="sub">
+                  {m.doneAt ? `הושגה ${formatDMY(localDate(m.doneAt))}` : m.dueDate ? `יעד ${formatDMY(m.dueDate)}` : 'בלי תאריך'}
+                  {late && <span className="tag warn" style={{ marginInlineStart: 6 }}>באיחור</span>}
+                </span>
+              </span>
+              <input type="date" className="mini-input" aria-label="תאריך יעד" style={{ width: 34, padding: '6px 4px', color: 'transparent' }} value={m.dueDate ?? ''} onChange={(e) => void updateMilestone(m.id, { dueDate: e.target.value || undefined })} />
+              <button type="button" className="muted" aria-label="למעלה" disabled={i === 0} style={{ opacity: i === 0 ? 0.3 : 1 }} onClick={() => void moveMilestone(m.id, -1)}>
+                <Icon name="up" size="sm" />
+              </button>
+              <button type="button" className="muted" aria-label="מחק" onClick={() => confirmAction(`למחוק את "${m.title}"?`) && void deleteMilestone(m.id)}>
+                <Icon name="x" size="xs" />
+              </button>
+            </div>
+          );
+        })}
+        <form
+          className="addrow"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            await addMilestone(projectId, title, date || undefined);
+            setTitle('');
+            setDate('');
+          }}
+        >
+          <input className="input" placeholder="+ אבן דרך, למשל: גרסה ראשונה באוויר" value={title} onChange={(e) => setTitle(e.target.value)} />
+          <input type="date" className="mini-input" aria-label="תאריך יעד" value={date} onChange={(e) => setDate(e.target.value)} style={{ flex: 'none', width: 130 }} />
+        </form>
+      </section>
+    </>
   );
 }

@@ -30,9 +30,18 @@ export const SCHEMA_V1 = {
 const { infoCards: _removed, ...SCHEMA_V2 } = SCHEMA_V1;
 export { SCHEMA_V2 };
 
-export type TableName = keyof typeof SCHEMA_V2;
-export const TABLE_NAMES = Object.keys(SCHEMA_V2) as TableName[];
-export const CURRENT_SCHEMA_VERSION = 2;
+/** v3 (03/10/2026, SPEC 1.3): people, agenda, milestones; tasks indexed by waitingPersonId. */
+export const SCHEMA_V3 = {
+  ...SCHEMA_V2,
+  tasks: 'id, seq, status, dueDate, sprintId, parentId, recurringId, top3Date, waitingPersonId, *projectIds',
+  people: 'id',
+  agenda: 'id, personId',
+  milestones: 'id, projectId, dueDate',
+} as const;
+
+export type TableName = keyof typeof SCHEMA_V3;
+export const TABLE_NAMES = Object.keys(SCHEMA_V3) as TableName[];
+export const CURRENT_SCHEMA_VERSION = 3;
 
 export class StayFocusDB extends Dexie {
   tasks!: EntityTable<D.Task, 'id'>;
@@ -49,11 +58,15 @@ export class StayFocusDB extends Dexie {
   attachments!: EntityTable<D.Attachment, 'id'>;
   templates!: EntityTable<D.Template, 'id'>;
   settings!: EntityTable<D.Settings, 'id'>;
+  people!: EntityTable<D.Person, 'id'>;
+  agenda!: EntityTable<D.AgendaItem, 'id'>;
+  milestones!: EntityTable<D.Milestone, 'id'>;
 
   constructor(name = DB_NAME) {
     super(name);
     this.version(1).stores(SCHEMA_V1);
     this.version(2).stores({ ...SCHEMA_V2, infoCards: null });
+    this.version(3).stores(SCHEMA_V3);
   }
 }
 

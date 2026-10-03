@@ -3,7 +3,7 @@ import { db, TABLE_NAMES } from '../db/db';
 import { defaultAreas, defaultTemplates } from '../db/seed';
 import { logId } from '../domain/challenge';
 import { addDays, dayOfWeek, hhmmOf, nowMinutes, weekStart } from '../domain/dates';
-import { SETTINGS_ID, type Challenge, type ChallengeLog, type Goal, type Note, type Project, type Recurring, type RoutineItem, type RoutineLog, type Sprint, type Task } from '../domain/schemas';
+import { SETTINGS_ID, type AgendaItem, type Challenge, type ChallengeLog, type Goal, type Milestone, type Note, type Person, type Project, type Recurring, type RoutineItem, type RoutineLog, type Sprint, type Task } from '../domain/schemas';
 import { sprintName, sprintRange } from '../domain/sprints';
 import { exportBackup, parseBackup, restoreBackup } from './backup';
 import { getSettings, newId, nowIso } from './entity';
@@ -121,6 +121,13 @@ const NOTES: { title: string; body: string; kinds: Note['kinds']; project?: stri
   { title: 'רעיון: סדנה קטנה לחברים', body: 'ערב אחד: איך לתכנן שבוע בלי להשתגע.', kinds: ['idea'] },
 ];
 
+const PEOPLE: [string, string][] = [['אמא', '❤️'], ['אבא', '👨'], ['נועה', '👩'], ['יואב', '🧑‍💼'], ['סבתא', '👵'], ['דני מהעבודה', '🤝'], ['מיכל', '⭐']];
+const TALK = ['לספר על הפרויקט החדש', 'לשאול איך היה הטיול', 'להחזיר את הספר', 'לתאם ארוחת שישי', 'לשאול על ההמלצה לרופא', 'להראות את התמונות', 'לשאול מה הוא חושב על הרעיון', 'להגיד תודה על העזרה'];
+const WAITING = ['לקבל הצעה מהמעצבת', 'תשובה לגבי התאריכים', 'שיחזיר את המקדחה', 'פידבק על הטיוטה', 'אישור לגבי הפגישה', 'שישלח את התמונות'];
+const SOMEDAY = ['ללמוד קרמיקה', 'לכתוב בלוג על טכנולוגיה', 'לבנות שולחן מעץ', 'טיול לאיסלנד', 'ללמוד לצלם בפילם', 'קורס אפייה של לחם', 'להתנדב פעם בשבוע', 'ללמוד צרפתית'];
+const MILESTONES = ['גרסה ראשונה', 'פידבק מ-5 אנשים', 'השקה', 'חצי הדרך', 'סיום תכנון', 'גרסה סופית'];
+const WEEK_GOALS = ['לסיים את דף הבית', 'שני פרקים בספר', 'ערב אחד בלי מסכים', 'לצלם פרק ראשון', 'שיחה בספרדית', 'לסגור את המחסן'];
+
 const MORNING = ['השכמה בלי טלפון', 'כוס מים', 'מדיטציה 10 דק׳', 'לכתוב את 3 החשובים', 'לקרוא 10 עמודים', 'לעבור על המשימות של היום'];
 const EVENING = ['לסגור את המחשב', 'לסדר את השולחן', 'יומן: מה הלך טוב', 'להכין את המחר', 'לקרוא לפני השינה', 'במיטה עד 23:30'];
 
@@ -157,7 +164,7 @@ export async function generateDemo(today: string, now: Date = new Date()): Promi
   const cur = weekStart(today);
   const sprints: Sprint[] = [-42, -35, -28, -21, -14, -7, 0, 7].map((off) => {
     const start = addDays(cur, off);
-    return { ...st(), name: sprintName(start), ...sprintRange(start), reviewedAt: off < -7 ? ts : undefined };
+    return { ...st(), name: sprintName(start), ...sprintRange(start), reviewedAt: off < -7 ? ts : undefined, weeklyGoals: [] as string[] };
   });
   const past = sprints.slice(0, 6);
   const sCur = sprints[6]!;
@@ -167,7 +174,7 @@ export async function generateDemo(today: string, now: Date = new Date()): Promi
   let seq = 0;
   const tasks: Task[] = [];
   const T = (title: string, p: Partial<Task> = {}): Task => {
-    const t: Task = { ...st(), seq: ++seq, title, body: '', status: 'todo', projectIds: [], labels: [], urgent: false, important: false, links: [], attachmentIds: [], sortOrder: seq, ...p };
+    const t = { ...st(), seq: ++seq, title, body: '', status: 'todo', projectIds: [], labels: [], urgent: false, important: false, links: [], attachmentIds: [], sortOrder: seq, someday: false, postponeCount: 0, ...p } as Task;
     if (t.status === 'done' && !t.completedAt) t.completedAt = ts;
     tasks.push(t);
     return t;
@@ -194,6 +201,12 @@ export async function generateDemo(today: string, now: Date = new Date()): Promi
       }
     });
   }
+  // Last week: a few more done, and some left over for the weekly review (R-SPR-4)
+  const sLast = past[5]!;
+  for (const t of shuffle(tasks.filter((x) => x.status === 'done' && x.sprintId && x.sprintId !== sLast.id)).slice(0, 5)) {
+    Object.assign(t, { sprintId: sLast.id, completedAt: `${addDays(sLast.startDate, rnd(7))}T15:00:00.000Z` });
+  }
+  for (const t of shuffle(tasks.filter((x) => x.status === 'todo' && !x.sprintId)).slice(0, 3)) t.sprintId = sLast.id;
   // A few sub-tasks
   for (const parent of shuffle(tasks.filter((t) => t.status !== 'done' && t.sprintId === sCur.id)).slice(0, 2)) {
     for (const sub of ['טיוטה ראשונה', 'לבקש פידבק', 'גרסה סופית'].slice(0, 2 + rnd(2))) {
@@ -213,6 +226,30 @@ export async function generateDemo(today: string, now: Date = new Date()): Promi
   T(pick(['לקבוע תור לרופא', 'להתקשר לסבא', 'לאסוף חבילה מהדואר']), { dueDate: today, status: 'done' });
   // Inbox
   for (const title of shuffle(INBOX).slice(0, 6)) T(title, { createdAt: `${addDays(today, -rnd(5))}T08:00:00.000Z` });
+
+  // People + talking points + waiting (R-PPL, R-WAI)
+  const people: Person[] = shuffle(PEOPLE).slice(0, 5).map(([name, emoji]) => ({ ...st(), name, emoji, body: '' }));
+  const agenda: AgendaItem[] = [];
+  for (const p of people) for (const text of shuffle(TALK).slice(0, 1 + rnd(3))) agenda.push({ ...st(), personId: p.id, text });
+  for (const [i, title] of shuffle(WAITING).slice(0, 4).entries()) {
+    T(title, { waitingPersonId: people[i % people.length]!.id, dueDate: addDays(today, rnd(2) ? 1 + rnd(5) : -1), createdAt: `${addDays(today, -rnd(10))}T09:00:00.000Z` });
+  }
+  // Someday (R-SMD) and procrastinated tasks (R-PRC)
+  for (const title of shuffle(SOMEDAY).slice(0, 6)) T(title, { someday: true, createdAt: `${addDays(today, -rnd(90))}T09:00:00.000Z` });
+  for (const t of shuffle(tasks.filter((x) => x.status === 'todo' && !x.someday && !x.top3Date)).slice(0, 3)) Object.assign(t, { postponeCount: 3 + rnd(3) });
+  // Old untouched tasks, so "cleanup" has something (R-CLN)
+  for (const t of shuffle(tasks.filter((x) => x.status === 'todo' && !x.sprintId && !x.dueDate && !x.someday)).slice(0, 4)) t.createdAt = `${addDays(today, -(70 + rnd(60)))}T09:00:00.000Z`;
+
+  // Milestones for active and planned projects (R-MIL)
+  const milestones: Milestone[] = [];
+  for (const p of projects.filter((x) => x.status === 'active' || x.status === 'planning')) {
+    shuffle(MILESTONES).slice(0, 2 + rnd(2)).forEach((title, order) => {
+      const due = addDays(today, -20 + order * 25 + rnd(10));
+      const done = p.status === 'active' && order === 0 && chance(0.7);
+      milestones.push({ ...st(), projectId: p.id, title, order, dueDate: due, doneAt: done ? `${addDays(due, chance(0.6) ? -2 : 3)}T12:00:00.000Z` : undefined });
+    });
+  }
+  sCur.weeklyGoals = shuffle(WEEK_GOALS).slice(0, 3);
 
   // Notes
   const notes: Note[] = shuffle(NOTES).slice(0, 15).map((n, i) => {
@@ -267,6 +304,9 @@ export async function generateDemo(today: string, now: Date = new Date()): Promi
     await db.challenges.bulkAdd([ended, activeCh]);
     await db.challengeLogs.bulkAdd(clogs);
     await db.recurring.bulkAdd(recurring);
+    await db.people.bulkAdd(people);
+    await db.agenda.bulkAdd(agenda);
+    await db.milestones.bulkAdd(milestones);
   });
   await runDaily(today);
 }

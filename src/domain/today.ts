@@ -48,7 +48,7 @@ export function regulars(tasks: Task[], today: string): Task[] {
 
 /** R-TOD-5 */
 export function overdue(tasks: Task[], today: string): Task[] {
-  const late = tasks.filter((t) => isOpen(t) && !!t.dueDate && t.dueDate < today && !t.recurringId);
+  const late = tasks.filter((t) => isOpen(t) && !t.someday && !!t.dueDate && t.dueDate < today && !t.recurringId);
   const lateIds = new Set(late.map((t) => t.id));
   return late.filter((t) => !(t.parentId && lateIds.has(t.parentId))).sort((a, b) => a.dueDate!.localeCompare(b.dueDate!) || compareForDay(a, b));
 }

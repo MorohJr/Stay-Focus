@@ -1,17 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { diffDays, formatDMY, localDate } from '../../domain/dates';
-import type { Template } from '../../domain/schemas';
 import { backupFileName, BackupError, exportBackup, markBackupDone, parseBackup, restoreBackup, wipeAll, type ParsedBackup } from '../../services/backup';
 import { assertNotDemo, exitDemo, loadDemo } from '../../services/demo';
 import { ensureSeed, updateSettings } from '../../services/entity';
-import { deleteArea, deleteTemplate, saveArea, saveTemplate } from '../../services/misc';
+import { deleteArea, saveArea } from '../../services/misc';
 import { runDaily } from '../../services/planning';
 import { currentPosition, saveFile } from '../../services/platform';
 import { Q } from '../../services/queries';
 import { searchAll, type SearchHit } from '../../services/search';
 import { describeWeather, refreshWeather, searchPlaces, type Place } from '../../services/weather';
 import { confirmAction, Empty, TopBar, useToast } from '../components/common';
-import { DraftInput, DraftTextarea } from '../components/edit';
+import { DraftInput } from '../components/edit';
 import { Icon } from '../components/Icon';
 import { useClock, useLive } from '../hooks';
 import { go } from '../router';
@@ -21,6 +20,7 @@ export function MoreScreen() {
   const counts = {
     notes: useLive(async () => (await Q.notes()).length) ?? 0,
     challenges: useLive(async () => (await Q.challenges()).length) ?? 0,
+    people: useLive(async () => (await Q.people()).length) ?? 0,
   };
   const row = (to: string, icon: string, label: string, end?: string, blue = false) => (
     <button type="button" className="listrow" onClick={() => go(to)}>
@@ -39,6 +39,7 @@ export function MoreScreen() {
       <TopBar title="עוד" />
       <section className="card">
         {row('/notes', 'note', 'פתקים', counts.notes ? String(counts.notes) : undefined, true)}
+        {row('/people', 'users', 'אנשים', counts.people ? String(counts.people) : undefined, true)}
         {row('/challenges', 'shield', 'אתגרים', counts.challenges ? String(counts.challenges) : undefined, true)}
         {row('/routines', 'sunrise', 'שגרות בוקר וערב', undefined, true)}
         {row('/recurring', 'repeat', 'משימות חוזרות', undefined, true)}
@@ -47,8 +48,8 @@ export function MoreScreen() {
         {row('/search', 'search', 'חיפוש')}
         {row('/tasks/matrix', 'grid', 'מטריצת דחוף / חשוב')}
         {row('/projects/goals', 'mountain', 'מטרות')}
+        {row('/cleanup', 'archive', 'ניקוי משימות ישנות')}
         {row('/areas', 'tag', 'תחומים')}
-        {row('/templates', 'layers', 'תבניות')}
       </section>
       <section className="card">
         {row('/backup', 'download', 'גיבוי וסנכרון')}
@@ -66,8 +67,8 @@ export function MoreScreen() {
 // Search (SPEC 5.8)
 // ---------------------------------------------------------------------------
 
-const HIT_LABEL: Record<SearchHit['kind'], string> = { task: 'משימות', project: 'פרויקטים', note: 'פתקים', goal: 'מטרות' };
-const HIT_PATH: Record<SearchHit['kind'], string> = { task: '/task/', project: '/project/', note: '/note/', goal: '/goal/' };
+const HIT_LABEL: Record<SearchHit['kind'], string> = { task: 'משימות', project: 'פרויקטים', note: 'פתקים', goal: 'מטרות', person: 'אנשים' };
+const HIT_PATH: Record<SearchHit['kind'], string> = { task: '/task/', project: '/project/', note: '/note/', goal: '/goal/', person: '/person/' };
 
 export function SearchScreen() {
   const [q, setQ] = useState('');
@@ -474,58 +475,6 @@ export function AreasScreen() {
           <input className="input" placeholder="+ תחום חדש" value={name} onChange={(e) => setName(e.target.value)} />
         </form>
       </section>
-    </div>
-  );
-}
-
-const KIND_LABEL: Record<Template['kind'], string> = { note: 'פתק', project: 'פרויקט', task: 'משימה' };
-
-export function TemplatesScreen() {
-  const templates = useLive(Q.templates) ?? [];
-  const [open, setOpen] = useState<string>();
-  return (
-    <div className="page sub">
-      <TopBar title="תבניות" backTo="/more">
-        <button
-          type="button"
-          className="iconbtn"
-          aria-label="תבנית חדשה"
-          onClick={async () => {
-            await saveTemplate({ kind: 'note', name: 'תבנית חדשה' });
-          }}
-        >
-          <Icon name="plus" />
-        </button>
-      </TopBar>
-      <p className="muted small" style={{ margin: '0 4px 10px' }}>
-        תבנית פתק ממלאת את גוף הפתק. תבנית פרויקט ממלאת את התיאור ויוצרת משימות ראשונות.
-      </p>
-      {!templates.length && <Empty icon="🧩">אין תבניות.</Empty>}
-      {templates.map((t) => (
-        <section key={t.id} className="card">
-          <button type="button" className="card-h" style={{ width: '100%', margin: 0 }} onClick={() => setOpen(open === t.id ? undefined : t.id)}>
-            <span className="t">
-              <Icon name="layers" size="sm" /> {t.name}
-            </span>
-            <small>{KIND_LABEL[t.kind]}</small>
-          </button>
-          {open === t.id && (
-            <div className="stack" style={{ marginTop: 10 }}>
-              <DraftInput value={t.name} onSave={(v) => void saveTemplate({ ...t, name: v })} placeholder="שם התבנית" />
-              <select className="select" aria-label="סוג" value={t.kind} onChange={(e) => void saveTemplate({ ...t, kind: e.target.value as typeof t.kind })}>
-                <option value="note">פתק</option>
-                <option value="project">פרויקט</option>
-              </select>
-              {t.kind === 'note' && <DraftInput value={t.title} onSave={(v) => void saveTemplate({ ...t, title: v })} placeholder="תחילת כותרת (לא חובה)" />}
-              <DraftTextarea value={t.body} onSave={(v) => void saveTemplate({ ...t, body: v })} placeholder="התוכן" rows={6} />
-              {t.kind === 'project' && <DraftTextarea value={t.subtasks.join('\n')} onSave={(v) => void saveTemplate({ ...t, subtasks: v.split('\n').map((s) => s.trim()).filter(Boolean) })} placeholder="משימות ראשונות, אחת בכל שורה" rows={4} />}
-              <button type="button" className="btn danger" onClick={() => confirmAction(`למחוק את "${t.name}"?`) && void deleteTemplate(t.id)}>
-                מחק תבנית
-              </button>
-            </div>
-          )}
-        </section>
-      ))}
     </div>
   );
 }

@@ -3,10 +3,11 @@ import { formatDMY, localDate } from '../../domain/dates';
 import { describeRule } from '../../domain/recurring';
 import type { Priority, Task, TaskStatus } from '../../domain/schemas';
 import { sprintStatus, SPRINT_STATUS_LABEL } from '../../domain/sprints';
-import { PRIORITY_LABEL, STATUS_EMOJI, STATUS_LABEL } from '../../domain/tasks';
+import { isStuck, PRIORITY_LABEL, STATUS_EMOJI, STATUS_LABEL } from '../../domain/tasks';
 import { top3 as top3Of } from '../../domain/today';
 import { Q } from '../../services/queries';
-import { addToTop3, createTask, deleteTask, removeFromTop3, restoreTasks, updateTask } from '../../services/tasks';
+import { addToTop3, createTask, deleteTask, removeFromTop3, resolveStuck, restoreTasks, setSomeday, setWaiting, updateTask } from '../../services/tasks';
+import { PersonPicker } from './PeopleScreens';
 import { Empty, Switch, TopBar, useToast } from '../components/common';
 import { DraftInput, DraftTextarea, LabelsEditor, LinksEditor, PhotosEditor } from '../components/edit';
 import { Icon } from '../components/Icon';
@@ -28,6 +29,9 @@ export function TaskScreen({ id }: { id: string }) {
   const [pickProject, setPickProject] = useState(false);
   const [pickSprint, setPickSprint] = useState(false);
   const [subTitle, setSubTitle] = useState('');
+  const [pickPerson, setPickPerson] = useState(false);
+  const subRef = useRef<HTMLInputElement>(null);
+  const waitingFor = useLive(() => (task?.waitingPersonId ? Q.person(task.waitingPersonId) : Promise.resolve(null)), [task?.waitingPersonId]);
 
   if (task === undefined) return <div className="page sub" />;
   if (task === null) {
@@ -68,6 +72,45 @@ export function TaskScreen({ id }: { id: string }) {
         </button>
       )}
       <DraftInput className="title-input" value={task.title} onSave={(v) => set({ title: v })} placeholder="שם המשימה" ariaLabel="שם המשימה" />
+
+      {isStuck(task) && (
+        <section className="card" style={{ background: 'var(--warn-soft)', border: 0, marginTop: 10 }}>
+          <h4 style={{ color: 'var(--warn)' }}>
+            <span>🐢 נדחתה {task.postponeCount} פעמים</span>
+          </h4>
+          <p className="small" style={{ margin: '0 0 10px' }}>משהו פה לא עובד. מה עושים איתה?</p>
+          <div className="chips tight">
+            <button type="button" className="chip on" onClick={() => void resolveStuck(task.id, 'today', today)}>
+              לעשות היום
+            </button>
+            <button
+              type="button"
+              className="chip out"
+              onClick={async () => {
+                await resolveStuck(task.id, 'split', today);
+                subRef.current?.focus();
+              }}
+            >
+              לפרק לצעדים קטנים
+            </button>
+            <button type="button" className="chip out" onClick={() => void resolveStuck(task.id, 'someday', today)}>
+              לאולי פעם
+            </button>
+            <button type="button" className="chip out" onClick={() => void remove()}>
+              למחוק
+            </button>
+          </div>
+        </section>
+      )}
+      {task.someday && (
+        <div className="banner" style={{ marginTop: 10 }}>
+          <Icon name="info" size="sm" />
+          <span className="grow">המשימה ב"אולי פעם" ולא מופיעה ברשימות.</span>
+          <button type="button" className="minibtn p" onClick={() => void setSomeday(task.id, false)}>
+            להפעיל
+          </button>
+        </div>
+      )}
 
       <div className="seg" style={{ margin: '12px 0' }}>
         {STATUSES.map((s) => (
@@ -169,6 +212,22 @@ export function TaskScreen({ id }: { id: string }) {
             </button>
           </span>
         </div>
+        <div className="field">
+          <span className="lab">
+            <Icon name="hourglass" size="sm" /> ממתין ל...
+          </span>
+          <button type="button" className="val linkbtn" onClick={() => setPickPerson(true)}>
+            {waitingFor ? `${waitingFor.emoji} ${waitingFor.name}` : 'אף אחד'}
+          </button>
+        </div>
+        {!task.parentId && (
+          <div className="field">
+            <span className="lab">
+              <Icon name="sparkle" size="sm" /> אולי פעם
+            </span>
+            <Switch label="אולי פעם" on={task.someday} onChange={(on) => void setSomeday(task.id, on)} />
+          </div>
+        )}
         {rec && (
           <div className="field">
             <span className="lab">
@@ -205,7 +264,7 @@ export function TaskScreen({ id }: { id: string }) {
                 setSubTitle('');
               }}
             >
-              <input className="input" placeholder="+ תת-משימה" value={subTitle} onChange={(e) => setSubTitle(e.target.value)} />
+              <input ref={subRef} className="input" placeholder="+ תת-משימה" value={subTitle} onChange={(e) => setSubTitle(e.target.value)} />
             </form>
           </section>
         </>
@@ -227,6 +286,7 @@ export function TaskScreen({ id }: { id: string }) {
         {task.completedAt ? ` · בוצעה ${formatDMY(localDate(task.completedAt))}` : ''}
       </p>
 
+      <PersonPicker open={pickPerson} onClose={() => setPickPerson(false)} value={task.waitingPersonId} onChange={(id) => void setWaiting(task.id, id)} />
       <ProjectPicker open={pickProject} onClose={() => setPickProject(false)} selected={task.projectIds} onChange={(projectIds) => set({ projectIds })} />
       <SprintPicker open={pickSprint} onClose={() => setPickSprint(false)} value={task.sprintId} onChange={(sprintId) => set({ sprintId })} />
     </div>

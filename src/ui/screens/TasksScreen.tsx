@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { addDays, formatLong, formatRelative, formatShort, HE_DAYS_SHORT, HE_MONTHS, parseISODate, toISODate, weekStart, localDate } from '../../domain/dates';
 import type { Task } from '../../domain/schemas';
 import { sprintStatus } from '../../domain/sprints';
-import { compareForDay, isInbox, isOpen, quadrantOf, QUADRANT_LABEL, type Quadrant } from '../../domain/tasks';
+import { compareForDay, isActiveOpen, isInbox, isOpen, quadrantOf, QUADRANT_LABEL, type Quadrant } from '../../domain/tasks';
 import { occurrencesBetween } from '../../services/planning';
 import { Q } from '../../services/queries';
-import { deleteTask, restoreTasks, updateTask } from '../../services/tasks';
+import { deleteTask, restoreTasks, setSomeday, setWaiting, updateTask } from '../../services/tasks';
 import { Empty, Tabs, TopBar, useToast } from '../components/common';
 import { Icon } from '../components/Icon';
 import { ProjectPicker, SprintPicker, TaskRow } from '../components/tasks';
@@ -13,10 +13,10 @@ import { ProjectIcon } from '../components/ProjectIcon';
 import { useClock, useLive } from '../hooks';
 import { go, replace } from '../router';
 
-type Tab = 'inbox' | 'calendar' | 'projects' | 'matrix' | 'done';
+type Tab = 'inbox' | 'calendar' | 'projects' | 'matrix' | 'waiting' | 'someday' | 'done';
 
 export function TasksScreen({ tab = 'inbox' }: { tab?: string }) {
-  const t = (['inbox', 'calendar', 'projects', 'matrix', 'done'].includes(tab) ? tab : 'inbox') as Tab;
+  const t = (['inbox', 'calendar', 'projects', 'matrix', 'waiting', 'someday', 'done'].includes(tab) ? tab : 'inbox') as Tab;
   const tasks = useLive(Q.tasks) ?? [];
   const inboxCount = tasks.filter(isInbox).length;
   return (
@@ -34,6 +34,8 @@ export function TasksScreen({ tab = 'inbox' }: { tab?: string }) {
           { id: 'calendar', label: 'יומן' },
           { id: 'projects', label: 'לפי פרויקט' },
           { id: 'matrix', label: 'מטריצה' },
+          { id: 'waiting', label: 'ממתין', count: tasks.filter((x) => isActiveOpen(x) && x.waitingPersonId).length },
+          { id: 'someday', label: 'אולי פעם', count: tasks.filter((x) => isOpen(x) && x.someday).length },
           { id: 'done', label: 'הושלמו' },
         ]}
       />
@@ -41,13 +43,15 @@ export function TasksScreen({ tab = 'inbox' }: { tab?: string }) {
       {t === 'calendar' && <CalendarTab tasks={tasks} />}
       {t === 'projects' && <ByProjectTab tasks={tasks} />}
       {t === 'matrix' && <MatrixTab tasks={tasks} />}
+      {t === 'waiting' && <WaitingTab tasks={tasks} />}
+      {t === 'someday' && <SomedayTab tasks={tasks} />}
       {t === 'done' && <DoneTab tasks={tasks} />}
     </div>
   );
 }
 
 /** SPEC 5.2 Clarify: each item gets a date, project or sprint, and leaves the inbox. */
-function InboxTab({ tasks }: { tasks: Task[] }) {
+export function InboxTab({ tasks }: { tasks: Task[] }) {
   const { today } = useClock();
   const sprints = useLive(Q.sprints) ?? [];
   const toast = useToast();
@@ -89,6 +93,9 @@ function InboxTab({ tasks }: { tasks: Task[] }) {
                   <Icon name="sprint" size="xs" /> לספרינט
                 </button>
               )}
+              <button type="button" className="chip out" onClick={() => void setSomeday(t.id, true)}>
+                אולי פעם
+              </button>
               <button type="button" className="chip out" onClick={() => setSprintFor(t)} aria-label="ספרינט אחר">
                 …
               </button>
@@ -124,7 +131,9 @@ function CalendarTab({ tasks }: { tasks: Task[] }) {
   const days = Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
   const lastDay = days[41]!;
   const future = occurrencesBetween(recurring, addDays(today, 1), lastDay);
-  const has = (d: string) => tasks.some((t) => t.dueDate === d && t.status !== 'archived') || future.some((o) => o.date === d);
+  const milestones = useLive(Q.milestones) ?? [];
+  const has = (d: string) => tasks.some((t) => t.dueDate === d && t.status !== 'archived') || future.some((o) => o.date === d) || milestones.some((m) => m.dueDate === d);
+  const dayMilestones = milestones.filter((m) => m.dueDate === sel);
   const dayTasks = tasks.filter((t) => t.dueDate === sel && t.status !== 'archived' && !t.parentId).sort(compareForDay);
   const dayRecurring = future.filter((o) => o.date === sel);
   const m = parseISODate(first);
@@ -182,7 +191,18 @@ function CalendarTab({ tasks }: { tasks: Task[] }) {
             </button>
           </div>
         ))}
-        {!dayTasks.length && !dayRecurring.length && <p className="muted small" style={{ margin: 4 }}>אין משימות ביום הזה.</p>}
+        {dayMilestones.map((m) => (
+          <div key={m.id} className={`todo ${m.doneAt ? 'done' : ''}`}>
+            <span className="box" style={{ borderRadius: 7, borderColor: 'var(--blue)' }}>
+              <Icon name="milestone" size="xs" />
+            </span>
+            <button type="button" className="txt" onClick={() => go(`/project/${m.projectId}`)}>
+              {m.title}
+              <span className="sub">אבן דרך · {projects.find((p) => p.id === m.projectId)?.name ?? ''}</span>
+            </button>
+          </div>
+        ))}
+        {!dayTasks.length && !dayRecurring.length && !dayMilestones.length && <p className="muted small" style={{ margin: 4 }}>אין משימות ביום הזה.</p>}
       </section>
     </>
   );
@@ -191,7 +211,7 @@ function CalendarTab({ tasks }: { tasks: Task[] }) {
 function ByProjectTab({ tasks }: { tasks: Task[] }) {
   const projects = useLive(Q.projects) ?? [];
   const { today } = useClock();
-  const open = tasks.filter((t) => isOpen(t) && !t.parentId);
+  const open = tasks.filter((t) => isActiveOpen(t) && !t.parentId);
   const groups = [
     ...projects
       .filter((p) => p.status !== 'archived')
@@ -222,7 +242,7 @@ function ByProjectTab({ tasks }: { tasks: Task[] }) {
 }
 
 function MatrixTab({ tasks }: { tasks: Task[] }) {
-  const open = tasks.filter((t) => isOpen(t) && !t.parentId);
+  const open = tasks.filter((t) => isActiveOpen(t) && !t.parentId);
   const quads: Quadrant[] = ['do', 'plan', 'delegate', 'drop'];
   return (
     <>
@@ -249,6 +269,88 @@ function MatrixTab({ tasks }: { tasks: Task[] }) {
           );
         })}
       </div>
+    </>
+  );
+}
+
+/** R-WAI: grouped by person. */
+function WaitingTab({ tasks }: { tasks: Task[] }) {
+  const people = useLive(Q.people) ?? [];
+  const { today } = useClock();
+  const list = tasks.filter((t) => isActiveOpen(t) && t.waitingPersonId);
+  if (!list.length) {
+    return (
+      <Empty icon="⏳">
+        אין משימות שממתינות למישהו.
+        <br />
+        במסך משימה בוחרים "ממתין ל..." כשהמשימה תלויה באדם אחר.
+      </Empty>
+    );
+  }
+  const groups = people.map((p) => ({ p, list: list.filter((t) => t.waitingPersonId === p.id) })).filter((g) => g.list.length);
+  return (
+    <>
+      {groups.map(({ p, list: l }) => (
+        <div key={p.id}>
+          <div className="section-title">
+            <button type="button" onClick={() => go(`/person/${p.id}`)}>
+              {p.emoji} {p.name}
+            </button>
+            <span className="num">{l.length}</span>
+          </div>
+          <section className="card">
+            {l.map((t) => (
+              <TaskRow
+                key={t.id}
+                task={t}
+                today={today}
+                meta={t.dueDate ? `לבדוק ${formatRelative(t.dueDate, today)}` : 'בלי תאריך לבדיקה'}
+                end={
+                  <button type="button" className="minibtn p" onClick={() => void setWaiting(t.id, undefined)}>
+                    התקבל
+                  </button>
+                }
+              />
+            ))}
+          </section>
+        </div>
+      ))}
+    </>
+  );
+}
+
+/** R-SMD */
+function SomedayTab({ tasks }: { tasks: Task[] }) {
+  const projects = useLive(Q.projects) ?? [];
+  const list = tasks.filter((t) => isOpen(t) && t.someday).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  if (!list.length) {
+    return (
+      <Empty icon="💭">
+        "אולי פעם" ריק.
+        <br />
+        רעיונות שאתה לא מתחייב אליהם עכשיו נשמרים כאן, כדי שלא יעמיסו על הרשימות.
+      </Empty>
+    );
+  }
+  return (
+    <>
+      <p className="muted small" style={{ margin: '0 4px 10px' }}>
+        רעיונות בלי התחייבות. הם לא מופיעים בשום רשימה אחרת עד ש"מפעילים" אותם.
+      </p>
+      <section className="card">
+        {list.map((t) => (
+          <TaskRow
+            key={t.id}
+            task={t}
+            projects={projects}
+            end={
+              <button type="button" className="minibtn p" onClick={() => void setSomeday(t.id, false)}>
+                להפעיל
+              </button>
+            }
+          />
+        ))}
+      </section>
     </>
   );
 }
