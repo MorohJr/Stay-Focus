@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Stay Focus · סגנונות למסכים הפנימיים</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&family=Rubik:wght@500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root { --page: #e9eaee; --ink: #111; --muted: #7a7a74; --line: #ececea; --s2: #f5f5f4; --track: #efefec; --track2: #cfcfca; --blue: #3346c4; --bsoft: #eef0fb; --btext: #2b3cab; --warn: #c2410c; --wsoft: #fff1e8; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font-family: 'Heebo', sans-serif; }
+  .wrap { max-width: 1500px; margin: 0 auto; padding: 0 16px 60px; }
+  header.top { padding: 28px 0 8px; }
+  h1 { margin: 0 0 6px; font-size: 1.7rem; }
+  header.top p { margin: 0; color: #5f6572; max-width: 820px; line-height: 1.55; }
+  .style { background: #fff; border-radius: 22px; padding: 18px 16px 22px; margin-top: 22px; }
+  .style h2 { margin: 0; font-size: 1.3rem; }
+  .style .sub { color: #5f6572; margin: 4px 0 14px; font-size: .95rem; line-height: 1.5; }
+  .pair { display: flex; gap: 22px; flex-wrap: wrap; justify-content: center; }
+  .pair figure { margin: 0; text-align: center; }
+  .pair figcaption { font-size: .85rem; color: #5f6572; margin-bottom: 6px; font-weight: 600; }
+  .phone { width: 320px; height: 640px; border-radius: 42px; padding: 9px; background: #111; box-shadow: 0 14px 34px rgba(0,0,0,.2); }
+  .screen { position: relative; height: 100%; border-radius: 34px; overflow: hidden; background: #fff; text-align: right; }
+  .scroll { height: 100%; overflow-y: auto; padding: 44px 14px 90px; scrollbar-width: none; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .status { position: absolute; top: 0; inset-inline: 0; height: 40px; display: flex; justify-content: space-between; align-items: center; padding: 0 24px; font-size: 12px; font-weight: 600; z-index: 3; direction: ltr; background: rgba(255,255,255,.9); }
+  .notch { position: absolute; top: 9px; left: 50%; transform: translateX(-50%); width: 86px; height: 24px; border-radius: 20px; background: #000; z-index: 4; }
+  .nav { position: absolute; inset-inline: 0; bottom: 0; height: 64px; padding-bottom: 12px; display: flex; justify-content: space-around; align-items: center; background: rgba(255,255,255,.95); border-top: 1px solid var(--line); z-index: 5; font-size: 9.5px; color: #a3a39d; }
+  .nav span { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .nav span.on { color: var(--ink); font-weight: 700; }
+  .nav i { width: 18px; height: 18px; border-radius: 5px; border: 1.8px solid currentColor; display: block; }
+  .nav span.on i { border-color: var(--blue); }
+  .num { font-family: 'Rubik'; font-variant-numeric: tabular-nums; }
+  .ltr { direction: ltr; unicode-bidi: isolate; }
+  .muted { color: var(--muted); }
+  .logo { width: 44px; height: 44px; border-radius: 12px; background: #ff6b35; color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 22px; flex: none; }
+  .em { width: 26px; height: 26px; border-radius: 8px; background: var(--s2); display: grid; place-items: center; font-size: 14px; flex: none; }
+  .circ { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--track2); flex: none; display: grid; place-items: center; }
+  .circ.doing { border-color: var(--blue); }
+  .circ.doing::after { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--blue); }
+  .circ.done { background: var(--ink); border-color: var(--ink); }
+  .circ.done::after { content: '✓'; color: #fff; font-size: 11px; font-weight: 800; }
+  .sq { width: 18px; height: 18px; border-radius: 5px; border: 1.8px solid var(--track2); flex: none; }
+  .sq.done { background: var(--ink); border-color: var(--ink); }
+  .strike { text-decoration: line-through; opacity: .45; }
+  .tag { font-size: 10px; padding: 2px 7px; border-radius: 99px; background: var(--bsoft); color: var(--btext); white-space: nowrap; }
+  .tag.w { background: var(--wsoft); color: var(--warn); }
+  .tag.g { background: var(--s2); color: var(--muted); }
+  .bar { height: 6px; border-radius: 9px; background: var(--track); overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 71%; background: var(--blue); border-radius: 9px; }
+  .chips { display: flex; gap: 5px; overflow: hidden; }
+  .chip { flex: none; font-size: 11.5px; padding: 6px 11px; border-radius: 99px; background: var(--s2); font-weight: 600; }
+  .chip.on { background: var(--ink); color: #fff; }
+  .meta { font-size: 10.5px; color: var(--muted); }
+  .fab { position: absolute; z-index: 6; bottom: 76px; inset-inline-start: 14px; width: 46px; height: 46px; border-radius: 15px; background: #111; color: #fff; display: grid; place-items: center; font-size: 24px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>8 סגנונות למסכים הפנימיים</h1>
+    <p>אותם צבעים בכל הסגנונות: רקע לבן, שחור ואינדיגו. משתנים רק הסידור, הצורות והטיפוגרפיה. בכל סגנון יש שני מסכים: רשימת המשימות (לשונית "לפי פרויקט") ודף פרויקט. אותו סגנון יחול גם על ספרינט, פתקים, אתגרים וכל השאר. מסך "היום" לא משתנה. אפשר לגלול בתוך כל טלפון.</p>
+  </header>
+  <div id="list"></div>
+</div>
+<script>
+const G = [
+  { e: '🌐', n: 'אתר תדמית חדש', t: [['לכתוב טקסטים לדף הבית', 'doing', 'היום · 10:00', ''], ['לצלם תמונות לאתר', 'todo', 'מחר', ''], ['בדיקות במובייל', 'todo', '', 'דחוף']] },
+  { e: '🎬', n: 'ערוץ יוטיוב', t: [['לכתוב תסריט לפרק 1', 'doing', 'יום חמישי', ''], ['לעצב תמונה ממוזערת', 'todo', '', 'חשוב']] },
+  { e: '📚', n: 'ספרדית', t: [['למצוא שותף לשיחה', 'todo', 'שבוע הבא', ''], ['שיעורים 1–5 באפליקציה', 'done', 'בוצע אתמול', '']] },
+];
+const PT = [['לעצב תמונה ממוזערת', 'todo', 'יום חמישי', 'חשוב'], ['לתכנן לוח העלאות לחודש', 'todo', '', ''], ['לכתוב תסריט לפרק 1', 'doing', 'היום', ''], ['לצלם פרק ראשון', 'done', '', ''], ['לחקור 10 ערוצים', 'done', '', '']];
+const TABS = ['דואר נכנס', 'יומן', 'לפי פרויקט', 'מטריצה', 'הושלמו'];
+const tabs = (cls = '') => `<div class="chips ${cls}">${TABS.map((t, i) => `<span class="chip ${i === 2 ? 'on' : ''}">${t}${i === 0 ? ' <b class="num" style="opacity:.6">4</b>' : ''}</span>`).join('')}</div>`;
+const circ = (s) => `<span class="circ ${s}"></span>`;
+const tagOf = (x) => (x ? `<span class="tag ${x === 'דחוף' ? 'w' : ''}">${x}</span>` : '');
+const all = G.reduce((a, g) => a + g.t.length, 0);
+const phone = (inner, navOn) => `<div class="phone"><div class="screen"><div class="status"><span>9:41</span><span>●●● ▮</span></div><div class="notch"></div><div class="scroll">${inner}</div><div class="fab">+</div><div class="nav">${['היום', 'משימות', 'ספרינט', 'פרויקטים', 'עוד'].map((n, i) => `<span class="${i === navOn ? 'on' : ''}"><i></i>${n}</span>`).join('')}</div></div></div>`;
+
+const STYLES = [
+  /* 1 */ {
+    name: '1. רשימות מקובצות (iOS)', sub: 'כמו ההגדרות באייפון: כותרת גדולה, קבוצות מעוגלות עם קווי הפרדה דקים, חץ בכל שורה. מוכר ושקט.',
+    css: `.s1 h3{font-size:30px;font-weight:800;margin:4px 0 10px}.s1 .gh{font-size:11.5px;color:var(--muted);margin:16px 6px 6px;display:flex;gap:6px;align-items:center}.s1 .grp{border:1px solid var(--line);border-radius:14px;overflow:hidden}.s1 .r{display:flex;align-items:center;gap:10px;padding:11px 12px;font-size:13.5px}.s1 .r+.r{border-top:1px solid var(--line);margin-inline-start:42px;padding-inline-start:0}.s1 .r .x{flex:1}.s1 .r .ch{color:#c4c4be}`,
+    tasks: () => `<div class="s1"><h3>משימות</h3>${tabs()}${G.map((g) => `<div class="gh"><span class="em">${g.e}</span>${g.n}</div><div class="grp">${g.t.map(([t, s, m, x]) => `<div class="r">${circ(s)}<span class="x ${s === 'done' ? 'strike' : ''}">${t}<div class="meta">${m}</div></span>${tagOf(x)}<span class="ch">‹</span></div>`).join('')}</div>`).join('')}</div>`,
+    project: () => `<div class="s1"><div style="display:flex;gap:10px;align-items:center;margin-top:6px"><span class="logo">W</span><h3 style="margin:0">ערוץ יוטיוב</h3></div><div class="grp" style="margin-top:12px"><div class="r"><span class="x">סטטוס</span><b>בעבודה</b><span class="ch">‹</span></div><div class="r" style="margin:0;padding-inline-start:12px"><span class="x">התקדמות</span><b class="num">71%</b></div><div class="r" style="margin:0;padding-inline-start:12px"><span class="x">תחום</span><span class="muted">עבודה</span><span class="ch">‹</span></div><div class="r" style="margin:0;padding-inline-start:12px"><span class="x">תאריך סיום</span><span class="muted ltr">14/08/2026</span></div></div><div class="gh">משימות</div><div class="grp">${PT.map(([t, s, m, x]) => `<div class="r">${circ(s)}<span class="x ${s === 'done' ? 'strike' : ''}">${t}<div class="meta">${m}</div></span>${tagOf(x)}</div>`).join('')}</div><div class="gh">פתקים</div><div class="grp"><div class="r"><span class="x">רעיונות לסרטונים</span><span class="ch">‹</span></div></div></div>`,
+  },
+  /* 2 */ {
+    name: '2. כרטיס לכל משימה', sub: 'כל משימה כרטיס נפרד עם צל עדין ומרווח גדול. קל ללחוץ באצבע, מרגיש "אפליקציה".',
+    css: `.s2 h3{font-size:24px;font-weight:800;margin:4px 0 12px}.s2 .gh{font-size:12.5px;font-weight:700;margin:16px 2px 8px;display:flex;gap:6px;align-items:center}.s2 .c{display:flex;gap:10px;align-items:center;padding:12px;border-radius:16px;box-shadow:0 2px 10px rgba(17,17,17,.07);border:1px solid #f0f0ee;margin-bottom:8px;font-size:13.5px}.s2 .c .x{flex:1}`,
+    tasks: () => `<div class="s2"><h3>משימות</h3>${tabs()}${G.map((g) => `<div class="gh"><span class="em">${g.e}</span>${g.n} <span class="muted num" style="font-weight:500">${g.t.length}</span></div>${g.t.map(([t, s, m, x]) => `<div class="c">${circ(s)}<span class="x ${s === 'done' ? 'strike' : ''}">${t}<div class="meta">${m}</div></span>${tagOf(x)}</div>`).join('')}`).join('')}</div>`,
+    project: () => `<div class="s2"><div class="c" style="flex-direction:column;align-items:stretch;gap:10px;padding:14px"><div style="display:flex;gap:10px;align-items:center"><span class="logo">W</span><div style="flex:1"><b style="font-size:18px">ערוץ יוטיוב</b><div class="meta">עבודה · עד 14/08</div></div><b class="num" style="font-size:20px">71%</b></div><div class="bar"><i></i></div></div><div class="chips" style="margin:10px 0"><span class="chip">תכנון</span><span class="chip on">בעבודה</span><span class="chip">הושלם</span><span class="chip">ארכיון</span></div><div class="gh">משימות <span class="muted num">5</span></div>${PT.map(([t, s, m, x]) => `<div class="c">${circ(s)}<span class="x ${s === 'done' ? 'strike' : ''}">${t}<div class="meta">${m}</div></span>${tagOf(x)}</div>`).join('')}<div class="gh">פתקים</div><div class="c"><span class="x">💡 רעיונות לסרטונים</span></div></div>`,
+  },
+  /* 3 */ {
+    name: '3. מינימלי טיפוגרפי', sub: 'בלי מסגרות ובלי כרטיסים. כותרות גדולות, הרבה אוויר וקווים דקים בלבד. בהשראת Things.',
+    css: `.s3 h3{font-size:32px;font-weight:900;letter-spacing:-.5px;margin:6px 0 14px}.s3 .gh{font-size:17px;font-weight:800;margin:22px 0 4px;display:flex;gap:8px;align-items:center;padding-bottom:6px;border-bottom:2px solid var(--ink)}.s3 .r{display:flex;gap:10px;align-items:center;padding:10px 0;font-size:14px}.s3 .r .x{flex:1}.s3 .chips .chip{background:none;padding:6px 4px;border-radius:0}.s3 .chips .chip.on{color:var(--ink);background:none;border-bottom:2px solid var(--blue)}`,
+    tasks: () => `<div class="s3"><h3>משימות</h3>${tabs()}${G.map((g) => `<div class="gh">${g.e} ${g.n}</div>${g.t.map(([t, s, m, x]) => `<div class="r">${circ(s)}<span class="x ${s === 'done' ? 'strike' : ''}">${t}${m ? ` <span class="meta">· ${m}</span>` : ''}</span>${tagOf(x)}</div>`).join('')}`).join('')}</div>`,
+    project: () => `<div class="s3"><span class="logo" style="margin-top:6px">W</span><h3 style="margin-top:10px">ערוץ יוטיוב</h3><div style="display:flex;gap:18px;font-size:13px"><span><b class="num" style="font-size:22px">71%</b><div class="meta">הושלם</div></span><span><b style="font-size:15px">בעבודה</b><div class="meta">סטטוס</div></span><span><b class="ltr" style="font-size:15px">14/08</b><div class="meta">סיום</div></span></div><div class="gh">משימות</div>${PT.map(([t, s, m, x]) => `<div class="r">${circ(s)}<span class="x ${s === 'done' ? 'strike' : ''}">${t}${m ? ` <span class="meta">· ${m}</span>` : ''}</span>${tagOf(x)}</div>`).join('')}<div class="gh">פתקים</div><div class="r"><span class="x">רעיונות לסרטונים</span></div></div>`,
+  },
+  /* 4 */ {
+    name: '4. צפוף ומקצועי (Linear)', sub: 'שורות נמוכות, טקסט קטן, מספר המשימה (#) בצד וסטטוס באייקון. הכי הרבה מידע במסך אחד.',
+    css: `.s4{font-size:12.5px}.s4 h3{font-size:18px;font-weight:800;margin:4px 0 10px;display:flex;justify-content:space-between}.s4 .gh{font-size:11px;font-weight:700;color:var(--muted);margin:12px 0 2px;display:flex;gap:6px;align-items:center;text-transform:uppercase}.s4 .r{display:flex;gap:8px;align-items:center;padding:7px 4px;border-bottom:1px solid var(--line)}.s4 .r .x{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.s4 .id{font-family:Rubik;font-size:10.5px;color:#aaa;width:28px}.s4 .circ{width:15px;height:15px;border-width:1.6px}.s4 .chip{font-size:11px;padding:4px 9px;border-radius:7px}`,
+    tasks: () => { let n = 188; return `<div class="s4"><h3>משימות <span class="muted num" style="font-size:12px;font-weight:500">${all} פתוחות</span></h3>${tabs()}${G.map((g) => `<div class="gh">${g.e} ${g.n} · ${g.t.length}</div>${g.t.map(([t, s, m, x]) => `<div class="r"><span class="id">#${n--}</span>${circ(s)}<span class="x ${s === 'done' ? 'strike' : ''}">${t}</span>${x ? tagOf(x) : ''}<span class="meta" style="width:58px;text-align:left">${m.replace('בוצע ', '')}</span></div>`).join('')}`).join('')}</div>`; },
+    project: () => { let n = 140; return `<div class="s4"><div style="display:flex;gap:8px;align-items:center;margin-top:4px"><span class="logo" style="width:30px;height:30px;font-size:15px;border-radius:8px">W</span><b style="font-size:16px">ערוץ יוטיוב</b></div><div style="display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:12px 0;font-size:12px"><span class="muted">סטטוס</span><span>🔄 בעבודה</span><span class="muted">תחום</span><span>עבודה</span><span class="muted">סיום</span><span class="ltr" style="text-align:right">14/08/2026</span><span class="muted">התקדמות</span><span style="display:flex;gap:6px;align-items:center"><span class="bar" style="flex:1"><i></i></span><b class="num">71%</b></span></div><div class="gh">משימות · 5</div>${PT.map(([t, s, m, x]) => `<div class="r"><span class="id">#${n--}</span>${circ(s)}<span class="x ${s === 'done' ? 'strike' : ''}">${t}</span>${tagOf(x)}<span class="meta">${m}</span></div>`).join('')}<div class="gh">פתקים · 1</div><div class="r"><span class="x">רעיונות לסרטונים</span></div></div>`; },
+  },
+  /* 5 */ {
+    name: '5. קבוצות בגוון אינדיגו', sub: 'כל פרויקט בבלוק עם כותרת בגוון אינדיגו בהיר, ומשימות בשורות לבנות בתוכו. פינות עגולות מאוד.',
+    css: `.s5 h3{font-size:24px;font-weight:800;margin:4px 0 12px}.s5 .blk{background:var(--bsoft);border-radius:22px;padding:8px;margin-top:12px}.s5 .bh{display:flex;gap:8px;align-items:center;padding:6px 6px 8px;font-weight:700;font-size:13.5px;color:var(--btext)}.s5 .bh .em{background:#fff}.s5 .r{display:flex;gap:10px;align-items:center;padding:10px;background:#fff;border-radius:14px;font-size:13.5px}.s5 .r+.r{margin-top:5px}.s5 .r .x{flex:1}`,
+    tasks: () => `<div class="s5"><h3>משימות</h3>${tabs()}${G.map((g) => `<div class="blk"><div class="bh"><span class="em">${g.e}</span>${g.n}<span class="num" style="margin-inline-start:auto;font-weight:500">${g.t.length}</span></div>${g.t.map(([t, s, m, x]) => `<div class="r">${circ(s)}<span class="x ${s === 'done' ? 'strike' : ''}">${t}<div class="meta">${m}</div></span>${tagOf(x)}</div>`).join('')}</div>`).join('')}</div>`,
+    project: () => `<div class="s5"><div class="blk" style="padding:14px;margin-top:4px"><div style="display:flex;gap:10px;align-items:center"><span class="logo">W</span><div style="flex:1"><b style="font-size:18px">ערוץ יוטיוב</b><div class="meta">בעבודה · עבודה · עד 14/08</div></div></div><div style="display:flex;align-items:center;gap:8px;margin-top:12px"><div class="bar" style="flex:1;background:#fff"><i></i></div><b class="num">71%</b></div></div><div class="blk"><div class="bh">משימות<span class="num" style="margin-inline-start:auto;font-weight:500">5</span></div>${PT.map(([t, s, m, x]) => `<div class="r">${circ(s)}<span class="x ${s === 'done' ? 'strike' : ''}">${t}<div class="meta">${m}</div></span>${tagOf(x)}</div>`).join('')}</div><div class="blk"><div class="bh">פתקים</div><div class="r"><span class="x">💡 רעיונות לסרטונים</span></div></div></div>`,
+  },
+  /* 6 */ {
+    name: '6. פס צבע בצד', sub: 'כל שורה עם פס בצד ימין שמראה מצב: אינדיגו = בתהליך, שחור = דחוף, אפור = רגיל. רואים את המצב בלי לקרוא.',
+    css: `.s6 h3{font-size:24px;font-weight:800;margin:4px 0 12px}.s6 .gh{font-size:12.5px;font-weight:700;margin:16px 2px 8px;display:flex;gap:6px;align-items:center}.s6 .r{display:flex;gap:10px;align-items:center;padding:10px 12px;font-size:13.5px;background:var(--s2);border-radius:12px;margin-bottom:6px;box-shadow:inset -4px 0 0 var(--track2)}.s6 .r.doing{box-shadow:inset -4px 0 0 var(--blue);background:var(--bsoft)}.s6 .r.urgent{box-shadow:inset -4px 0 0 var(--ink)}.s6 .r.done{opacity:.55}.s6 .r .x{flex:1}`,
+    tasks: () => `<div class="s6"><h3>משימות</h3>${tabs()}${G.map((g) => `<div class="gh"><span class="em">${g.e}</span>${g.n}</div>${g.t.map(([t, s, m, x]) => `<div class="r ${s} ${x === 'דחוף' ? 'urgent' : ''}">${circ(s)}<span class="x ${s === 'done' ? 'strike' : ''}">${t}<div class="meta">${m}</div></span>${tagOf(x)}</div>`).join('')}`).join('')}</div>`,
+    project: () => `<div class="s6"><div style="display:flex;gap:10px;align-items:center;margin-top:4px"><span class="logo">W</span><div style="flex:1"><b style="font-size:19px">ערוץ יוטיוב</b><div class="meta">בעבודה · עבודה</div></div><b class="num" style="font-size:22px">71%</b></div><div class="bar" style="margin:12px 0"><i></i></div><div class="gh">משימות</div>${PT.map(([t, s, m, x]) => `<div class="r ${s}">${circ(s)}<span class="x ${s === 'done' ? 'strike' : ''}">${t}<div class="meta">${m}</div></span>${tagOf(x)}</div>`).join('')}<div class="gh">פתקים</div><div class="r"><span class="x">💡 רעיונות לסרטונים</span></div></div>`,
+  },
+  /* 7 */ {
+    name: '7. אריחים בשתי עמודות', sub: 'משימות ופרויקטים כאריחים מרובעים, שניים בשורה. ויזואלי וכיפי, מתאים כשאין הרבה משימות.',
+    css: `.s7 h3{font-size:24px;font-weight:800;margin:4px 0 12px}.s7 .gh{font-size:12.5px;font-weight:700;margin:16px 2px 8px;display:flex;gap:6px;align-items:center}.s7 .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.s7 .tile{border:1px solid var(--line);border-radius:16px;padding:10px;min-height:92px;display:flex;flex-direction:column;justify-content:space-between;font-size:13px;gap:8px}.s7 .tile.doing{background:var(--bsoft);border-color:transparent}.s7 .tile.done{background:var(--s2);border-color:transparent}.s7 .tile .top{display:flex;justify-content:space-between;align-items:flex-start;gap:6px}`,
+    tasks: () => `<div class="s7"><h3>משימות</h3>${tabs()}${G.map((g) => `<div class="gh"><span class="em">${g.e}</span>${g.n}</div><div class="grid">${g.t.map(([t, s, m, x]) => `<div class="tile ${s}"><div class="top"><b class="${s === 'done' ? 'strike' : ''}" style="font-weight:600">${t}</b>${circ(s)}</div><div style="display:flex;justify-content:space-between;align-items:center"><span class="meta">${m}</span>${tagOf(x)}</div></div>`).join('')}</div>`).join('')}</div>`,
+    project: () => `<div class="s7"><div class="grid" style="margin-top:4px"><div class="tile" style="grid-column:span 2;flex-direction:row;align-items:center;min-height:0"><span class="logo">W</span><div style="flex:1"><b style="font-size:18px">ערוץ יוטיוב</b><div class="meta">עבודה</div></div></div><div class="tile" style="background:#111;color:#fff;border:0"><span class="meta" style="color:#aaa">הושלם</span><b class="num" style="font-size:28px">71%</b></div><div class="tile"><span class="meta">סטטוס</span><b>בעבודה</b><span class="meta ltr" style="text-align:right">עד 14/08</span></div></div><div class="gh">משימות</div><div class="grid">${PT.map(([t, s, m, x]) => `<div class="tile ${s}"><div class="top"><b class="${s === 'done' ? 'strike' : ''}" style="font-weight:600">${t}</b>${circ(s)}</div><div style="display:flex;justify-content:space-between;align-items:center"><span class="meta">${m}</span>${tagOf(x)}</div></div>`).join('')}</div></div>`,
+  },
+  /* 8 */ {
+    name: '8. כותרת שחורה גדולה', sub: 'בראש כל מסך בלוק שחור עם מספרים חשובים (כמו כרטיס "עכשיו" בדשבורד), והתוכן הלבן עולה עליו. ממשיך את השפה של מסך היום.',
+    css: `.s8 .head{background:#111;color:#fff;margin:-44px -14px 0;padding:54px 16px 34px;position:relative;overflow:hidden}.s8 .head::after{content:'';position:absolute;inset-inline-end:-40px;top:-30px;width:140px;height:140px;border-radius:50%;background:var(--blue);opacity:.45}.s8 .head>*{position:relative;z-index:1}.s8 .head h3{font-size:26px;font-weight:800;margin:0 0 4px}.s8 .stats{display:flex;gap:16px;font-size:11px;color:#bbb}.s8 .stats b{display:block;color:#fff;font-size:18px;font-family:Rubik}.s8 .body{background:#fff;border-radius:22px 22px 0 0;margin:-18px -14px 0;padding:14px 14px 0;position:relative}.s8 .gh{font-size:12.5px;font-weight:700;margin:14px 2px 6px;display:flex;gap:6px;align-items:center}.s8 .r{display:flex;gap:10px;align-items:center;padding:9px 0;font-size:13.5px}.s8 .r+.r{border-top:1px solid var(--line)}.s8 .r .x{flex:1}`,
+    tasks: () => `<div class="s8"><div class="head"><h3>משימות</h3><div class="stats"><span><b>${all}</b>פתוחות</span><span><b>3</b>להיום</span><span><b>4</b>בדואר נכנס</span></div></div><div class="body">${tabs()}${G.map((g) => `<div class="gh"><span class="em">${g.e}</span>${g.n}</div>${g.t.map(([t, s, m, x]) => `<div class="r">${circ(s)}<span class="x ${s === 'done' ? 'strike' : ''}">${t}<div class="meta">${m}</div></span>${tagOf(x)}</div>`).join('')}`).join('')}</div></div>`,
+    project: () => `<div class="s8"><div class="head"><div style="display:flex;gap:10px;align-items:center;margin-bottom:12px"><span class="logo">W</span><div><h3 style="margin:0">ערוץ יוטיוב</h3><span style="font-size:12px;color:#bbb">בעבודה · עבודה</span></div></div><div class="stats"><span><b>71%</b>הושלם</span><span><b>5/7</b>משימות</span><span><b class="ltr">14/08</b>סיום</span></div></div><div class="body"><div class="bar" style="margin:4px 0 6px"><i></i></div><div class="gh">משימות</div>${PT.map(([t, s, m, x]) => `<div class="r">${circ(s)}<span class="x ${s === 'done' ? 'strike' : ''}">${t}<div class="meta">${m}</div></span>${tagOf(x)}</div>`).join('')}<div class="gh">פתקים</div><div class="r"><span class="x">💡 רעיונות לסרטונים</span></div></div></div>`,
+  },
+];
+
+const style = document.createElement('style');
+style.textContent = STYLES.map((s) => s.css).join('\n');
+document.head.appendChild(style);
+document.getElementById('list').innerHTML = STYLES.map((s) => `<section class="style"><h2>${s.name}</h2><p class="sub">${s.sub}</p><div class="pair"><figure><figcaption>משימות</figcaption>${phone(s.tasks(), 1)}</figure><figure><figcaption>דף פרויקט</figcaption>${phone(s.project(), 3)}</figure></div></section>`).join('');
+</script>
+</body>
+</html>
