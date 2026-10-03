@@ -42,7 +42,6 @@ export function MoreScreen() {
         {row('/challenges', 'shield', 'אתגרים', counts.challenges ? String(counts.challenges) : undefined, true)}
         {row('/routines', 'sunrise', 'שגרות בוקר וערב', undefined, true)}
         {row('/recurring', 'repeat', 'משימות חוזרות', undefined, true)}
-        {row('/info', 'info', 'כרטיסי מידע', undefined, true)}
       </section>
       <section className="card">
         {row('/search', 'search', 'חיפוש')}
@@ -67,8 +66,8 @@ export function MoreScreen() {
 // Search (SPEC 5.8)
 // ---------------------------------------------------------------------------
 
-const HIT_LABEL: Record<SearchHit['kind'], string> = { task: 'משימות', project: 'פרויקטים', note: 'פתקים', goal: 'מטרות', info: 'כרטיסי מידע' };
-const HIT_PATH: Record<SearchHit['kind'], string> = { task: '/task/', project: '/project/', note: '/note/', goal: '/goal/', info: '/info/' };
+const HIT_LABEL: Record<SearchHit['kind'], string> = { task: 'משימות', project: 'פרויקטים', note: 'פתקים', goal: 'מטרות' };
+const HIT_PATH: Record<SearchHit['kind'], string> = { task: '/task/', project: '/project/', note: '/note/', goal: '/goal/' };
 
 export function SearchScreen() {
   const [q, setQ] = useState('');
@@ -112,7 +111,7 @@ export function SearchScreen() {
 // Backup & sync (SPEC 5.9)
 // ---------------------------------------------------------------------------
 
-const TABLE_LABELS: Partial<Record<keyof ParsedBackup['counts'], string>> = { tasks: 'משימות', projects: 'פרויקטים', notes: 'פתקים', goals: 'מטרות', sprints: 'ספרינטים', challenges: 'אתגרים', routineItems: 'פריטי שגרה', recurring: 'חוזרות', infoCards: 'כרטיסי מידע', attachments: 'תמונות' };
+const TABLE_LABELS: Partial<Record<keyof ParsedBackup['counts'], string>> = { tasks: 'משימות', projects: 'פרויקטים', notes: 'פתקים', goals: 'מטרות', sprints: 'ספרינטים', challenges: 'אתגרים', routineItems: 'פריטי שגרה', recurring: 'חוזרות', attachments: 'תמונות' };
 
 export function BackupScreen() {
   const settings = useLive(Q.settings);

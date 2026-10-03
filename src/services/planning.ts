@@ -120,7 +120,8 @@ export async function updateProject(id: string, patch: Partial<Project>): Promis
 /** Deleting a project unlinks its tasks and notes (they are kept). */
 export async function deleteProject(id: string): Promise<void> {
   const now = nowIso();
-  await db.transaction('rw', db.projects, db.tasks, db.notes, async () => {
+  await db.transaction('rw', db.projects, db.tasks, db.notes, db.attachments, async () => {
+    await db.attachments.where('ownerId').equals(id).delete(); // R-PRJ-3: logo and cover
     const tasks = await db.tasks.where('projectIds').equals(id).toArray();
     await db.tasks.bulkPut(tasks.map((t) => ({ ...t, projectIds: t.projectIds.filter((x) => x !== id), updatedAt: now })));
     const notes = await db.notes.where('projectIds').equals(id).toArray();

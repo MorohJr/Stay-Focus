@@ -4,7 +4,7 @@ import { SETTINGS_ID } from '../domain/schemas';
 import { exportBackup, parseBackup, restoreBackup, BackupError } from './backup';
 import { exitDemo, isDemoMode, loadDemo } from './demo';
 import { ensureSeed, getSettings } from './entity';
-import { addAttachment } from './misc';
+import { addAttachment, removeProjectImage, setProjectImage } from './misc';
 import { createProject, deleteProject, ensureSprints, materializeRecurring, reviewSprint, setFocusGoal, createGoal } from './planning';
 import { cycleRule, createChallenge, toggleRoutineItem, saveRecurring } from './habits';
 import { addToTop3, createTask, deleteTask, moveTop3, postponeAllOverdue, postponeTask, restoreTasks, updateTask } from './tasks';
@@ -146,6 +146,33 @@ describe('backup and demo', () => {
     expect(new Uint8Array(await new Response(att.blob).arrayBuffer())).toEqual(new Uint8Array([1, 2, 3]));
   });
 
+  it('migrates a v1 backup: info cards are dropped (SPEC 1.2)', async () => {
+    await createTask({ title: 'ישן' });
+    const file = JSON.parse(await exportBackup());
+    file.schemaVersion = 1;
+    file.data.infoCards = [{ id: 'i', createdAt: 'x', updatedAt: 'x', title: 'Nutrition', icon: '🍗', body: '', order: 0 }];
+    const parsed = await parseBackup(JSON.stringify(file));
+    expect(Object.keys(parsed.tables)).not.toContain('infoCards');
+    await restoreBackup(parsed);
+    expect((await db.tasks.toArray())[0]!.title).toBe('ישן');
+  });
+
+  it('R-PRJ-3: logo and cover replace, remove and go with the project', async () => {
+    const p = await createProject({ name: 'p' });
+    const img = () => new Blob([new Uint8Array([1])], { type: 'image/png' });
+    await setProjectImage(p.id, 'logo', img(), 'a.png');
+    await setProjectImage(p.id, 'logo', img(), 'b.png');
+    await setProjectImage(p.id, 'cover', img(), 'c.png');
+    expect(await db.attachments.count()).toBe(2);
+    const cur = (await db.projects.get(p.id))!;
+    expect(cur.logoId && cur.coverId).toBeTruthy();
+    await removeProjectImage(p.id, 'cover');
+    expect((await db.projects.get(p.id))!.coverId).toBeUndefined();
+    expect(await db.attachments.count()).toBe(1);
+    await deleteProject(p.id);
+    expect(await db.attachments.count()).toBe(0);
+  });
+
   it('rejects garbage and newer versions', async () => {
     await expect(parseBackup('nope')).rejects.toBeInstanceOf(BackupError);
     const text = JSON.parse(await exportBackup());
@@ -157,8 +184,12 @@ describe('backup and demo', () => {
     await createTask({ title: 'אמיתי' });
     await loadDemo(TODAY, new Date(`${TODAY}T08:30:00`));
     expect(await isDemoMode()).toBe(true);
-    expect(await db.tasks.count()).toBeGreaterThan(30);
-    expect(await db.challenges.count()).toBe(1);
+    expect(await db.tasks.count()).toBeGreaterThan(70);
+    expect(await db.projects.count()).toBe(12);
+    expect(await db.challenges.count()).toBe(2);
+    // R-DEM-1: nothing about fitness or money
+    const text = JSON.stringify(await db.tasks.toArray()) + JSON.stringify(await db.projects.toArray()) + JSON.stringify(await db.notes.toArray());
+    for (const word of ['אימון', 'כושר', 'תזונה', 'חלבון', 'תקציב', 'משכורת', 'השקע', 'חיסכון', 'מניות']) expect(text).not.toContain(word);
     await exitDemo();
     expect(await isDemoMode()).toBe(false);
     expect((await db.tasks.toArray()).map((t) => t.title)).toEqual(['אמיתי']);

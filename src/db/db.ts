@@ -26,9 +26,13 @@ export const SCHEMA_V1 = {
   settings: 'id',
 } as const;
 
-export type TableName = keyof typeof SCHEMA_V1;
-export const TABLE_NAMES = Object.keys(SCHEMA_V1) as TableName[];
-export const CURRENT_SCHEMA_VERSION = 1;
+/** v2 (03/10/2026, SPEC 1.2): info cards removed. Project logo/cover need no index. */
+const { infoCards: _removed, ...SCHEMA_V2 } = SCHEMA_V1;
+export { SCHEMA_V2 };
+
+export type TableName = keyof typeof SCHEMA_V2;
+export const TABLE_NAMES = Object.keys(SCHEMA_V2) as TableName[];
+export const CURRENT_SCHEMA_VERSION = 2;
 
 export class StayFocusDB extends Dexie {
   tasks!: EntityTable<D.Task, 'id'>;
@@ -42,7 +46,6 @@ export class StayFocusDB extends Dexie {
   challenges!: EntityTable<D.Challenge, 'id'>;
   challengeLogs!: EntityTable<D.ChallengeLog, 'id'>;
   recurring!: EntityTable<D.Recurring, 'id'>;
-  infoCards!: EntityTable<D.InfoCard, 'id'>;
   attachments!: EntityTable<D.Attachment, 'id'>;
   templates!: EntityTable<D.Template, 'id'>;
   settings!: EntityTable<D.Settings, 'id'>;
@@ -50,6 +53,7 @@ export class StayFocusDB extends Dexie {
   constructor(name = DB_NAME) {
     super(name);
     this.version(1).stores(SCHEMA_V1);
+    this.version(2).stores({ ...SCHEMA_V2, infoCards: null });
   }
 }
 

@@ -11,7 +11,7 @@ import { Icon } from './components/Icon';
 import { QuickCapture } from './components/tasks';
 import { useClock, useLive } from './hooks';
 import { go, useRoute } from './router';
-import { ChallengeScreen, ChallengesScreen, InfoCardScreen, InfoCardsScreen, RecurringListScreen, RecurringScreen, RoutinesScreen } from './screens/HabitsScreens';
+import { ChallengeScreen, ChallengesScreen, RecurringListScreen, RecurringScreen, RoutinesScreen } from './screens/HabitsScreens';
 import { AreasScreen, BackupScreen, MoreScreen, SearchScreen, SettingsScreen, TemplatesScreen, WeatherScreen } from './screens/MoreScreens';
 import { NewNoteScreen, NoteScreen, NotesScreen } from './screens/NotesScreens';
 import { GoalScreen, NewProjectScreen, ProjectScreen, ProjectsScreen } from './screens/ProjectsScreen';
@@ -28,8 +28,8 @@ const TABS = [
   { id: 'more', label: 'עוד', icon: 'more' },
 ];
 /** Screens that show the bottom nav and the + button. */
-const MAIN = new Set(['', 'tasks', 'sprint', 'projects', 'more', 'notes', 'challenges', 'recurring', 'info']);
-const OWNER: Record<string, string> = { notes: 'more', challenges: 'more', recurring: 'more', info: 'more' };
+const MAIN = new Set(['', 'tasks', 'sprint', 'projects', 'more', 'notes', 'challenges', 'recurring']);
+const OWNER: Record<string, string> = { notes: 'more', challenges: 'more', recurring: 'more' };
 
 function screenFor(r: string[]): ReactNode {
   const [a = '', b, c] = r;
@@ -68,8 +68,6 @@ function screenFor(r: string[]): ReactNode {
       return <RoutinesScreen />;
     case 'recurring':
       return b ? <RecurringScreen id={b} /> : <RecurringListScreen />;
-    case 'info':
-      return b ? <InfoCardScreen id={b} /> : <InfoCardsScreen />;
     case 'areas':
       return <AreasScreen />;
     case 'templates':

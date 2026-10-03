@@ -1,6 +1,6 @@
 import { db } from '../db/db';
 import { logId, nextRuleValue, ruleValue } from '../domain/challenge';
-import type { Challenge, InfoCard, Recurring, RoutineItem, RoutineKind, Rule } from '../domain/schemas';
+import type { Challenge, Recurring, RoutineItem, RoutineKind, Rule } from '../domain/schemas';
 import { newId, nowIso, stamps } from './entity';
 
 // ---------------------------------------------------------------------------
@@ -76,7 +76,7 @@ export async function deleteChallenge(id: string): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
-// Recurring rules, info cards
+// Recurring rules
 // ---------------------------------------------------------------------------
 
 export async function saveRecurring(input: Partial<Recurring> & Pick<Recurring, 'title' | 'rule' | 'startDate'>): Promise<Recurring> {
@@ -91,14 +91,4 @@ export async function saveRecurring(input: Partial<Recurring> & Pick<Recurring, 
 /** Removing a rule keeps the tasks it already created (history). */
 export async function deleteRecurring(id: string): Promise<void> {
   await db.recurring.delete(id);
-}
-
-export async function saveInfoCard(input: Partial<InfoCard> & { title: string }): Promise<void> {
-  const existing = input.id ? await db.infoCards.get(input.id) : undefined;
-  const order = existing?.order ?? (await db.infoCards.count());
-  await db.infoCards.put(existing ? { ...existing, ...input, updatedAt: nowIso() } : { ...stamps(), icon: '📌', body: '', order, ...input });
-}
-
-export async function deleteInfoCard(id: string): Promise<void> {
-  await db.infoCards.delete(id);
 }

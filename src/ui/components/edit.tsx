@@ -112,7 +112,7 @@ function Thumb({ a, onOpen }: { a: Attachment; onOpen: (url: string) => void }) 
 }
 
 /** Photos from camera or gallery (SPEC 3.11). */
-export function PhotosEditor({ ownerType, ownerId }: { ownerType: Attachment['ownerType']; ownerId: string }) {
+export function PhotosEditor({ ownerType, ownerId }: { ownerType: 'task' | 'note'; ownerId: string }) {
   const list = useLive(() => Q.attachmentsOf(ownerId), [ownerId]) ?? [];
   const [viewing, setViewing] = useState<string>();
   const input = useRef<HTMLInputElement>(null);

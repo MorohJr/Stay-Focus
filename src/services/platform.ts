@@ -31,8 +31,8 @@ export async function saveFile(fileName: string, text: string, mime = 'applicati
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-/** Shrinks a photo to at most 1600px on the long side, as JPEG (SPEC 3.11). */
-export async function shrinkImage(file: File, maxSide = 1600): Promise<Blob> {
+/** Shrinks a photo to at most 1600px on the long side (SPEC 3.11). Logos stay PNG to keep transparency. */
+export async function shrinkImage(file: File | Blob, maxSide = 1600, mime: 'image/jpeg' | 'image/png' = 'image/jpeg'): Promise<Blob> {
   try {
     const bmp = await createImageBitmap(file);
     const scale = Math.min(1, maxSide / Math.max(bmp.width, bmp.height));
@@ -41,7 +41,7 @@ export async function shrinkImage(file: File, maxSide = 1600): Promise<Blob> {
     canvas.width = Math.round(bmp.width * scale);
     canvas.height = Math.round(bmp.height * scale);
     canvas.getContext('2d')!.drawImage(bmp, 0, 0, canvas.width, canvas.height);
-    return await new Promise<Blob>((resolve) => canvas.toBlob((b) => resolve(b ?? file), 'image/jpeg', 0.85));
+    return await new Promise<Blob>((resolve) => canvas.toBlob((b) => resolve(b ?? file), mime, 0.85));
   } catch {
     return file;
   }

@@ -10,6 +10,7 @@ import { useClock, useLive } from '../hooks';
 import { go } from '../router';
 import { Seg, Sheet, useToast } from './common';
 import { Icon } from './Icon';
+import { ProjectIcon } from './ProjectIcon';
 
 export function Box({ status, onClick, label }: { status: Task['status']; onClick: () => void; label: string }) {
   return (
@@ -80,7 +81,7 @@ export function ProjectPicker({ open, onClose, selected, onChange, multi = true 
               }
             }}
           >
-            <span>{p.icon}</span>
+            <ProjectIcon project={p} size={28} radius={8} />
             <span className="grow">{p.name}</span>
             {on && <span className="check"><Icon name="check" /></span>}
           </button>

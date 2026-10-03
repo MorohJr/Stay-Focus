@@ -2,8 +2,8 @@ import Dexie, { type EntityTable } from 'dexie';
 import { db, TABLE_NAMES } from '../db/db';
 import { defaultAreas, defaultTemplates } from '../db/seed';
 import { logId } from '../domain/challenge';
-import { addDays, hhmmOf, nowMinutes, weekStart } from '../domain/dates';
-import { SETTINGS_ID, type ChallengeLog, type RoutineLog, type Task } from '../domain/schemas';
+import { addDays, dayOfWeek, hhmmOf, nowMinutes, weekStart } from '../domain/dates';
+import { SETTINGS_ID, type Challenge, type ChallengeLog, type Goal, type Note, type Project, type Recurring, type RoutineItem, type RoutineLog, type Sprint, type Task } from '../domain/schemas';
 import { sprintName, sprintRange } from '../domain/sprints';
 import { exportBackup, parseBackup, restoreBackup } from './backup';
 import { getSettings, newId, nowIso } from './entity';
@@ -62,164 +62,211 @@ export async function exitDemo(): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
-// Sample data, built around "now" so the Today screen looks alive.
+// Sample data (R-DEM-1): generic, random on every load, built around "now".
+// No fitness/nutrition and no money topics — those live in separate apps.
 // ---------------------------------------------------------------------------
+
+const rnd = (n: number) => Math.floor(Math.random() * n);
+const pick = <T,>(a: readonly T[]): T => a[rnd(a.length)]!;
+const shuffle = <T,>(a: readonly T[]): T[] => [...a].sort(() => Math.random() - 0.5);
+const chance = (p: number) => Math.random() < p;
+
+type GoalKey = 'product' | 'spanish' | 'book' | 'japan' | 'audience' | 'guitar' | 'home';
+const GOALS: Record<GoalKey, { title: string; area: string; body: string; years: number }> = {
+  product: { title: 'להשיק מוצר דיגיטלי משלי', area: 'area-work', body: 'משהו קטן שאנשים באמת משתמשים בו.', years: 1 },
+  spanish: { title: 'לדבר ספרדית שוטפת', area: 'area-study', body: 'שיחה של חצי שעה בלי להיתקע.', years: 2 },
+  book: { title: 'לכתוב ולהוציא ספר קצר', area: 'area-personal', body: '', years: 2 },
+  japan: { title: 'חודש של טיול ביפן', area: 'area-personal', body: '', years: 1 },
+  audience: { title: 'קהילה של 10,000 עוקבים', area: 'area-work', body: 'תוכן שימושי, פעמיים בשבוע.', years: 2 },
+  guitar: { title: 'לנגן 10 שירים בגיטרה', area: 'area-personal', body: '', years: 1 },
+  home: { title: 'בית מסודר ונעים', area: 'area-personal', body: '', years: 1 },
+};
+
+const PROJECTS: { name: string; icon: string; area: string; goal?: GoalKey; tasks: string[] }[] = [
+  { name: 'אתר תדמית חדש', icon: '🌐', area: 'area-work', goal: 'product', tasks: ['לבחור פלטפורמה לאתר', 'לכתוב טקסטים לדף הבית', 'לצלם תמונות לאתר', 'לעצב לוגו חדש', 'לבנות דף אודות', 'לחבר דומיין', 'בדיקות במובייל', 'להעלות לאוויר', 'לשלוח לחברים לפידבק'] },
+  { name: 'ערוץ יוטיוב', icon: '🎬', area: 'area-work', goal: 'audience', tasks: ['לחקור 10 ערוצים מצליחים', 'לכתוב תסריט לפרק 1', 'לסדר פינת צילום בבית', 'לצלם פרק ראשון', 'לערוך ולהוסיף כתוביות', 'לעצב תמונה ממוזערת', 'לתכנן לוח העלאות לחודש'] },
+  { name: 'ניוזלטר שבועי', icon: '✉️', area: 'area-work', goal: 'audience', tasks: ['לבחור שם לניוזלטר', 'לכתוב גיליון ראשון', 'לבנות דף הרשמה', 'להזמין 50 אנשים ראשונים', 'לקבוע יום קבוע לשליחה'] },
+  { name: 'אפליקציית מתכונים', icon: '💡', area: 'area-work', goal: 'product', tasks: ['לכתוב אפיון קצר', 'סקיצות למסכים', 'לבחור טכנולוגיה', 'לבנות אב טיפוס', 'לבדוק עם 5 משתמשים', 'לתקן לפי הפידבק'] },
+  { name: 'פודקאסט עם חבר', icon: '🎙️', area: 'area-work', goal: 'audience', tasks: ['לבחור קונספט', 'פגישת תכנון', 'להקליט פרק ניסיון', 'לבחור פלטפורמה', 'לעצב עטיפה'] },
+  { name: 'ספרדית', icon: '📚', area: 'area-study', goal: 'spanish', tasks: ['שיעורים 1–5 באפליקציה', 'ללמוד 100 מילים בסיסיות', 'למצוא שותף לשיחה', 'לראות סדרה עם כתוביות בספרדית', 'לקרוא ספר ילדים בספרדית', 'מבחן רמה'] },
+  { name: 'קורס עיצוב UX', icon: '🎓', area: 'area-study', tasks: ['פרק 1: מחקר משתמשים', 'פרק 2: וויירפריימים', 'פרק 3: אב טיפוס', 'פרויקט גמר', 'להוסיף לפורטפוליו', 'לקרוא Don’t Make Me Think'] },
+  { name: 'מעבר דירה', icon: '📦', area: 'area-personal', goal: 'home', tasks: ['רשימה של מה לוקחים', 'לתאם מובילים', 'לארוז את המטבח', 'לעדכן כתובת בכל המקומות', 'לחבר אינטרנט בדירה החדשה', 'לתלות תמונות'] },
+  { name: 'סידור הבית', icon: '🏠', area: 'area-personal', goal: 'home', tasks: ['לפנות את המחסן', 'לסדר את הארון', 'למסור בגדים שלא לובשים', 'לתקן את הברז במטבח', 'להחליף נורות במסדרון'] },
+  { name: 'גינה במרפסת', icon: '🌱', area: 'area-personal', goal: 'home', tasks: ['לבחור צמחים', 'להביא עציצים ואדמה', 'לשתול תבלינים', 'מערכת השקיה פשוטה'] },
+  { name: 'לכתוב ספר קצר', icon: '✍️', area: 'area-personal', goal: 'book', tasks: ['לבחור נושא', 'ראשי פרקים', 'לכתוב פרק 1', 'לכתוב פרק 2', 'לכתוב פרק 3', 'למצוא עורך', 'עיצוב כריכה'] },
+  { name: 'טיול ליפן', icon: '✈️', area: 'area-personal', goal: 'japan', tasks: ['לבחור תאריכים', 'מסלול: טוקיו, קיוטו, אוסקה', 'להזמין טיסות', 'להזמין מלונות', 'רשימת מקומות לראות', 'ללמוד 30 מילים ביפנית'] },
+  { name: 'גיטרה', icon: '🎸', area: 'area-personal', goal: 'guitar', tasks: ['ללמוד 4 אקורדים בסיסיים', 'שיר ראשון', 'לתרגל 15 דק׳ ביום', 'לנגן מול חברים'] },
+  { name: 'משפחה', icon: '❤️', area: 'area-family', tasks: ['ארוחת שישי אצל ההורים', 'לתכנן טיול עם האחיינים', 'להתקשר לסבא', 'לסדר אלבום תמונות משפחתי', 'לבחור מתנה לאחות'] },
+  { name: 'יום הולדת לסבתא', icon: '🎂', area: 'area-family', tasks: ['לבחור תאריך', 'להזמין את כל הדודים', 'להזמין מקום', 'מצגת תמונות', 'לכתוב ברכה'] },
+];
+
+const INBOX = ['לבדוק שעות פתיחה של הדואר', 'רעיון לפוסט: 5 טעויות של מתחילים', 'להחזיר ספר לספרייה', 'לקבוע תספורת', 'לברר על סדנת צילום', 'להוריד אפליקציית מדיטציה', 'לשאול את דנה על ההמלצה', 'רעיון: פודקאסט על הרגלים', 'לחדש דרכון', 'לכתוב תודה למורה מהתיכון'];
+
+const NOTES: { title: string; body: string; kinds: Note['kinds']; project?: string }[] = [
+  { title: 'רעיונות לסרטונים', body: '- איך אני מתכנן שבוע\n- 3 אפליקציות שחוסכות לי שעה ביום\n- מה למדתי מ-30 יום בלי טלפון בבוקר', kinds: ['idea'], project: 'ערוץ יוטיוב' },
+  { title: 'פגישה עם המעצבת', body: '## החלטות\n- צבע ראשי: כחול כהה\n- גופן: Heebo\n## להמשך\n- לשלוח טקסטים עד יום חמישי', kinds: ['meeting'], project: 'אתר תדמית חדש' },
+  { title: 'מילים בספרדית', body: 'hola, gracias, por favor, ¿dónde está…?, me gustaría', kinds: ['note'], project: 'ספרדית' },
+  { title: 'שמות לניוזלטר', body: 'יום ראשון של פוקוס / שבוע אחד קדימה / המכתב הקטן', kinds: ['idea'], project: 'ניוזלטר שבועי' },
+  { title: 'מה לבדוק בדירה החדשה', body: '- לחץ מים\n- קליטה בסלולר\n- רעש מהכביש בערב', kinds: ['note'], project: 'מעבר דירה' },
+  { title: 'ספרים לקרוא', body: '1. Deep Work\n2. Atomic Habits\n3. Show Your Work\n4. Make Time', kinds: ['note'] },
+  { title: 'פגישת תכנון פודקאסט', body: '## משתתפים\nאני ויואב\n## החלטות\nפרק של 30 דקות, פעם בשבועיים', kinds: ['meeting'], project: 'פודקאסט עם חבר' },
+  { title: 'רעיון: אפליקציה לרשימות קניות משותפות', body: 'כל המשפחה מוסיפה, ומי שבסופר מסמן.', kinds: ['idea'] },
+  { title: 'פרק 1: שורות פתיחה', body: 'היא ידעה שהבוקר הזה יהיה שונה כבר כשהקפה נשפך…', kinds: ['note'], project: 'לכתוב ספר קצר' },
+  { title: 'מסלול יפן, טיוטה', body: 'טוקיו 6 לילות\nהקונה 2 לילות\nקיוטו 5 לילות\nאוסקה 3 לילות', kinds: ['note'], project: 'טיול ליפן' },
+  { title: 'סיכום שיחה עם מנטור', body: '- להתמקד בדבר אחד ברבעון\n- לפרסם גם כשזה לא מושלם', kinds: ['meeting'] },
+  { title: 'שירים ללמוד', body: 'Wonderwall, Let It Be, Stand By Me, עטור מצחך', kinds: ['note'], project: 'גיטרה' },
+  { title: 'רעיונות לגינה', body: 'בזיליקום, נענע, רוזמרין, עגבניות שרי', kinds: ['idea'], project: 'גינה במרפסת' },
+  { title: 'מתנה לסבתא', body: 'אלבום מודפס עם תמונות מכל הנכדים', kinds: ['idea'], project: 'יום הולדת לסבתא' },
+  { title: 'דברים שלמדתי השבוע', body: 'לכתוב את 3 החשובים בערב הקודם עובד הרבה יותר טוב מבבוקר.', kinds: ['note'] },
+  { title: 'רעיון: סדנה קטנה לחברים', body: 'ערב אחד: איך לתכנן שבוע בלי להשתגע.', kinds: ['idea'] },
+];
+
+const MORNING = ['השכמה בלי טלפון', 'כוס מים', 'מדיטציה 10 דק׳', 'לכתוב את 3 החשובים', 'לקרוא 10 עמודים', 'לעבור על המשימות של היום'];
+const EVENING = ['לסגור את המחשב', 'לסדר את השולחן', 'יומן: מה הלך טוב', 'להכין את המחר', 'לקרוא לפני השינה', 'במיטה עד 23:30'];
 
 export async function generateDemo(today: string, now: Date = new Date()): Promise<void> {
   const settings = await getSettings();
   const ts = nowIso();
   const st = () => ({ id: newId(), createdAt: ts, updatedAt: ts });
+  const nowMin = nowMinutes(now);
+  const slot = (offsetMin: number) => hhmmOf(Math.max(6 * 60, Math.min(23 * 60, Math.floor((nowMin + offsetMin) / 15) * 15)));
+  const dow = dayOfWeek(today);
+
+  // Goals: 4 of the pool, one in focus.
+  const goalKeys = shuffle(Object.keys(GOALS) as GoalKey[]).slice(0, 4);
+  const goals: Goal[] = goalKeys.map((k, i) => ({
+    ...st(), title: GOALS[k].title, body: GOALS[k].body, areaId: GOALS[k].area,
+    targetDate: addDays(today, 365 * GOALS[k].years - rnd(120)), status: 'active', progressMode: chance(0.75) ? 'projects' : 'manual',
+    manualProgress: 10 + rnd(50), inFocus: i === 0,
+  }));
+  const goalId = (k?: GoalKey) => (k ? goals.find((g) => g.title === GOALS[k].title)?.id : undefined);
+
+  // Projects: 12 of the pool, with mixed statuses.
+  const statuses: Project['status'][] = shuffle(['active', 'active', 'active', 'active', 'active', 'planning', 'planning', 'planning', 'planning', 'done', 'done', 'archived']);
+  const chosen = shuffle(PROJECTS).slice(0, 12);
+  const projects: Project[] = chosen.map((p, i) => ({
+    ...st(), name: p.name, icon: p.icon, body: '', status: statuses[i]!, areaId: p.area, goalId: goalId(p.goal), blockedByIds: [],
+    priority: pick(['high', 'medium', 'low', undefined] as const),
+    startDate: chance(0.5) ? addDays(today, -rnd(60)) : undefined, endDate: chance(0.4) ? addDays(today, 20 + rnd(120)) : undefined,
+  }));
+  const planning = projects.filter((p) => p.status === 'planning');
+  const active = projects.filter((p) => p.status === 'active');
+  if (planning[0] && active[0]) planning[0].blockedByIds = [active[0].id];
+
+  // Sprints: 6 past weeks, this week, next week.
+  const cur = weekStart(today);
+  const sprints: Sprint[] = [-42, -35, -28, -21, -14, -7, 0, 7].map((off) => {
+    const start = addDays(cur, off);
+    return { ...st(), name: sprintName(start), ...sprintRange(start), reviewedAt: off < -7 ? ts : undefined };
+  });
+  const past = sprints.slice(0, 6);
+  const sCur = sprints[6]!;
+  const sNext = sprints[7]!;
+
+  // Tasks
+  let seq = 0;
+  const tasks: Task[] = [];
+  const T = (title: string, p: Partial<Task> = {}): Task => {
+    const t: Task = { ...st(), seq: ++seq, title, body: '', status: 'todo', projectIds: [], labels: [], urgent: false, important: false, links: [], attachmentIds: [], sortOrder: seq, ...p };
+    if (t.status === 'done' && !t.completedAt) t.completedAt = ts;
+    tasks.push(t);
+    return t;
+  };
+  for (const [i, p] of projects.entries()) {
+    const titles = chosen[i]!.tasks;
+    const doneShare = p.status === 'done' || p.status === 'archived' ? 1 : p.status === 'active' ? 0.3 + Math.random() * 0.4 : Math.random() * 0.15;
+    titles.forEach((title, k) => {
+      const done = k < Math.round(titles.length * doneShare);
+      const created = addDays(today, -(10 + rnd(70)));
+      if (done) {
+        const s = pick(past);
+        T(title, { projectIds: [p.id], sprintId: chance(0.8) ? s.id : undefined, status: 'done', completedAt: `${addDays(s.startDate, rnd(7))}T1${rnd(9)}:00:00.000Z`, createdAt: `${created}T09:00:00.000Z` });
+      } else if (p.status === 'active') {
+        const where = rnd(10);
+        T(title, {
+          projectIds: [p.id], createdAt: `${created}T09:00:00.000Z`,
+          sprintId: where < 5 ? sCur.id : where < 7 ? sNext.id : undefined,
+          status: where < 5 && chance(0.3) ? (chance(0.5) ? 'doing' : 'done') : 'todo',
+          urgent: chance(0.25), important: chance(0.4), priority: pick(['high', 'medium', undefined, undefined] as const),
+        });
+      } else {
+        T(title, { projectIds: [p.id], createdAt: `${created}T09:00:00.000Z`, important: chance(0.3) });
+      }
+    });
+  }
+  // A few sub-tasks
+  for (const parent of shuffle(tasks.filter((t) => t.status !== 'done' && t.sprintId === sCur.id)).slice(0, 2)) {
+    for (const sub of ['טיוטה ראשונה', 'לבקש פידבק', 'גרסה סופית'].slice(0, 2 + rnd(2))) {
+      T(sub, { parentId: parent.id, projectIds: parent.projectIds, sprintId: parent.sprintId, status: chance(0.4) ? 'done' : 'todo' });
+    }
+  }
+  // Today: one running now, two later (all top 3), more today, overdue
+  const openCur = shuffle(tasks.filter((t) => t.sprintId === sCur.id && t.status !== 'done' && !t.parentId));
+  const [a, b, c, ...rest] = openCur;
+  if (a) Object.assign(a, { dueDate: today, startTime: slot(-20), durationMin: 60, top3Date: today, top3Order: 1, status: 'doing' });
+  if (b) Object.assign(b, { dueDate: today, startTime: slot(90), durationMin: 30, top3Date: today, top3Order: 2 });
+  if (c) Object.assign(c, { dueDate: today, startTime: slot(240), durationMin: 60, top3Date: today, top3Order: 3 });
+  rest.slice(0, 3).forEach((t, i) => Object.assign(t, { dueDate: today, startTime: i === 0 ? slot(330) : undefined }));
+  rest.slice(3, 6).forEach((t, i) => Object.assign(t, { dueDate: addDays(today, -(1 + i * 2)) }));
+  rest.slice(6, 10).forEach((t, i) => Object.assign(t, { dueDate: addDays(today, 1 + i) }));
+  T('להכין את השבוע הבא', { dueDate: today, startTime: '21:00', durationMin: 45, sprintId: sCur.id });
+  T(pick(['לקבוע תור לרופא', 'להתקשר לסבא', 'לאסוף חבילה מהדואר']), { dueDate: today, status: 'done' });
+  // Inbox
+  for (const title of shuffle(INBOX).slice(0, 6)) T(title, { createdAt: `${addDays(today, -rnd(5))}T08:00:00.000Z` });
+
+  // Notes
+  const notes: Note[] = shuffle(NOTES).slice(0, 15).map((n, i) => {
+    const p = projects.find((x) => x.name === n.project);
+    const d = addDays(today, -rnd(40));
+    return { ...st(), title: n.title, body: n.body, kinds: n.kinds, projectIds: p ? [p.id] : [], links: [], attachmentIds: [], pinned: i < 2, createdAt: `${d}T10:00:00.000Z`, updatedAt: `${d}T10:00:00.000Z` };
+  });
+
+  // Routines + a month of history
+  const R = (routine: 'morning' | 'evening', titles: string[]): RoutineItem[] => titles.map((title, order) => ({ ...st(), routine, title, order, active: true }));
+  const items = [...R('morning', MORNING), ...R('evening', EVENING)];
+  const rlogs: RoutineLog[] = [];
+  for (let back = 1; back <= 30; back++) {
+    const d = addDays(today, -back);
+    for (const it of items) if (chance(0.72)) rlogs.push({ id: `${d}:${it.id}`, date: d, itemId: it.id, done: true });
+  }
+  for (const it of items.slice(0, Math.min(4, Math.max(0, Math.floor((nowMin - 6 * 60) / 25))))) rlogs.push({ id: `${today}:${it.id}`, date: today, itemId: it.id, done: true });
+
+  // Challenges: one that ended, one active
+  const rule = (title: string) => ({ id: newId(), title });
+  const ended: Challenge = { ...st(), name: 'חודש בלי רשתות חברתיות', startDate: addDays(today, -75), endDate: addDays(today, -46), rules: ['בלי אינסטגרם', 'בלי טיקטוק', 'מייל רק פעמיים ביום'].map(rule) };
+  const activeCh: Challenge = { ...st(), name: '30 יום של פוקוס', startDate: addDays(today, -12 - rnd(8)), endDate: addDays(today, 10 + rnd(10)), rules: ['בלי טלפון בשעה הראשונה', 'שעתיים עבודה עמוקה', 'לקרוא 20 דק׳', 'לכתוב עמוד אחד', 'לישון לפני 23:30', '15 דק׳ ספרדית'].map(rule) };
+  const clogs: ChallengeLog[] = [];
+  for (const ch of [ended, activeCh]) {
+    for (let d = ch.startDate; d < today && d <= ch.endDate; d = addDays(d, 1)) {
+      for (const r of ch.rules) clogs.push({ id: logId(ch.id, d, r.id), challengeId: ch.id, date: d, ruleId: r.id, value: chance(0.9) ? 'kept' : 'broken' });
+    }
+  }
+  activeCh.rules.slice(0, 3).forEach((r) => clogs.push({ id: logId(activeCh.id, today, r.id), challengeId: activeCh.id, date: today, ruleId: r.id, value: 'kept' }));
+
+  // Recurring: at least two fall today, so "today's regulars" shows
+  const recurring: Recurring[] = [
+    { ...st(), title: 'שיחה עם ההורים', body: '', projectIds: [], labels: [], rule: { type: 'weekly', days: [dow] }, startDate: addDays(today, -90), active: true },
+    { ...st(), title: 'להשקות עציצים', body: '', projectIds: [], labels: [], rule: { type: 'weekly', days: [dow, (dow + 3) % 7] }, startDate: addDays(today, -90), active: true },
+    { ...st(), title: 'לגבות את האפליקציה', body: '', projectIds: [], labels: [], rule: { type: 'interval', weeks: 2, day: dow }, startDate: weekStart(today), active: true },
+    { ...st(), title: 'לתכנן את השבוע', body: '', projectIds: [], labels: [], startTime: '20:00', durationMin: 30, rule: { type: 'weekly', days: [0] }, startDate: addDays(today, -90), active: true },
+    { ...st(), title: 'ניקיון יסודי', body: '', projectIds: [], labels: [], rule: { type: 'weekly', days: [5] }, startDate: addDays(today, -90), active: true },
+  ];
 
   await db.transaction('rw', db.tables, async () => {
     for (const name of TABLE_NAMES) await db.table(name).clear();
-    await db.settings.add({ ...settings, id: SETTINGS_ID, lastBackupAt: ts, seqCounter: 0, updatedAt: ts });
+    await db.settings.add({ ...settings, id: SETTINGS_ID, lastBackupAt: ts, seqCounter: seq, updatedAt: ts });
     await db.areas.bulkAdd(defaultAreas(ts));
     await db.templates.bulkAdd(defaultTemplates(ts));
-
-    // Goals
-    const gMoney = { ...st(), title: '500K₪ / 130K$', body: 'עצמאות כלכלית עד גיל 35.', areaId: 'area-work', targetDate: '2033-12-22', status: 'active' as const, progressMode: 'projects' as const, manualProgress: 0, inFocus: true };
-    const gHome = { ...st(), title: 'בית גדול ו-3 כלבים', body: '', areaId: 'area-personal', targetDate: '2033-12-22', status: 'active' as const, progressMode: 'manual' as const, manualProgress: 12, inFocus: false };
-    const gBody = { ...st(), title: 'גוף חזק ובריא', body: '', areaId: 'area-personal', targetDate: addDays(today, 180), status: 'active' as const, progressMode: 'projects' as const, manualProgress: 0, inFocus: false };
-    await db.goals.bulkAdd([gMoney, gHome, gBody]);
-
-    // Projects
-    const P = (name: string, icon: string, status: 'planning' | 'active' | 'done' | 'archived', areaId: string, goalId?: string, extra: object = {}) =>
-      ({ ...st(), name, icon, status, areaId, goalId, body: '', blockedByIds: [] as string[], ...extra });
-    const pWeb = P('Powerful Websites', '🌐', 'active', 'area-work', gMoney.id, { priority: 'high', body: 'חשבונות ברשתות על אתרים שכדאי להכיר, ואחר כך קורס/כלים.' });
-    const pNotion = P('תבניות Notion', '🧩', 'active', 'area-work', gMoney.id, { priority: 'medium' });
-    const pSaas = P('ללמוד SaaS', '💻', 'planning', 'area-study', gMoney.id, { priority: 'high' });
-    const pBody = P('גוף חזק', '💪', 'active', 'area-personal', gBody.id);
-    const pHome = P('בית', '🏠', 'active', 'area-personal');
-    const pMom = P('אמא', '❤️', 'active', 'area-family', undefined, { priority: 'high' });
-    const pTechnion = P('טכניון', '🎓', 'planning', 'area-study');
-    const pOld = P('Uneron Studios', '🎬', 'done', 'area-work');
-    pSaas.blockedByIds = [pNotion.id];
-    await db.projects.bulkAdd([pWeb, pNotion, pSaas, pBody, pHome, pMom, pTechnion, pOld]);
-
-    // Sprints: two past, last, current, next
-    const cur = weekStart(today);
-    const sprints = [-21, -14, -7, 0, 7].map((off) => {
-      const start = addDays(cur, off);
-      return { ...st(), name: sprintName(start), ...sprintRange(start), reviewedAt: off < -7 ? ts : undefined };
-    });
+    await db.goals.bulkAdd(goals);
+    await db.projects.bulkAdd(projects);
     await db.sprints.bulkAdd(sprints);
-    const [s3, s2, sLast, sCur, sNext] = sprints as [typeof sprints[0], typeof sprints[0], typeof sprints[0], typeof sprints[0], typeof sprints[0]];
-
-    // Tasks
-    let seq = 0;
-    const tasks: Task[] = [];
-    const T = (title: string, p: Partial<Task> = {}): Task => {
-      const t: Task = { ...st(), seq: ++seq, title, body: '', status: 'todo', projectIds: [], labels: [], urgent: false, important: false, links: [], attachmentIds: [], sortOrder: seq, ...p };
-      if (t.status === 'done' && !t.completedAt) t.completedAt = ts;
-      tasks.push(t);
-      return t;
-    };
-    const nowMin = nowMinutes(now);
-    const slot = (offsetMin: number) => hhmmOf(Math.max(6 * 60, Math.min(23 * 60, Math.floor((nowMin + offsetMin) / 15) * 15)));
-
-    // Today: one running now, one next, top 3, more today
-    T('עבודה על דף הנחיתה', { projectIds: [pWeb.id], sprintId: sCur.id, dueDate: today, startTime: slot(-20), durationMin: 60, top3Date: today, top3Order: 1, important: true, urgent: true, status: 'doing' });
-    T('להתקשר למוסך', { projectIds: [pHome.id], sprintId: sCur.id, dueDate: today, startTime: slot(90), durationMin: 15, top3Date: today, top3Order: 2, urgent: true });
-    T('אימון בית', { projectIds: [pBody.id], sprintId: sCur.id, dueDate: today, startTime: slot(240), durationMin: 60, top3Date: today, top3Order: 3, important: true });
-    T('לשלם על הבלנדר', { projectIds: [pHome.id], dueDate: today, urgent: true });
-    T('לפתוח פרופיל LinkedIn', { projectIds: [pSaas.id], dueDate: today, sprintId: sCur.id });
-    T('להכין ספרינט חדש', { dueDate: today, startTime: '21:00', durationMin: 45 });
-    T('לשאול את אמא על המתנה', { projectIds: [pMom.id], dueDate: today, status: 'done' });
-    // Overdue
-    T('לבדוק אילו תשלומים מיותרים', { dueDate: addDays(today, -1), important: true });
-    T('לשלם ארנונה', { projectIds: [pHome.id], dueDate: addDays(today, -3), urgent: true, important: true });
-    // Current sprint
-    const logo = T('ליצור לוגו', { projectIds: [pWeb.id], sprintId: sCur.id, status: 'doing', priority: 'high' });
-    T('סקיצות ראשונות', { parentId: logo.id, projectIds: [pWeb.id], sprintId: sCur.id, status: 'done' });
-    T('לבחור צבעים', { parentId: logo.id, projectIds: [pWeb.id], sprintId: sCur.id });
-    T('לפתוח חשבונות ברשתות', { projectIds: [pWeb.id, pNotion.id], sprintId: sCur.id, status: 'doing' });
-    T('לכתוב 5 רעיונות לסרטונים', { projectIds: [pWeb.id], sprintId: sCur.id, status: 'done' });
-    T('תבנית ניהול תקציב בעברית', { projectIds: [pNotion.id], sprintId: sCur.id, priority: 'medium' });
-    T('תוכנית תזונה', { projectIds: [pBody.id], sprintId: sCur.id, status: 'done' });
-    T('תרגילי גב ישר וכתפיים', { projectIds: [pBody.id], sprintId: sCur.id, important: true });
-    T('לקבוע תור לרופא שיניים', { sprintId: sCur.id, dueDate: addDays(today, 2) });
-    T('לסדר את הארון', { projectIds: [pHome.id], sprintId: sCur.id, status: 'done' });
-    // Next sprint + backlog
-    T('למכור תבניות בעברית', { projectIds: [pNotion.id], sprintId: sNext.id, important: true });
-    T('לברר תנאי קבלה', { projectIds: [pTechnion.id], sprintId: sNext.id });
-    T('ללמוד על מודעות באינסטגרם', { projectIds: [pSaas.id] });
-    T('ללמוד על מודעות ב-TikTok', { projectIds: [pSaas.id] });
-    T('קורס מכירות', { projectIds: [pSaas.id], important: true });
-    T('לבדוק מחיר טיפול בשיניים', { projectIds: [pBody.id] });
-    // Inbox
-    T('לפתוח פרופיל Indeed');
-    T('טיפול מוקדם לקרחת');
-    T('רעיון: חדר הלבשה וירטואלי');
-    T('לקנות מתנה ליום הולדת');
-    // Past sprints
-    for (const [s, list] of [
-      [sLast, ['להחליף ספק אינטרנט', 'להעביר תשלומים לחשבון החדש', 'לסדר את המדפים', 'לקחת שמיכות לכביסה']],
-      [s2, ['להחזיר את ה-TRX', 'לשנות שם בבנק', 'לבחור נישה']],
-      [s3, ['ליצור מייל עסקי', 'אימון סיבולת ראשון']],
-    ] as const) {
-      for (const title of list) T(title, { sprintId: s.id, status: 'done', completedAt: `${s.endDate}T12:00:00.000Z`, dueDate: s.startDate });
-    }
-    T('לשנות ספרינטים לשבועות הגשמה', { sprintId: sLast.id, projectIds: [pNotion.id] });
-    T('לארגן תמונות שמורות', { sprintId: sLast.id });
     await db.tasks.bulkAdd(tasks);
-
-    // Notes
-    const N = (title: string, body: string, kinds: ('note' | 'idea' | 'meeting')[], projectIds: string[] = [], pinned = false) =>
-      ({ ...st(), title, body, kinds, projectIds, links: [], attachmentIds: [], pinned });
-    await db.notes.bulkAdd([
-      N('תבניות Notion ו-Excel למכירה', 'לבנות 3 תבניות בעברית: תקציב, משימות, הרגלים.\nלבדוק מחירים ב-Etsy ו-Gumroad.', ['idea'], [pNotion.id], true),
-      N('חדר הלבשה וירטואלי', 'אווטאר תלת-ממדי שמודד בגדים מכל חנות אונליין.', ['idea']),
-      N('אתרים שכדאי להכיר', 'רשימה לתוכן:\n- Perplexity\n- Gamma\n- Remove.bg', ['note'], [pWeb.id]),
-      N('פגישה עם דיסקונט', '## החלטות\n- להעביר את התשלומים לחשבון העסקי\n## המשך\n- לשלוח מסמכים', ['meeting']),
-      N('', 'להסתכל על מסי: תנועות בלי לגעת בכדור, תמיד הטייה לכיוון שהשחקן מולו כבר הולך.', ['note']),
-    ]);
-
-    // Routines + logs
-    const R = (routine: 'morning' | 'evening', titles: string[]) => titles.map((title, order) => ({ ...st(), routine, title, order, active: true }));
-    const morning = R('morning', ['השכמה', 'צחצוח שיניים', 'מקלחת', 'לקרוא את החוקים', 'אימון בית', 'להתכונן ליציאה']);
-    const evening = R('evening', ['מקלחת', 'צחצוח שיניים', 'לקרוא ספר', 'עדכון תכנון למחר', 'לישון עד 23:30']);
-    await db.routineItems.bulkAdd([...morning, ...evening]);
-    const rlogs: RoutineLog[] = [];
-    for (let back = 1; back <= 20; back++) {
-      const d = addDays(today, -back);
-      for (const [i, it] of [...morning, ...evening].entries()) if ((i + back) % 4 !== 0) rlogs.push({ id: `${d}:${it.id}`, date: d, itemId: it.id, done: true });
-    }
-    for (const it of morning.slice(0, Math.min(4, Math.max(0, Math.floor((nowMin - 6 * 60) / 20))))) rlogs.push({ id: `${today}:${it.id}`, date: today, itemId: it.id, done: true });
+    await db.notes.bulkAdd(notes);
+    await db.routineItems.bulkAdd(items);
     await db.routineLogs.bulkAdd(rlogs);
-
-    // Challenge: 90 days, started 17 days ago
-    const rules = ['רק מים', 'בלי סוכר', 'בלי גלוטן', 'אימון כל יום', 'פחות עישון', 'לקרוא 10 דק׳', 'רשתות רק לעבודה', 'לצפות בסרטון של דוד'].map((title) => ({ id: newId(), title }));
-    const ch = { ...st(), name: 'אתגר 90 יום', startDate: addDays(today, -17), endDate: addDays(today, 72), rules };
-    await db.challenges.add(ch);
-    const clogs: ChallengeLog[] = [];
-    for (let back = 1; back <= 17; back++) {
-      const d = addDays(today, -back);
-      rules.forEach((r, i) => {
-        const broken = back > 12 && (back + i) % 9 === 0;
-        clogs.push({ id: logId(ch.id, d, r.id), challengeId: ch.id, date: d, ruleId: r.id, value: broken ? 'broken' : 'kept' });
-      });
-    }
-    rules.slice(0, 4).forEach((r) => clogs.push({ id: logId(ch.id, today, r.id), challengeId: ch.id, date: today, ruleId: r.id, value: 'kept' }));
+    await db.challenges.bulkAdd([ended, activeCh]);
     await db.challengeLogs.bulkAdd(clogs);
-
-    // Recurring: every rule falls on today so "the regulars" card shows
-    const dow = new Date(`${today}T12:00:00`).getDay();
-    await db.recurring.bulkAdd([
-      { ...st(), title: 'לתת כביסה', body: '', projectIds: [pHome.id], labels: [], rule: { type: 'weekly', days: [dow] }, startDate: addDays(today, -60), active: true },
-      { ...st(), title: 'לישון אצל אמא', body: '', projectIds: [pMom.id], labels: [], rule: { type: 'interval', weeks: 2, day: dow }, startDate: weekStart(today), active: true },
-      { ...st(), title: 'ניקיון מקלחת ומגבות', body: '', projectIds: [pHome.id], labels: [], rule: { type: 'weekly', days: [5] }, startDate: addDays(today, -60), active: true },
-    ]);
-
-    // Info cards (the fixed texts from the Notion home page)
-    const I = (icon: string, title: string, body: string, order: number) => ({ ...st(), icon, title, body, order });
-    await db.infoCards.bulkAdd([
-      I('🍗', 'תזונה', 'ראשון–חמישי\n• חביתה / כריך טונה / סמות׳י / בוטנים / שייק חלבון / פירות\n• חזה עוף / סלמון / פילה בקר\n• אורז / תפו״א / פירה + ירקות\n\nשישי\n• שניצל, אורז, ירקות, דג חריף\n\nשבת\n• שקשוקה', 0),
-      I('🗒️', 'שגרה שבועית', 'רביעי\n• לתת כביסה\n• לישון אצל אמא\n\nשישי–שבת\n• לבשל לשבוע\n• ארוחה משפחתית\n• לאסוף כביסה', 1),
-      I('🧹', 'ימי ניקיון', 'שישי\n• כל המקלחת\n• להחליף מגבות ומצעים\n• אבק, לטאטא, לשטוף\n• מרפסת (פעם בחודש)\n\nמוצ״ש\n• כלים', 2),
-      I('🌹', 'חוקים אישיים', '• להיות גבר\n• בלי קנאה, בלי לבדוק\n• להביע עניין כשיוצאים', 3),
-    ]);
+    await db.recurring.bulkAdd(recurring);
   });
-
-  await db.settings.update(SETTINGS_ID, { seqCounter: 200 });
   await runDaily(today);
 }

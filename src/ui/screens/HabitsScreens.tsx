@@ -5,10 +5,10 @@ import { describeRule } from '../../domain/recurring';
 import type { RecurrenceRule, Recurring, RoutineKind, RoutineSettings } from '../../domain/schemas';
 import { ROUTINE_LABEL } from '../../domain/routine';
 import { getSettings, updateSettings } from '../../services/entity';
-import { addRoutineItem, createChallenge, cycleRule, deleteChallenge, deleteInfoCard, deleteRecurring, deleteRoutineItem, moveRoutineItem, newRule, saveInfoCard, saveRecurring, updateChallenge, updateRoutineItem } from '../../services/habits';
+import { addRoutineItem, createChallenge, cycleRule, deleteChallenge, deleteRecurring, deleteRoutineItem, moveRoutineItem, newRule, saveRecurring, updateChallenge, updateRoutineItem } from '../../services/habits';
 import { Q } from '../../services/queries';
 import { confirmAction, Empty, Seg, Switch, TopBar } from '../components/common';
-import { DraftInput, DraftTextarea } from '../components/edit';
+import { DraftInput } from '../components/edit';
 import { Icon } from '../components/Icon';
 import { ProjectPicker } from '../components/tasks';
 import { useClock, useLive } from '../hooks';
@@ -534,107 +534,6 @@ function RecurringForm({ existing, today }: { existing?: Recurring; today: strin
         שמור
       </button>
       <ProjectPicker open={pick} onClose={() => setPick(false)} selected={projectIds} onChange={setProjectIds} />
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Info cards (SPEC 3.10)
-// ---------------------------------------------------------------------------
-
-export function InfoCardsScreen() {
-  const cards = useLive(Q.infoCards) ?? [];
-  return (
-    <div className="page">
-      <TopBar title="כרטיסי מידע" backTo="/more">
-        <button type="button" className="iconbtn" aria-label="כרטיס חדש" onClick={() => go('/info/new')}>
-          <Icon name="plus" />
-        </button>
-      </TopBar>
-      {!cards.length && (
-        <Empty icon="📌">
-          טקסטים קבועים שרוצים לראות, כמו תזונה לפי ימים, ימי ניקיון או חוקים אישיים.
-          <br />
-          <button type="button" className="linkbtn" onClick={() => go('/info/new')}>
-            <Icon name="plus" size="xs" /> כרטיס חדש
-          </button>
-        </Empty>
-      )}
-      {cards.map((c) => (
-        <button key={c.id} type="button" className="card" style={{ width: '100%', textAlign: 'start', display: 'block' }} onClick={() => go(`/info/${c.id}`)}>
-          <h4>
-            <span className="t">
-              <span style={{ fontSize: 18 }}>{c.icon}</span> {c.title}
-            </span>
-            <Icon name="edit" size="sm" />
-          </h4>
-          <div className="info-body">{c.body}</div>
-        </button>
-      ))}
-    </div>
-  );
-}
-
-const INFO_ICONS = ['📌', '🍗', '🗒️', '🧹', '🌹', '🥇', '💊', '🏋️', '📚', '💡', '🛒', '🧘'];
-
-export function InfoCardScreen({ id }: { id: string }) {
-  const isNew = id === 'new';
-  const c = useLive(() => (isNew ? Promise.resolve(null) : Q.infoCard(id)), [id]);
-  const [title, setTitle] = useState('');
-  if (isNew) {
-    return (
-      <div className="page sub">
-        <TopBar title="כרטיס חדש" backTo="/info" />
-        <form
-          onSubmit={async (e) => {
-            e.preventDefault();
-            if (!title.trim()) return;
-            await saveInfoCard({ title: title.trim() });
-            back('/info');
-          }}
-        >
-          <input className="title-input" autoFocus placeholder="למשל: תזונה" value={title} onChange={(e) => setTitle(e.target.value)} />
-          <button type="submit" className="btn primary block" disabled={!title.trim()} style={{ marginTop: 12 }}>
-            צור
-          </button>
-        </form>
-      </div>
-    );
-  }
-  if (c === undefined) return <div className="page sub" />;
-  if (c === null) {
-    return (
-      <div className="page sub">
-        <TopBar title="כרטיס" backTo="/info" />
-        <Empty icon="🔍">הכרטיס לא נמצא.</Empty>
-      </div>
-    );
-  }
-  return (
-    <div className="page sub">
-      <TopBar title="" backTo="/info">
-        <button
-          type="button"
-          className="iconbtn"
-          aria-label="מחק"
-          onClick={async () => {
-            if (!confirmAction('למחוק את הכרטיס?')) return;
-            await deleteInfoCard(c.id);
-            back('/info');
-          }}
-        >
-          <Icon name="trash" />
-        </button>
-      </TopBar>
-      <DraftInput className="title-input" value={c.title} onSave={(v) => void saveInfoCard({ id: c.id, title: v })} />
-      <div className="chips" style={{ margin: '10px 0' }}>
-        {INFO_ICONS.map((ic) => (
-          <button key={ic} type="button" className={`chip ${c.icon === ic ? 'on' : 'out'}`} style={{ fontSize: 18 }} onClick={() => void saveInfoCard({ id: c.id, title: c.title, icon: ic })}>
-            {ic}
-          </button>
-        ))}
-      </div>
-      <DraftTextarea value={c.body} onSave={(v) => void saveInfoCard({ id: c.id, title: c.title, body: v })} placeholder="הטקסט של הכרטיס. אפשר שורות ורשימות עם •" rows={16} />
     </div>
   );
 }

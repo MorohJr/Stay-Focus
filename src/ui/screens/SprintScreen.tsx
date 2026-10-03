@@ -9,6 +9,7 @@ import { addToSprint, setStatus } from '../../services/tasks';
 import { Bar, Empty, Tabs, TopBar } from '../components/common';
 import { Icon } from '../components/Icon';
 import { projectName, TaskRow } from '../components/tasks';
+import { ProjectIcon } from '../components/ProjectIcon';
 import { useClock, useLive } from '../hooks';
 import { back, go, replace } from '../router';
 
@@ -125,7 +126,7 @@ function Planning({ tasks, cur, next }: { tasks: Task[]; cur?: Sprint; next?: Sp
   const inCur = tasks.filter((t) => cur && t.sprintId === cur.id && isOpen(t) && !t.parentId);
   const inNext = tasks.filter((t) => next && t.sprintId === next.id && isOpen(t) && !t.parentId);
   const groups = [
-    ...projects.filter((p) => p.status === 'active' || p.status === 'planning').map((p) => ({ key: p.id, name: `${p.icon} ${p.name}`, list: backlog.filter((t) => t.projectIds.includes(p.id)) })),
+    ...projects.filter((p) => p.status === 'active' || p.status === 'planning').map((p) => ({ key: p.id, name: <span className="row" style={{ gap: 6 }}><ProjectIcon project={p} size={20} radius={6} />{p.name}</span>, list: backlog.filter((t) => t.projectIds.includes(p.id)) })),
     { key: 'none', name: 'בלי פרויקט', list: backlog.filter((t) => !t.projectIds.some((id) => projects.find((p) => p.id === id && (p.status === 'active' || p.status === 'planning')))) },
   ].filter((g) => g.list.length);
   const remove = (t: Task) => (

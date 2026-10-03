@@ -22,10 +22,9 @@ export const Q = {
   allChallengeLogs: () => db.challengeLogs.toArray(),
   recurring: () => db.recurring.toArray(),
   recurringOne: (id: string) => db.recurring.get(id).then((x) => x ?? null),
-  infoCards: () => db.infoCards.orderBy('order').toArray(),
-  infoCard: (id: string) => db.infoCards.get(id).then((x) => x ?? null),
   templates: () => db.templates.toArray(),
   settings: () => db.settings.get(SETTINGS_ID),
+  attachment: (id: string) => db.attachments.get(id).then((x) => x ?? null),
   attachmentsOf: (ownerId: string) => db.attachments.where('ownerId').equals(ownerId).toArray(),
   demo: () => isDemoMode(),
 };

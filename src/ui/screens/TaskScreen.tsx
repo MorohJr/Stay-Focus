@@ -132,7 +132,7 @@ export function TaskScreen({ id }: { id: string }) {
             <Icon name="folder" size="sm" /> פרויקט
           </span>
           <button type="button" className="val linkbtn" onClick={() => setPickProject(true)}>
-            {taskProjects.length ? taskProjects.map((p) => `${p.icon} ${p.name}`).join(', ') : 'בחר'}
+            {taskProjects.length ? taskProjects.map((p) => p.name).join(', ') : 'בחר'}
           </button>
         </div>
         <div className="field">

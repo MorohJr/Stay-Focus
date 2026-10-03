@@ -9,6 +9,7 @@ import { deleteTask, restoreTasks, updateTask } from '../../services/tasks';
 import { Empty, Tabs, TopBar, useToast } from '../components/common';
 import { Icon } from '../components/Icon';
 import { ProjectPicker, SprintPicker, TaskRow } from '../components/tasks';
+import { ProjectIcon } from '../components/ProjectIcon';
 import { useClock, useLive } from '../hooks';
 import { go, replace } from '../router';
 
@@ -194,7 +195,7 @@ function ByProjectTab({ tasks }: { tasks: Task[] }) {
   const groups = [
     ...projects
       .filter((p) => p.status !== 'archived')
-      .map((p) => ({ key: p.id, name: `${p.icon} ${p.name}`, list: open.filter((t) => t.projectIds.includes(p.id)) }))
+      .map((p) => ({ key: p.id, name: <span className="row" style={{ gap: 6 }}><ProjectIcon project={p} size={20} radius={6} />{p.name}</span>, list: open.filter((t) => t.projectIds.includes(p.id)) }))
       .filter((g) => g.list.length),
     { key: 'none', name: 'בלי פרויקט', list: open.filter((t) => t.projectIds.length === 0) },
   ].filter((g) => g.list.length);

@@ -6,6 +6,9 @@ import { activeBlockers, compareForDay, isOpen, PRIORITY_LABEL } from '../../dom
 import { createGoal, createProject, deleteGoal, deleteProject, noteTitle, setFocusGoal, updateGoal, updateProject } from '../../services/planning';
 import { Q } from '../../services/queries';
 import { createTask } from '../../services/tasks';
+import { removeProjectImage, setProjectImage } from '../../services/misc';
+import { shrinkImage } from '../../services/platform';
+import { ProjectCover, ProjectIcon } from '../components/ProjectIcon';
 import { Bar, confirmAction, Empty, Seg, Sheet, Tabs, TopBar } from '../components/common';
 import { DraftInput, DraftTextarea } from '../components/edit';
 import { Icon } from '../components/Icon';
@@ -90,9 +93,14 @@ function ProjectCard({ p, all, tasks }: { p: Project; all: Project[]; tasks: Tas
   const c = projectCompletion(p, tasks);
   const blockers = activeBlockers(p, all);
   return (
-    <button type="button" className="card pcard" onClick={() => go(`/project/${p.id}`)}>
+    <button type="button" className="card pcard" onClick={() => go(`/project/${p.id}`)} style={p.coverId ? { paddingTop: 0, overflow: 'hidden' } : undefined}>
+      {p.coverId && (
+        <div style={{ margin: '0 -13px 12px' }}>
+          <ProjectCover project={p} height={72} />
+        </div>
+      )}
       <div className="top">
-        <span className="ic">{p.icon}</span>
+        <ProjectIcon project={p} />
         <span className="grow">
           <span className="name">{p.name}</span>
           <span className="muted small" style={{ display: 'block' }}>
@@ -173,6 +181,9 @@ export function ProjectScreen({ id }: { id: string }) {
   const [newTask, setNewTask] = useState('');
   const [iconOpen, setIconOpen] = useState(false);
   const [blockOpen, setBlockOpen] = useState(false);
+  const [imgOpen, setImgOpen] = useState(false);
+  const logoRef = useRef<HTMLInputElement>(null);
+  const coverRef = useRef<HTMLInputElement>(null);
   const [showDone, setShowDone] = useState(false);
   if (p === undefined) return <div className="page sub" />;
   if (p === null) {
@@ -206,11 +217,21 @@ export function ProjectScreen({ id }: { id: string }) {
           <Icon name="trash" />
         </button>
       </TopBar>
-      <div className="row" style={{ alignItems: 'center' }}>
-        <button type="button" className="pcard" style={{ width: 'auto' }} onClick={() => setIconOpen(true)} aria-label="אייקון">
-          <span className="ic" style={{ fontSize: 26, width: 48, height: 48, borderRadius: 14, background: 'var(--surface2)', display: 'grid', placeItems: 'center' }}>
-            {p.icon}
-          </span>
+      {p.coverId ? (
+        <div style={{ margin: '0 -15px 0', position: 'relative' }}>
+          <ProjectCover project={p} height={150} />
+          <button type="button" className="minibtn" style={{ position: 'absolute', bottom: 10, insetInlineEnd: 12, background: 'rgba(255,255,255,.92)' }} onClick={() => setImgOpen(true)}>
+            <Icon name="image" size="xs" /> החלף רקע
+          </button>
+        </div>
+      ) : (
+        <button type="button" className="linkbtn" style={{ marginBottom: 8 }} onClick={() => setImgOpen(true)}>
+          <Icon name="image" size="xs" /> הוסף תמונת רקע
+        </button>
+      )}
+      <div className="row" style={{ alignItems: 'center', marginTop: p.coverId ? -26 : 0, position: 'relative' }}>
+        <button type="button" style={{ borderRadius: 16, border: '3px solid #fff', background: '#fff', flex: 'none' }} onClick={() => setIconOpen(true)} aria-label="לוגו או אייקון">
+          <ProjectIcon project={p} size={52} radius={14} />
         </button>
         <DraftInput className="title-input" value={p.name} onSave={(v) => set({ name: v })} placeholder="שם הפרויקט" />
       </div>
@@ -325,7 +346,18 @@ export function ProjectScreen({ id }: { id: string }) {
         {!linkedNotes.length && <p className="muted small" style={{ margin: 4 }}>אין פתקים מקושרים.</p>}
       </section>
 
-      <Sheet open={iconOpen} onClose={() => setIconOpen(false)} title="אייקון">
+      <Sheet open={iconOpen} onClose={() => setIconOpen(false)} title="לוגו או אייקון">
+        <div className="row" style={{ marginBottom: 12 }}>
+          <button type="button" className="btn grow" onClick={() => logoRef.current?.click()}>
+            <Icon name="upload" size="sm" /> {p.logoId ? 'החלף לוגו' : 'העלה לוגו'}
+          </button>
+          {p.logoId && (
+            <button type="button" className="btn danger" onClick={() => void removeProjectImage(p.id, 'logo')}>
+              הסר לוגו
+            </button>
+          )}
+        </div>
+        <p className="muted small" style={{ margin: '0 2px 8px' }}>{p.logoId ? 'כשיש לוגו הוא מוצג במקום האייקון.' : 'או בחר אייקון:'}</p>
         <div className="chips">
           {ICONS.map((ic) => (
             <button
@@ -343,6 +375,50 @@ export function ProjectScreen({ id }: { id: string }) {
           ))}
         </div>
       </Sheet>
+      <Sheet open={imgOpen} onClose={() => setImgOpen(false)} title="תמונת רקע">
+        <button type="button" className="btn primary block" onClick={() => coverRef.current?.click()}>
+          <Icon name="image" size="sm" /> {p.coverId ? 'בחר תמונה אחרת' : 'בחר תמונה'}
+        </button>
+        {p.coverId && (
+          <button
+            type="button"
+            className="btn danger block"
+            style={{ marginTop: 8 }}
+            onClick={async () => {
+              await removeProjectImage(p.id, 'cover');
+              setImgOpen(false);
+            }}
+          >
+            הסר תמונת רקע
+          </button>
+        )}
+      </Sheet>
+      <input
+        ref={logoRef}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={async (e) => {
+          const f = e.target.files?.[0];
+          e.target.value = '';
+          if (!f) return;
+          await setProjectImage(p.id, 'logo', await shrinkImage(f, 512, 'image/png'), f.name);
+          setIconOpen(false);
+        }}
+      />
+      <input
+        ref={coverRef}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={async (e) => {
+          const f = e.target.files?.[0];
+          e.target.value = '';
+          if (!f) return;
+          await setProjectImage(p.id, 'cover', await shrinkImage(f, 1600), f.name);
+          setImgOpen(false);
+        }}
+      />
       <Sheet open={blockOpen} onClose={() => setBlockOpen(false)} title="חסום ע״י">
         {projects
           .filter((x) => x.id !== p.id && x.status !== 'archived')
@@ -350,7 +426,7 @@ export function ProjectScreen({ id }: { id: string }) {
             const on = p.blockedByIds.includes(x.id);
             return (
               <button key={x.id} type="button" className="opt" onClick={() => set({ blockedByIds: on ? p.blockedByIds.filter((y) => y !== x.id) : [...p.blockedByIds, x.id] })}>
-                <span>{x.icon}</span>
+                <ProjectIcon project={x} size={28} radius={8} />
                 <span className="grow">{x.name}</span>
                 {on && (
                   <span className="check">
@@ -553,7 +629,7 @@ export function GoalScreen({ id }: { id: string }) {
       <section className="card">
         {linked.map((p) => (
           <button key={p.id} type="button" className="listrow" onClick={() => go(`/project/${p.id}`)}>
-            <span className="ic">{p.icon}</span>
+            <ProjectIcon project={p} size={34} radius={11} />
             <span className="grow">{p.name}</span>
             <span className="end num">{projectCompletion(p, tasks).pct}%</span>
           </button>
@@ -569,7 +645,7 @@ export function GoalScreen({ id }: { id: string }) {
             const on = p.goalId === g.id;
             return (
               <button key={p.id} type="button" className="opt" onClick={() => void updateProject(p.id, { goalId: on ? undefined : g.id })}>
-                <span>{p.icon}</span>
+                <ProjectIcon project={p} size={28} radius={8} />
                 <span className="grow">{p.name}</span>
                 {p.goalId && !on && <span className="tag g">במטרה אחרת</span>}
                 {on && (

@@ -25,13 +25,12 @@ const ROW_SCHEMAS: Record<TableName, z.ZodType> = {
   challenges: S.Challenge,
   challengeLogs: S.ChallengeLog,
   recurring: S.Recurring,
-  infoCards: S.InfoCard,
   attachments: BackupAttachment,
   templates: S.Template,
   settings: S.Settings,
 };
 
-type BackupData = Partial<Record<TableName, unknown[]>>;
+type BackupData = Partial<Record<string, unknown[]>>;
 
 const BackupFile = z.object({
   format: z.literal(BACKUP_FORMAT),
@@ -95,7 +94,10 @@ export async function markBackupDone(): Promise<void> {
  * Migrations of backup data, keyed by the version they migrate FROM (n → n+1).
  * Add a step for every Dexie version bump (CLAUDE.md iron rule 4).
  */
-export const MIGRATIONS: Record<number, (data: BackupData) => BackupData> = {};
+export const MIGRATIONS: Record<number, (data: BackupData) => BackupData> = {
+  // v1 → v2: info cards were removed (SPEC 1.2).
+  1: ({ infoCards: _gone, ...rest }) => rest,
+};
 
 function migrate(data: BackupData, fromVersion: number): BackupData {
   let current = data;

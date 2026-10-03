@@ -39,7 +39,7 @@ export async function deleteTemplate(id: string): Promise<void> {
 // Attachments and links (SPEC 3.11)
 // ---------------------------------------------------------------------------
 
-export async function addAttachment(ownerType: Attachment['ownerType'], ownerId: string, blob: Blob, name: string): Promise<void> {
+export async function addAttachment(ownerType: 'task' | 'note', ownerId: string, blob: Blob, name: string): Promise<void> {
   const a: Attachment = { ...stamps(), ownerType, ownerId, name, mime: blob.type || 'image/jpeg', blob };
   const table = ownerType === 'task' ? db.tasks : db.notes;
   await db.transaction('rw', db.attachments, table, async () => {
@@ -49,9 +49,41 @@ export async function addAttachment(ownerType: Attachment['ownerType'], ownerId:
   });
 }
 
+/** R-PRJ-3: sets (or replaces) a project's logo or cover image. */
+export async function setProjectImage(projectId: string, kind: 'logo' | 'cover', blob: Blob, name: string): Promise<void> {
+  const key = kind === 'logo' ? 'logoId' : 'coverId';
+  await db.transaction('rw', db.attachments, db.projects, async () => {
+    const p = await db.projects.get(projectId);
+    if (!p) return;
+    const old = p[key];
+    const a: Attachment = { ...stamps(), ownerType: 'project', ownerId: projectId, name, mime: blob.type || 'image/jpeg', blob };
+    await db.attachments.add(a);
+    await db.projects.update(projectId, { [key]: a.id, updatedAt: nowIso() });
+    if (old) await db.attachments.delete(old);
+  });
+}
+
+export async function removeProjectImage(projectId: string, kind: 'logo' | 'cover'): Promise<void> {
+  const key = kind === 'logo' ? 'logoId' : 'coverId';
+  await db.transaction('rw', db.attachments, db.projects, async () => {
+    const p = await db.projects.get(projectId);
+    const old = p?.[key];
+    if (!p || !old) return;
+    await db.projects.update(projectId, { [key]: undefined, updatedAt: nowIso() });
+    await db.attachments.delete(old);
+  });
+}
+
 export async function deleteAttachment(id: string): Promise<void> {
   const a = await db.attachments.get(id);
   if (!a) return;
+  if (a.ownerType === 'project') {
+    const p = await db.projects.get(a.ownerId);
+    if (p?.logoId === id) return removeProjectImage(a.ownerId, 'logo');
+    if (p?.coverId === id) return removeProjectImage(a.ownerId, 'cover');
+    await db.attachments.delete(id);
+    return;
+  }
   const table = a.ownerType === 'task' ? db.tasks : db.notes;
   await db.transaction('rw', db.attachments, table, async () => {
     const owner = await table.get(a.ownerId);

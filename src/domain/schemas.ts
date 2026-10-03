@@ -53,6 +53,9 @@ export const Project = z.object({
   name: z.string(),
   body: z.string().default(''),
   icon: z.string().default('🎯'),
+  /** R-PRJ-3: uploaded logo and cover (Attachment ids). */
+  logoId: z.string().optional(),
+  coverId: z.string().optional(),
   status: ProjectStatus,
   priority: Priority.optional(),
   areaId: z.string().optional(),
@@ -155,12 +158,9 @@ export const Recurring = z.object({
 });
 export type Recurring = z.infer<typeof Recurring>;
 
-export const InfoCard = z.object({ ...base, title: z.string(), icon: z.string(), body: z.string(), order: z.number() });
-export type InfoCard = z.infer<typeof InfoCard>;
-
 export const Attachment = z.object({
   ...base,
-  ownerType: z.enum(['task', 'note']),
+  ownerType: z.enum(['task', 'note', 'project']),
   ownerId: z.string(),
   name: z.string(),
   mime: z.string(),
