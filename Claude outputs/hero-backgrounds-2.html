@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>רקע לבלוקים · סבב 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;800&family=Rubik:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --ink: #111; --muted: #7a7a74; --line: #ececea; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e9e9e6; font-family: Heebo, sans-serif; color: var(--ink); padding: 24px 16px 40px; }
+  h1 { margin: 0 0 4px; font-size: 24px; font-weight: 800; }
+  .lead { margin: 0 0 20px; color: #55554f; font-size: 14px; max-width: 900px; line-height: 1.5; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 18px; max-width: 1320px; }
+  .opt { background: #fff; border-radius: 22px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+  .opt-h { padding: 12px 14px 10px; display: flex; gap: 10px; align-items: baseline; }
+  .opt-h b { font-family: Rubik, sans-serif; font-size: 20px; color: var(--acc-text, #3346c4); }
+  .opt-h span { font-weight: 700; font-size: 15px; }
+  .opt-h small { display: block; color: var(--muted); font-size: 12px; font-weight: 400; margin-top: 1px; }
+  .sw { display: flex; gap: 4px; margin-top: 6px; }
+  .sw i { width: 18px; height: 18px; border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
+
+  /* each option sets: --bg (block), --acc (accent), --on-acc (text on accent), --t2 (secondary text), --kk (label) */
+  .opt { --bg: #111; --acc: #3346c4; --on-acc: #fff; --t2: #b9b9b4; --kk: #b6bdf0; --fg: #fff; --chip: rgba(255,255,255,.12); --track: rgba(255,255,255,.14); }
+  .dk { position: relative; overflow: hidden; background: var(--bg); color: var(--fg); }
+  .dk > * { position: relative; z-index: 1; }
+  .dk::before, .dk::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+
+  .head { padding: 16px 16px 34px; }
+  .head .bar { display: flex; gap: 6px; margin-bottom: 8px; }
+  .head .bar i { width: 30px; height: 30px; border-radius: 10px; background: var(--chip); display: block; }
+  .head h2 { margin: 0; font-size: 23px; font-weight: 800; letter-spacing: -.3px; }
+  .head .sub { font-size: 12px; color: var(--t2); margin-top: 2px; }
+  .head .stats { display: flex; gap: 18px; margin-top: 12px; font-size: 10.5px; color: var(--t2); }
+  .head .stats b { display: block; color: var(--fg); font-family: Rubik, sans-serif; font-size: 18px; }
+  .body { background: #fff; border-radius: 20px 20px 0 0; margin-top: -20px; position: relative; z-index: 2; padding: 14px; }
+  .row { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 7px 0; border-bottom: 1px solid var(--line); }
+  .row i { width: 15px; height: 15px; border-radius: 50%; border: 1.7px solid #cfcfca; flex: none; }
+  .row i.d { background: var(--acc-row, #111); border-color: var(--acc-row, #111); }
+  .now { border-radius: 20px; padding: 14px; margin-top: 12px; }
+  .now .k { font-size: 11px; font-weight: 600; color: var(--kk); }
+  .now .t { font-size: 19px; font-weight: 800; margin: 4px 0 2px; letter-spacing: -.2px; }
+  .now .m { font-size: 11.5px; color: var(--t2); }
+  .now .p { height: 4px; border-radius: 9px; background: var(--track); margin-top: 10px; overflow: hidden; }
+  .now .p i { display: block; width: 45%; height: 100%; background: var(--acc); }
+  .now .btns { display: flex; gap: 6px; margin-top: 10px; }
+  .now .btns span { font-size: 12px; font-weight: 700; padding: 7px 12px; border-radius: 11px; background: var(--chip); }
+  .now .btns span:first-child { background: var(--acc); color: var(--on-acc); }
+
+  /* 1. graphite + grain + hairline */
+  .o1 { --bg: #1c1c1f; --acc: #3346c4; }
+  .o1 .dk { box-shadow: inset 0 1px 0 rgba(255,255,255,.09); }
+  .o1 .dk::before { background: var(--noise) 0 0 / 160px; opacity: 1; }
+  .o1 .dk::after { background: linear-gradient(180deg, rgba(255,255,255,.05), transparent 45%); }
+
+  /* 2. midnight navy, light from above */
+  .o2 { --bg: #0a1020; --acc: #4f6bff; --kk: #9fb0ff; --t2: #93a0bf; }
+  .o2 .dk { box-shadow: inset 0 0 0 1px rgba(140,160,255,.14); }
+  .o2 .dk::before { background: radial-gradient(70% 70% at 50% -20%, rgba(110,135,255,.38), transparent 70%); }
+  .o2 .dk::after { background: linear-gradient(90deg, transparent, rgba(160,180,255,.55), transparent) top / 70% 1px no-repeat; }
+
+  /* 3. forest + contour lines, mint accent */
+  .o3 { --bg: #0c241e; --acc: #34d399; --on-acc: #052e22; --kk: #86efac; --t2: #9cb8ae; --acc-text: #059669; --acc-row: #0c241e; }
+  .o3 .dk::before { background: var(--topo) left -60px top -60px / 300px 300px no-repeat; opacity: .32; -webkit-mask-image: radial-gradient(circle at 0 0, #000 30%, transparent 75%); mask-image: radial-gradient(circle at 0 0, #000 30%, transparent 75%); }
+
+  /* 4. paper: a light block with ruled lines */
+  .o4 { --bg: #f2eee4; --fg: #1a1a1a; --acc: #3346c4; --t2: #6f6a5e; --kk: #3346c4; --chip: rgba(26,26,26,.07); --track: rgba(26,26,26,.1); }
+  .o4 .dk { box-shadow: inset 0 0 0 1px #e2dccd; }
+  .o4 .dk::before { background: repeating-linear-gradient(180deg, transparent 0 21px, rgba(51,70,196,.10) 21px 22px); }
+  .o4 .dk::after { inset: 0 auto 0 22px; width: 1px; background: rgba(220,38,38,.28); }
+  .o4 .body { border-top: 1px solid #e2dccd; }
+
+  /* 5. blueprint grid */
+  .o5 { --bg: #0f2747; --acc: #60a5fa; --on-acc: #0b1d36; --kk: #93c5fd; --t2: #9db3cf; --acc-text: #2563eb; }
+  .o5 .dk::before { background: linear-gradient(rgba(147,197,253,.16) 1px, transparent 1px) 0 0 / 60px 60px, linear-gradient(90deg, rgba(147,197,253,.16) 1px, transparent 1px) 0 0 / 60px 60px, linear-gradient(rgba(147,197,253,.07) 1px, transparent 1px) 0 0 / 12px 12px, linear-gradient(90deg, rgba(147,197,253,.07) 1px, transparent 1px) 0 0 / 12px 12px; -webkit-mask-image: linear-gradient(115deg, rgba(0,0,0,.25) 20%, #000 90%); mask-image: linear-gradient(115deg, rgba(0,0,0,.25) 20%, #000 90%); }
+
+  /* 6. a huge outlined week number */
+  .o6 { --bg: #111; --acc: #3346c4; }
+  .o6 .dk::before { content: '42'; inset: auto; left: -8px; bottom: -34px; font: 800 150px/1 Rubik, sans-serif; color: transparent; -webkit-text-stroke: 1.2px rgba(255,255,255,.16); letter-spacing: -6px; }
+  .o6 .now::before { font-size: 110px; bottom: -26px; }
+
+  /* 7. black with a progress arc (indigo → cyan) */
+  .o7 { --bg: #0d0d10; --acc: #3346c4; }
+  .o7 .dk::before { background: var(--arc) left -60px top -60px / 150px 150px no-repeat; }
+  .o7 .now::before { background-size: 120px 120px; background-position: left -50px top -50px; }
+
+  /* 8. plum with amber */
+  .o8 { --bg: #26121f; --acc: #f5a524; --on-acc: #2b1606; --kk: #fcd38d; --t2: #c4a9b9; --acc-text: #b45309; }
+  .o8 .dk::before { background: linear-gradient(118deg, transparent 38%, rgba(255,255,255,.07) 48%, transparent 58%), radial-gradient(80% 90% at 0% 0%, rgba(245,165,36,.16), transparent 60%); }
+</style>
+</head>
+<body>
+<h1>רקע לבלוקים · סבב 2</h1>
+<p class="lead">צבעים אחרים ואלמנטים אחרים. בכל הצעה רואים את הכותרת של מסך פנימי ואת כרטיס "עכשיו". הריבועים הקטנים מתחת לשם הם צבע הבלוק וצבע ההדגשה (כפתורים ופסי התקדמות).</p>
+<div class="grid" id="grid"></div>
+<script>
+// Contour lines (option 3), generated once
+const topo = (() => {
+  let paths = '';
+  for (let k = 1; k <= 11; k++) {
+    const pts = [];
+    for (let a = 0; a <= 360; a += 6) {
+      const r = a * Math.PI / 180;
+      const rad = 14 + k * 14 * (1 + 0.13 * Math.sin(3 * r + k * 0.5) + 0.07 * Math.sin(5 * r - k));
+      pts.push(`${(40 + rad * Math.cos(r)).toFixed(1)},${(40 + rad * Math.sin(r)).toFixed(1)}`);
+    }
+    paths += `<path d='M${pts.join('L')}Z'/>`;
+  }
+  return `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 340 340'><g fill='none' stroke='#6ee7b7' stroke-width='1'>${paths}</g></svg>`)}")`;
+})();
+const noise = `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .07 0'/></filter><rect width='100%' height='100%' filter='url(#n)'/></svg>`)}")`;
+const arc = `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 240'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='#22d3ee'/><stop offset='1' stop-color='#3346c4'/></linearGradient></defs><circle cx='120' cy='120' r='100' fill='none' stroke='rgba(255,255,255,.07)' stroke-width='9'/><circle cx='120' cy='120' r='100' fill='none' stroke='url(#g)' stroke-width='9' stroke-linecap='round' stroke-dasharray='390 628' transform='rotate(-90 120 120)'/><circle cx='120' cy='120' r='76' fill='none' stroke='rgba(255,255,255,.05)' stroke-width='1'/></svg>`)}")`;
+document.documentElement.style.setProperty('--topo', topo);
+document.documentElement.style.setProperty('--noise', noise);
+document.documentElement.style.setProperty('--arc', arc);
+
+const OPTS = [
+  ['1', 'גרפיט', 'אפור-פחם עם גרעיניות עדינה וקו אור דק למעלה. שקט, כמו אפליקציות של אפל', ['#1c1c1f', '#3346c4']],
+  ['2', 'כחול לילה', 'נייבי עמוק, אור רך מלמעלה וקו זוהר דק בקצה. בסגנון Linear', ['#0a1020', '#4f6bff']],
+  ['3', 'יער וקווי גובה', 'ירוק כהה עם קווי גובה של מפה, הדגשה בירוק מנטה. "הדרך למטרה"', ['#0c241e', '#34d399']],
+  ['4', 'נייר', 'בלוק בהיר בצבע נייר עם שורות של מחברת. עדין ומרגיע, בלי שחור בכלל', ['#f2eee4', '#3346c4']],
+  ['5', 'שרטוט', 'כחול של תוכנית אדריכלית עם רשת מדויקת. תכנון והנדסה', ['#0f2747', '#60a5fa']],
+  ['6', 'מספר השבוע', 'שחור, ובפינה מספר השבוע ענק ושקוף. האלמנט הוא מידע אמיתי', ['#111111', '#3346c4']],
+  ['7', 'קשת התקדמות', 'שחור עם קשת בפינה שמתמלאת לפי ההתקדמות של השבוע', ['#0d0d10', '#22d3ee']],
+  ['8', 'שזיף וענבר', 'סגול-בורדו כהה עם ברק עדין והדגשה בענבר. חם ויוקרתי', ['#26121f', '#f5a524']],
+];
+document.getElementById('grid').innerHTML = OPTS.map(([n, name, d, sw]) => `
+  <div class="opt o${n}">
+    <div class="opt-h"><b>${n}</b><span>${name}<small>${d}</small><span class="sw">${sw.map((c) => `<i style="background:${c}"></i>`).join('')}</span></span></div>
+    <div class="dk head">
+      <div class="bar"><i></i></div>
+      <h2>משימות</h2>
+      <div class="sub">שבוע 42 · 11/10–17/10</div>
+      <div class="stats"><span><b>24</b>פתוחות</span><span><b>5</b>להיום</span><span><b>2</b>באיחור</span></div>
+    </div>
+    <div class="body">
+      <div class="row"><i class="d"></i>לשלוח חשבונית</div>
+      <div class="row"><i></i>לעצב לוגו לאתר</div>
+      <div class="dk now">
+        <div class="k">עכשיו · 09:30–10:30</div>
+        <div class="t">לכתוב את ההצעה ללקוח</div>
+        <div class="m">אתר אישי · נשארו 35 דק׳</div>
+        <div class="p"><i></i></div>
+        <div class="btns"><span>✓ סיימתי</span><span>דחה</span></div>
+      </div>
+    </div>
+  </div>`).join('');
+</script>
+</body>
+</html>
