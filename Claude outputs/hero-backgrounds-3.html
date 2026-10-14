@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ירוק יוקרתי · סבב 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;800&family=Rubik:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --ink: #111; --muted: #7a7a74; --line: #ececea; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e9e9e6; font-family: Heebo, sans-serif; color: var(--ink); padding: 24px 16px 40px; }
+  h1 { margin: 0 0 4px; font-size: 24px; font-weight: 800; }
+  .lead { margin: 0 0 20px; color: #55554f; font-size: 14px; max-width: 900px; line-height: 1.5; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 18px; max-width: 1320px; }
+  .opt { background: #fff; border-radius: 22px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+  .opt-h { padding: 12px 14px 10px; display: flex; gap: 10px; align-items: baseline; }
+  .opt-h b { font-family: Rubik, sans-serif; font-size: 20px; color: var(--acc-text, #3346c4); }
+  .opt-h span { font-weight: 700; font-size: 15px; }
+  .opt-h small { display: block; color: var(--muted); font-size: 12px; font-weight: 400; margin-top: 1px; }
+  .sw { display: flex; gap: 4px; margin-top: 6px; }
+  .sw i { width: 18px; height: 18px; border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
+
+  /* each option sets: --bg (block), --acc (accent), --on-acc (text on accent), --t2 (secondary text), --kk (label) */
+  .opt { --bg: #111; --acc: #3346c4; --on-acc: #fff; --t2: #b9b9b4; --kk: #b6bdf0; --fg: #fff; --chip: rgba(255,255,255,.12); --track: rgba(255,255,255,.14); }
+  .dk { position: relative; overflow: hidden; background: var(--bg); color: var(--fg); }
+  .dk { background-color: #0a231c; }
+  .dk > * { position: relative; z-index: 1; }
+  .dk::before, .dk::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+
+  .head { padding: 16px 16px 34px; }
+  .head .bar { display: flex; gap: 6px; margin-bottom: 8px; }
+  .head .bar i { width: 30px; height: 30px; border-radius: 10px; background: var(--chip); display: block; }
+  .head h2 { margin: 0; font-size: 23px; font-weight: 800; letter-spacing: -.3px; }
+  .head .sub { font-size: 12px; color: var(--t2); margin-top: 2px; }
+  .head .stats { display: flex; gap: 18px; margin-top: 12px; font-size: 10.5px; color: var(--t2); }
+  .head .stats b { display: block; color: var(--fg); font-family: Rubik, sans-serif; font-size: 18px; }
+  .body { background: #fff; border-radius: 20px 20px 0 0; margin-top: -20px; position: relative; z-index: 2; padding: 14px; }
+  .row { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 7px 0; border-bottom: 1px solid var(--line); }
+  .row i { width: 15px; height: 15px; border-radius: 50%; border: 1.7px solid #cfcfca; flex: none; }
+  .row i.d { background: var(--acc-row, #111); border-color: var(--acc-row, #111); }
+  .now { border-radius: 20px; padding: 14px; margin-top: 12px; }
+  .now .k { font-size: 11px; font-weight: 600; color: var(--kk); }
+  .now .t { font-size: 19px; font-weight: 800; margin: 4px 0 2px; letter-spacing: -.2px; }
+  .now .m { font-size: 11.5px; color: var(--t2); }
+  .now .p { height: 4px; border-radius: 9px; background: var(--track); margin-top: 10px; overflow: hidden; }
+  .now .p i { display: block; width: 45%; height: 100%; background: var(--acc); }
+  .now .btns { display: flex; gap: 6px; margin-top: 10px; }
+  .now .btns span { font-size: 12px; font-weight: 700; padding: 7px 12px; border-radius: 11px; background: var(--chip); }
+  .now .btns span:first-child { background: var(--acc); color: var(--on-acc); }
+
+  .dk::before { z-index: 0; }
+  .dk::after { z-index: 0; }
+  .wk { position: absolute; left: -6px; bottom: -30px; font: 800 150px/1 Rubik, sans-serif; letter-spacing: -6px; pointer-events: none; z-index: 0; }
+  .now .wk { font-size: 112px; bottom: -24px; }
+  .topo::before { background: var(--topo) left -70px top -70px / 320px 320px no-repeat; -webkit-mask-image: radial-gradient(circle at 0 0, #000 28%, transparent 78%); mask-image: radial-gradient(circle at 0 0, #000 28%, transparent 78%); }
+
+  /* A. bottle green, sage lines, emerald outline number */
+  .oa { --bg: linear-gradient(160deg, #0f3328 0%, #0a231c 55%, #061712 100%); --acc: #2fa37a; --on-acc: #fff; --kk: #9fd9bf; --t2: #9ab8ab; --acc-text: #1f7a5a; --acc-row: #0f3328; }
+  .oa .dk::before { opacity: .22; }
+  .oa .wk { color: transparent; -webkit-text-stroke: 1.3px rgba(122, 214, 170, .30); }
+
+  /* B. emerald velvet: glow in the corner, the number filled with a green gradient */
+  .ob { --bg: radial-gradient(90% 80% at 0% 0%, #165c45 0%, #0c3a2c 45%, #072219 100%); --acc: #3fbf8f; --on-acc: #04281c; --kk: #a7f0cf; --t2: #a4c4b6; --acc-text: #1a8a62; --acc-row: #0c3a2c; }
+  .ob .dk::before { opacity: .18; }
+  .ob .wk { background: linear-gradient(160deg, rgba(167,240,207,.34), rgba(63,191,143,.04) 70%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .ob .dk { box-shadow: inset 0 1px 0 rgba(167,240,207,.14); }
+
+  /* C. racing green with a champagne hairline: the lines and number stay green, only the top line glints */
+  .oc { --bg: linear-gradient(180deg, #13392c, #0b261d); --acc: #2e8b67; --on-acc: #fff; --kk: #c8e6d6; --t2: #a3bdb1; --acc-text: #24714f; --acc-row: #13392c; }
+  .oc .dk::before { opacity: .26; }
+  .oc .dk::after { background: linear-gradient(90deg, transparent 5%, rgba(214,196,150,.55) 50%, transparent 95%) top / 100% 1px no-repeat; }
+  .oc .wk { color: rgba(95,178,140,.10); -webkit-text-stroke: 1px rgba(150,220,185,.28); }
+
+  /* D. deep jade, almost black, with a bright jade number */
+  .od { --bg: linear-gradient(165deg, #0b2620 0%, #071a16 60%, #04100d 100%); --acc: #22b07d; --on-acc: #fff; --kk: #8ee6c0; --t2: #93ada3; --acc-text: #128a5f; --acc-row: #0b2620; }
+  .od .dk::before { opacity: .16; }
+  .od .wk { color: transparent; -webkit-text-stroke: 1.5px rgba(34,176,125,.55); }
+</style>
+</head>
+<body>
+<h1>ירוק יוקרתי: קווי גובה ומספר השבוע</h1>
+<p class="lead">שילוב של "יער וקווי גובה" עם "מספר השבוע", בארבעה גוונים של ירוק. מספר השבוע וקווי הגובה באותו ירוק כמו הבלוק, כדי שיתחברו. הריבועים מתחת לשם: צבע הבלוק וצבע ההדגשה.</p>
+<div class="grid" id="grid"></div>
+<script>
+// Contour lines (option 3), generated once
+const topo = (() => {
+  let paths = '';
+  for (let k = 1; k <= 11; k++) {
+    const pts = [];
+    for (let a = 0; a <= 360; a += 6) {
+      const r = a * Math.PI / 180;
+      const rad = 14 + k * 14 * (1 + 0.13 * Math.sin(3 * r + k * 0.5) + 0.07 * Math.sin(5 * r - k));
+      pts.push(`${(40 + rad * Math.cos(r)).toFixed(1)},${(40 + rad * Math.sin(r)).toFixed(1)}`);
+    }
+    paths += `<path d='M${pts.join('L')}Z'/>`;
+  }
+  return `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 340 340'><g fill='none' stroke='#a7e3c8' stroke-width='1'>${paths}</g></svg>`)}")`;
+})();
+const noise = `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .07 0'/></filter><rect width='100%' height='100%' filter='url(#n)'/></svg>`)}")`;
+const arc = `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 240'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='#22d3ee'/><stop offset='1' stop-color='#3346c4'/></linearGradient></defs><circle cx='120' cy='120' r='100' fill='none' stroke='rgba(255,255,255,.07)' stroke-width='9'/><circle cx='120' cy='120' r='100' fill='none' stroke='url(#g)' stroke-width='9' stroke-linecap='round' stroke-dasharray='390 628' transform='rotate(-90 120 120)'/><circle cx='120' cy='120' r='76' fill='none' stroke='rgba(255,255,255,.05)' stroke-width='1'/></svg>`)}")`;
+document.documentElement.style.setProperty('--topo', topo);
+document.documentElement.style.setProperty('--noise', noise);
+document.documentElement.style.setProperty('--arc', arc);
+
+const OPTS = [
+  ['a', 'ירוק בקבוק', 'ירוק כהה ועמוק, קווי גובה במרווה, ומספר השבוע בקו אמרלד דק', ['#0f3328', '#2fa37a']],
+  ['b', 'קטיפה אמרלד', 'אור ירוק רך מהפינה, ומספר השבוע ממולא בירוק שדועך', ['#165c45', '#3fbf8f']],
+  ['c', 'ירוק בריטי', 'ירוק מרוצים קלאסי עם קו שמפניה דק למעלה. הכי "יוקרתי שקט"', ['#13392c', '#2e8b67']],
+  ['d', 'ירקן עמוק', 'כמעט שחור עם נגיעה ירוקה, ומספר בקו ירקן בולט יותר', ['#0b2620', '#22b07d']],
+];
+document.getElementById('grid').innerHTML = OPTS.map(([n, name, d, sw]) => `
+  <div class="opt o${n}">
+    <div class="opt-h"><b>${n.toUpperCase()}</b><span>${name}<small>${d}</small><span class="sw">${sw.map((c) => `<i style="background:${c}"></i>`).join('')}</span></span></div>
+    <div class="dk head topo"><span class="wk">42</span>
+      <div class="bar"><i></i></div>
+      <h2>משימות</h2>
+      <div class="sub">שבוע 42 · 11/10–17/10</div>
+      <div class="stats"><span><b>24</b>פתוחות</span><span><b>5</b>להיום</span><span><b>2</b>באיחור</span></div>
+    </div>
+    <div class="body">
+      <div class="row"><i class="d"></i>לשלוח חשבונית</div>
+      <div class="row"><i></i>לעצב לוגו לאתר</div>
+      <div class="dk now topo"><span class="wk">42</span>
+        <div class="k">עכשיו · 09:30–10:30</div>
+        <div class="t">לכתוב את ההצעה ללקוח</div>
+        <div class="m">אתר אישי · נשארו 35 דק׳</div>
+        <div class="p"><i></i></div>
+        <div class="btns"><span>✓ סיימתי</span><span>דחה</span></div>
+      </div>
+    </div>
+  </div>`).join('');
+</script>
+</body>
+</html>
