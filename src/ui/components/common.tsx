@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Icon } from './Icon';
 import { back } from '../router';
+import { todayISO, weekNumber } from '../../domain/dates';
 
 // ---------------------------------------------------------------------------
 // Bottom sheet: native <dialog> for focus and Escape handling
@@ -165,6 +166,10 @@ export function TopBar({ title, miniTitle, backTo, children, stats, sub, lead, c
           ))}
         </div>
       )}
+      {/* R-UI-4: this week's number, outlined, behind the header */}
+      <span className="wk" aria-hidden="true">
+        {weekNumber(todayISO())}
+      </span>
       <div ref={sentinel} className="shead-sentinel" />
     </header>
   );

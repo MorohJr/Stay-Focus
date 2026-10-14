@@ -22,7 +22,7 @@
 
 ## סטאק
 
-TypeScript strict · React 19 + Vite · Dexie + dexie-react-hooks · Zod · date-fns · vite-plugin-pwa · Vitest + fake-indexeddb · ESLint. CSS רגיל עם tokens ב-`src/ui/styles.css`. עיצוב: רקע לבן, שחור, אינדיגו `#3346C4`.
+TypeScript strict · React 19 + Vite · Dexie + dexie-react-hooks · Zod · date-fns · vite-plugin-pwa · Vitest + fake-indexeddb · ESLint. CSS רגיל עם tokens ב-`src/ui/styles.css`. עיצוב: רקע לבן, שחור, הדגשה ירקן `#128A5F` (הטוקן עדיין נקרא `--blue`), בלוקים כהים בירקן עמוק עם קווי גובה ומספר השבוע (R-UI-4).
 
 ## מוסכמות
 
@@ -62,4 +62,5 @@ export PATH="$HOME/.local/node/bin:$PATH"
 - 14/10/2026 (1.5): חזרה שנתית, יום הולדת בדף אדם, סגירת יום 20:00–חצות (R-CLS), מצב כהה אוטומטי (טוקנים ב-`:root` + `prefers-color-scheme`, אין צבעים קשיחים חוץ מטקסט לבן על בלוק כהה), כותרת מתכווצת (R-UI-1), לשוניות שנגללות עם דהייה (R-UI-2), לוח ספרינט כרשימות בטלפון (R-SPR-5). מסד גרסה 4. 67 בדיקות.
 - 14/10/2026 (1.6): עיגולים ואייקוני קו במקום אימוג'י (R-UI-3, `StatusIcon`, `StuckBadge`, `Empty icon` = שם אייקון, `emoji` רק לרגעים שמחים). מסך היום נשאר בדיוק כמו שהוא: אלכס בחר לא לשנות את הסדר.
 - 14/10/2026 (1.7): היכרות (R-ONB, `screens/OnboardingScreen.tsx`): 8 חלוניות מתחלפות ואז 13 צעדים, צעד לכל סוג נתונים, עם דילוג. מוצגת כשאין `settings.onboardedAt`: בפתיחה ראשונה ואחרי "מחק את כל הנתונים". App מציג אותה במקום המסכים. מסד גרסה 5 (upgrade מסמן מכשיר עם נתונים כמי שכבר עבר). 75 בדיקות.
+- 14/10/2026 (1.8): צבע ההדגשה ירקן בכל האפליקציה ובאייקון. הבלוקים הכהים (`--hero-grad`, `--topo`, `.wk` ב-`TopBar` ובהיכרות) במקום העיגול המטושטש. כפתור "הצג שוב את ההיכרות" בהגדרות (R-ONB-5). 76 בדיקות.
 - קובץ ייבוא מ-Notion: `import/` (לא ב-git, נתונים אישיים, המאגר ציבורי).

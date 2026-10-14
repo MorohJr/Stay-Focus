@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { HE_DAYS_SHORT, formatDMY } from '../../domain/dates';
+import { HE_DAYS_SHORT, formatDMY, todayISO, weekNumber } from '../../domain/dates';
 import { canLeaveStep, ONBOARDING_STEPS, type TaskDestination } from '../../domain/onboarding';
 import { describeRule } from '../../domain/recurring';
 import type { NoteKind, RecurrenceRule, RoutineKind, RoutineSettings } from '../../domain/schemas';
@@ -342,6 +342,9 @@ function Slides({ onStart, onSkip }: { onStart: () => void; onSkip: () => void }
         if (Math.abs(dx) > 40) to(i + (dx > 0 ? 1 : -1));
       }}
     >
+      <span className="wk" aria-hidden="true">
+        {weekNumber(todayISO())}
+      </span>
       <div className="onb-top">
         <span className="onb-brand">Stay Focus</span>
         <button type="button" className="onb-skip" onClick={onSkip}>
