@@ -22,6 +22,7 @@ import { ReviewScreen, SprintScreen, SprintViewScreen } from './screens/SprintSc
 import { NewTaskScreen, TaskScreen } from './screens/TaskScreen';
 import { TasksScreen } from './screens/TasksScreen';
 import { TodayScreen } from './screens/TodayScreen';
+import { SummariesScreen, YearScreen } from './screens/YearScreens';
 
 const TABS = [
   { id: '', label: 'היום', icon: 'today' },
@@ -31,8 +32,8 @@ const TABS = [
   { id: 'more', label: 'עוד', icon: 'more' },
 ];
 /** Screens that show the bottom nav and the + button. */
-const MAIN = new Set(['', 'tasks', 'sprint', 'projects', 'more', 'notes', 'challenges', 'recurring', 'people']);
-const OWNER: Record<string, string> = { notes: 'more', challenges: 'more', recurring: 'more', people: 'more' };
+const MAIN = new Set(['', 'tasks', 'sprint', 'projects', 'more', 'notes', 'challenges', 'recurring', 'people', 'summaries']);
+const OWNER: Record<string, string> = { notes: 'more', challenges: 'more', recurring: 'more', people: 'more', summaries: 'more' };
 
 function screenFor(r: string[]): ReactNode {
   const [a = '', b, c] = r;
@@ -87,6 +88,10 @@ function screenFor(r: string[]): ReactNode {
       return <WeatherScreen />;
     case 'settings':
       return <SettingsScreen />;
+    case 'year':
+      return <YearScreen year={b} />;
+    case 'summaries':
+      return <SummariesScreen />;
     default:
       return <TodayScreen />;
   }

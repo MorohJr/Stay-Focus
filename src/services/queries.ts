@@ -32,5 +32,8 @@ export const Q = {
   agendaOf: (personId: string) => db.agenda.where('personId').equals(personId).toArray(),
   milestones: () => db.milestones.toArray(),
   milestonesOf: (projectId: string) => db.milestones.where('projectId').equals(projectId).toArray(),
+  yearReviews: () => db.yearReviews.toArray(),
+  yearReview: (year: number) => db.yearReviews.get(String(year)).then((x) => x ?? null),
+  routineLogs: () => db.routineLogs.toArray(),
   demo: () => isDemoMode(),
 };

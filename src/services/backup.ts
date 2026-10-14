@@ -31,6 +31,7 @@ const ROW_SCHEMAS: Record<TableName, z.ZodType> = {
   people: S.Person,
   agenda: S.AgendaItem,
   milestones: S.Milestone,
+  yearReviews: S.YearReview,
 };
 
 type BackupData = Partial<Record<string, unknown[]>>;
@@ -106,6 +107,19 @@ export const MIGRATIONS: Record<number, (data: BackupData) => BackupData> = {
   3: (data) => data,
   // v4 → v5 (SPEC 1.7): a restored old backup belongs to someone who already uses the app (R-ONB-1).
   4: (data) => ({ ...data, settings: (data.settings ?? []).map((s) => ({ onboardedAt: (s as { updatedAt?: string }).updatedAt, ...(s as object) })) }),
+  // v5 → v6 (SPEC 1.9): year reviews; finished projects and achieved goals get a finish time (R-PRJ-4, R-GOL-3).
+  5: (data) => ({
+    ...data,
+    yearReviews: data.yearReviews ?? [],
+    projects: (data.projects ?? []).map((p) => {
+      const x = p as { status?: string; doneAt?: string; updatedAt?: string };
+      return x.status === 'done' && !x.doneAt ? { ...x, doneAt: x.updatedAt } : x;
+    }),
+    goals: (data.goals ?? []).map((g) => {
+      const x = g as { status?: string; achievedAt?: string; updatedAt?: string };
+      return x.status === 'achieved' && !x.achievedAt ? { ...x, achievedAt: x.updatedAt } : x;
+    }),
+  }),
 };
 
 function migrate(data: BackupData, fromVersion: number): BackupData {

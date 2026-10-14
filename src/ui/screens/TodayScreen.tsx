@@ -7,6 +7,8 @@ import { routineCard, routineDayStats, itemsOf, ROUTINE_LABEL } from '../../doma
 import type { Project, Task } from '../../domain/schemas';
 import { sprintNeedingReview, sprintStatus } from '../../domain/sprints';
 import { completion, isInbox } from '../../domain/tasks';
+import { yearBanner } from '../../domain/yearReview';
+import { markYearSeen } from '../../services/yearReview';
 import { DAY_END, DAY_START, dayBlocks, dayCloseCard, formatDuration, freeMinutes, greeting, moreToday, nextTask, nowCard, overdue, regulars, ring, ringsAverage, top3 } from '../../domain/today';
 import { updateSettings } from '../../services/entity';
 import { cycleRule, toggleRoutineItem } from '../../services/habits';
@@ -32,11 +34,13 @@ export function TodayScreen() {
   const challenges = useLive(Q.challenges) ?? [];
   const challengeLogs = useLive(Q.allChallengeLogs) ?? [];
   const recurring = useLive(Q.recurring) ?? [];
+  const yearReviews = useLive(Q.yearReviews) ?? [];
   const [postpone, setPostpone] = useState<Task | undefined>();
   const [picking, setPicking] = useState(false);
 
   if (!tasks || !settings) return <div className="page" />;
 
+  const yearDue = yearBanner(today, tasks, yearReviews);
   const pname = (t: Task) => projectName(t.projectIds, projects);
   const now = nowCard(tasks, today, nowMin);
   const next = nextTask(tasks, today, nowMin);
@@ -66,7 +70,18 @@ export function TodayScreen() {
 
   return (
     <div className="page">
-      {/* R-TOD-10 / R-SPR-4 banners */}
+      {/* R-YIR-1 / R-TOD-10 / R-SPR-4 banners */}
+      {yearDue !== undefined && (
+        <div className="banner dark">
+          <Icon name="chart" />
+          <button type="button" className="grow" style={{ textAlign: 'start', color: 'inherit' }} onClick={() => go(`/year/${yearDue}`)}>
+            <b>הסיכום של {yearDue} מוכן</b> · כל השנה שלך במבט אחד
+          </button>
+          <button type="button" aria-label="הסתר" style={{ color: 'inherit', padding: 4 }} onClick={() => void markYearSeen(yearDue)}>
+            <Icon name="x" size="sm" />
+          </button>
+        </div>
+      )}
       {review && (
         <button type="button" className="banner dark" style={{ width: '100%', textAlign: 'start' }} onClick={() => go(`/review/${review.id}`)}>
           <Icon name="sprint" />
@@ -112,6 +127,10 @@ export function TodayScreen() {
       {/* 2. Now */}
       {now.kind === 'scheduled' && (
         <div className="hero">
+          {/* R-UI-4: the week number on the left, level with the buttons */}
+          <span className="wk" aria-hidden="true">
+            {weekNumber(today)}
+          </span>
           <div className="k">
             עכשיו · <span className="ltr num">{hhmmOf(now.start)}–{hhmmOf(now.end)}</span>
           </div>

@@ -71,6 +71,8 @@ export const Project = z.object({
   endDate: isoDate.optional(),
   goalId: z.string().optional(),
   blockedByIds: z.array(z.string()).default([]),
+  /** R-PRJ-4: when it became done. */
+  doneAt: z.string().optional(),
 });
 export type Project = z.infer<typeof Project>;
 
@@ -123,8 +125,20 @@ export const Goal = z.object({
   progressMode: z.enum(['projects', 'manual']),
   manualProgress: z.number().min(0).max(100).default(0),
   inFocus: z.boolean().default(false),
+  /** R-GOL-3: when it was achieved. */
+  achievedAt: z.string().optional(),
 });
 export type Goal = z.infer<typeof Goal>;
+
+/** 3.16: one row per year, id = "2026" (R-YIR). */
+export const YearReview = z.object({
+  ...base,
+  seenAt: z.string().optional(),
+  wins: z.string().default(''),
+  lessons: z.string().default(''),
+  nextFocus: z.string().default(''),
+});
+export type YearReview = z.infer<typeof YearReview>;
 
 export const Area = z.object({ ...base, name: z.string(), color: z.string(), order: z.number() });
 export type Area = z.infer<typeof Area>;

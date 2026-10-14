@@ -41,6 +41,12 @@ export function withStatus(t: Task, status: TaskStatus, nowIso: string): Task {
   };
 }
 
+/** R-PRJ-4 / R-GOL-3: entering the finished status stamps the time, leaving it clears it. */
+export function finishedAt<S extends string>(from: S, to: S, finished: S, current: string | undefined, nowIso: string): string | undefined {
+  if (to !== finished) return undefined;
+  return from === finished ? current : nowIso;
+}
+
 /** R-PRJ-1 / R-SPR-3: done ÷ non-archived; 0 when empty. Returns 0–100. */
 export function completion(tasks: Pick<Task, 'status'>[]): { done: number; total: number; pct: number } {
   const counted = tasks.filter((t) => t.status !== 'archived');

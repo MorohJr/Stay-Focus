@@ -39,6 +39,7 @@ export function MoreScreen() {
     <div className="page">
       <TopBar title="עוד" stats={[{ v: counts.notes, k: 'פתקים' }, { v: counts.people, k: 'אנשים' }, { v: counts.challenges, k: 'אתגרים' }]} />
       <section className="card">
+        {row('/summaries', 'chart', 'סיכומים: שנתיים ושבועיים', undefined, true)}
         {row('/notes', 'note', 'פתקים', counts.notes ? String(counts.notes) : undefined, true)}
         {row('/people', 'users', 'אנשים', counts.people ? String(counts.people) : undefined, true)}
         {row('/challenges', 'shield', 'אתגרים', counts.challenges ? String(counts.challenges) : undefined, true)}

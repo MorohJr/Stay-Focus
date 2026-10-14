@@ -12,7 +12,9 @@ import { addAgenda, addMilestone, createPerson, deletePerson } from './people';
 import { addOnboardingTask, finishOnboarding, restartOnboarding, startChallenge } from './onboarding';
 import { wipeAll } from './backup';
 import Dexie from 'dexie';
-import { SCHEMA_V4, StayFocusDB } from '../db/db';
+import { SCHEMA_V4, SCHEMA_V5, StayFocusDB } from '../db/db';
+import { updateGoal, updateProject } from './planning';
+import { markYearSeen, saveYearAnswers } from './yearReview';
 
 const TODAY = '2026-09-30';
 
@@ -346,5 +348,54 @@ describe('onboarding (R-ONB)', () => {
       v5.close();
       await Dexie.delete(name);
     }
+  });
+});
+
+describe('year review data (1.9)', () => {
+  it('R-PRJ-4 / R-GOL-3: done and achieved get a time, leaving clears it', async () => {
+    const p = await createProject({ name: 'p', status: 'active' });
+    await updateProject(p.id, { status: 'done' });
+    expect((await db.projects.get(p.id))!.doneAt).toBeTruthy();
+    await updateProject(p.id, { name: 'renamed' });
+    expect((await db.projects.get(p.id))!.doneAt).toBeTruthy();
+    await updateProject(p.id, { status: 'active' });
+    expect((await db.projects.get(p.id))!.doneAt).toBeUndefined();
+    const g = await createGoal({ title: 'g' });
+    await updateGoal(g.id, { status: 'achieved' });
+    expect((await db.goals.get(g.id))!.achievedAt).toBeTruthy();
+  });
+
+  it('R-YIR-1/2: opening marks the year seen once; answers are saved', async () => {
+    await markYearSeen(2025);
+    const first = (await db.yearReviews.get('2025'))!.seenAt;
+    await markYearSeen(2025);
+    expect((await db.yearReviews.get('2025'))!.seenAt).toBe(first);
+    await saveYearAnswers(2025, { wins: 'הרבה' });
+    expect((await db.yearReviews.get('2025'))!.wins).toBe('הרבה');
+  });
+
+  it('migration v5 → v6: backups and devices get finish times for done projects and achieved goals', async () => {
+    const p = await createProject({ name: 'p', status: 'active' });
+    await db.projects.update(p.id, { status: 'done' }); // as before 1.9: no doneAt
+    const old = JSON.parse(await exportBackup());
+    old.schemaVersion = 5;
+    delete old.data.yearReviews;
+    const parsed = await parseBackup(JSON.stringify(old));
+    expect((parsed.tables.projects[0] as { doneAt?: string }).doneAt).toBe(old.data.projects[0].updatedAt);
+    expect(parsed.tables.yearReviews).toEqual([]);
+
+    const name = 'upgrade-v6';
+    const v5 = new Dexie(name);
+    v5.version(5).stores(SCHEMA_V5);
+    await v5.open();
+    await v5.table('projects').add({ id: 'x', status: 'done', updatedAt: '2026-03-01T00:00:00.000Z' });
+    await v5.table('goals').add({ id: 'g', status: 'achieved', updatedAt: '2026-04-01T00:00:00.000Z' });
+    v5.close();
+    const v6 = new StayFocusDB(name);
+    await v6.open();
+    expect((await v6.projects.get('x'))!.doneAt).toBe('2026-03-01T00:00:00.000Z');
+    expect((await v6.goals.get('g'))!.achievedAt).toBe('2026-04-01T00:00:00.000Z');
+    v6.close();
+    await Dexie.delete(name);
   });
 });

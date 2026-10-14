@@ -45,12 +45,15 @@ export const SCHEMA_V4 = SCHEMA_V3;
 /** v5 (14/10/2026, SPEC 1.7): no index changes. settings.onboardedAt (R-ONB-1) is new. */
 export const SCHEMA_V5 = SCHEMA_V4;
 
+/** v6 (14/10/2026, SPEC 1.9): year reviews (R-YIR). Project.doneAt / Goal.achievedAt need no index. */
+export const SCHEMA_V6 = { ...SCHEMA_V5, yearReviews: 'id' } as const;
+
 /** Tables whose rows mean "someone already uses this device" (R-ONB-1). */
 export const USER_DATA_TABLES = ['tasks', 'projects', 'notes', 'goals', 'challenges', 'routineItems', 'recurring', 'people'] as const;
 
-export type TableName = keyof typeof SCHEMA_V5;
-export const TABLE_NAMES = Object.keys(SCHEMA_V5) as TableName[];
-export const CURRENT_SCHEMA_VERSION = 5;
+export type TableName = keyof typeof SCHEMA_V6;
+export const TABLE_NAMES = Object.keys(SCHEMA_V6) as TableName[];
+export const CURRENT_SCHEMA_VERSION = 6;
 
 export class StayFocusDB extends Dexie {
   tasks!: EntityTable<D.Task, 'id'>;
@@ -70,6 +73,7 @@ export class StayFocusDB extends Dexie {
   people!: EntityTable<D.Person, 'id'>;
   agenda!: EntityTable<D.AgendaItem, 'id'>;
   milestones!: EntityTable<D.Milestone, 'id'>;
+  yearReviews!: EntityTable<D.YearReview, 'id'>;
 
   constructor(name = DB_NAME) {
     super(name);
@@ -90,6 +94,17 @@ export class StayFocusDB extends Dexie {
             return;
           }
         }
+      });
+    // R-PRJ-4 / R-GOL-3: things finished before 1.9 get their last update as the finish time.
+    this.version(6)
+      .stores(SCHEMA_V6)
+      .upgrade(async (tx) => {
+        await tx.table('projects').toCollection().modify((p) => {
+          if (p.status === 'done' && !p.doneAt) p.doneAt = p.updatedAt;
+        });
+        await tx.table('goals').toCollection().modify((g) => {
+          if (g.status === 'achieved' && !g.achievedAt) g.achievedAt = g.updatedAt;
+        });
       });
   }
 }

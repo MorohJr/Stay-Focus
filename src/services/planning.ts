@@ -3,7 +3,7 @@ import { addDays } from '../domain/dates';
 import { occursOn } from '../domain/recurring';
 import type { Goal, Note, Project, Sprint, Task } from '../domain/schemas';
 import { missingSprintWeeks, sprintName, sprintRange } from '../domain/sprints';
-import { isOpen } from '../domain/tasks';
+import { finishedAt, isOpen } from '../domain/tasks';
 import { nextSeq, nowIso, stamps } from './entity';
 
 // ---------------------------------------------------------------------------
@@ -105,6 +105,7 @@ export async function runDaily(today: string): Promise<void> {
 
 export async function createProject(input: Partial<Project> & { name: string }, templateSubtasks: string[] = []): Promise<Project> {
   const p: Project = { ...stamps(), body: '', icon: '🎯', status: 'planning', blockedByIds: [], ...input };
+  if (p.status === 'done' && !p.doneAt) p.doneAt = p.createdAt; // R-PRJ-4
   await db.projects.add(p);
   for (const title of templateSubtasks) {
     const seq = await nextSeq();
@@ -116,7 +117,12 @@ export async function createProject(input: Partial<Project> & { name: string }, 
 }
 
 export async function updateProject(id: string, patch: Partial<Project>): Promise<void> {
-  await db.projects.update(id, { ...patch, updatedAt: nowIso() });
+  await db.transaction('rw', db.projects, async () => {
+    const cur = await db.projects.get(id);
+    if (!cur) return;
+    const now = nowIso();
+    await db.projects.put({ ...cur, ...patch, ...(patch.status ? { doneAt: finishedAt(cur.status, patch.status, 'done', cur.doneAt, now) } : {}), updatedAt: now }); // R-PRJ-4
+  });
 }
 
 /** Deleting a project unlinks its tasks and notes (they are kept). */
@@ -137,12 +143,18 @@ export async function deleteProject(id: string): Promise<void> {
 
 export async function createGoal(input: Partial<Goal> & { title: string }): Promise<Goal> {
   const g: Goal = { ...stamps(), body: '', status: 'active', progressMode: 'projects', manualProgress: 0, inFocus: false, ...input };
+  if (g.status === 'achieved' && !g.achievedAt) g.achievedAt = g.createdAt; // R-GOL-3
   await db.goals.add(g);
   return g;
 }
 
 export async function updateGoal(id: string, patch: Partial<Goal>): Promise<void> {
-  await db.goals.update(id, { ...patch, updatedAt: nowIso() });
+  await db.transaction('rw', db.goals, async () => {
+    const cur = await db.goals.get(id);
+    if (!cur) return;
+    const now = nowIso();
+    await db.goals.put({ ...cur, ...patch, ...(patch.status ? { achievedAt: finishedAt(cur.status, patch.status, 'achieved', cur.achievedAt, now) } : {}), updatedAt: now }); // R-GOL-3
+  });
 }
 
 /** R-GOL-2: only one goal in focus. */

@@ -156,6 +156,7 @@ export async function generateDemo(today: string, now: Date = new Date()): Promi
     priority: pick(['high', 'medium', 'low', undefined] as const),
     startDate: chance(0.5) ? addDays(today, -rnd(60)) : undefined, endDate: chance(0.4) ? addDays(today, 20 + rnd(120)) : undefined,
   }));
+  for (const p of projects) if (p.status === 'done') p.doneAt = `${addDays(today, -7 - rnd(45))}T12:00:00.000Z`; // R-PRJ-4
   const planning = projects.filter((p) => p.status === 'planning');
   const active = projects.filter((p) => p.status === 'active');
   if (planning[0] && active[0]) planning[0].blockedByIds = [active[0].id];
