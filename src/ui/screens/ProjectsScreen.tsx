@@ -144,7 +144,7 @@ function GoalsList({ goals, projects, tasks }: { goals: Goal[]; projects: Projec
   const list = [...goals].sort((a, b) => (a.status === 'active' ? 0 : 1) - (b.status === 'active' ? 0 : 1) || (a.targetDate ?? '9').localeCompare(b.targetDate ?? '9'));
   if (!list.length) {
     return (
-      <Empty icon="🏔️">
+      <Empty icon="mountain">
         מטרות הן הדברים הגדולים (למשל "500K₪ עד גיל 35"). מחברים אליהן פרויקטים, ורואים כמה התקדמת.
         <br />
         <button type="button" className="linkbtn" onClick={() => go('/goal/new')}>
@@ -205,7 +205,7 @@ export function ProjectScreen({ id }: { id: string }) {
     return (
       <div className="page sub">
         <TopBar title="פרויקט" backTo="/projects" />
-        <Empty icon="🔍">הפרויקט לא נמצא.</Empty>
+        <Empty icon="search">הפרויקט לא נמצא.</Empty>
       </div>
     );
   }
@@ -538,7 +538,7 @@ export function GoalScreen({ id }: { id: string }) {
     return (
       <div className="page sub">
         <TopBar title="מטרה" backTo="/projects/goals" />
-        <Empty icon="🔍">המטרה לא נמצאה.</Empty>
+        <Empty icon="search">המטרה לא נמצאה.</Empty>
       </div>
     );
   }

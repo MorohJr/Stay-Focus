@@ -38,12 +38,12 @@ export function projectName(ids: string[], projects: Project[] | undefined): str
 /** A task line: circle to complete, title opens the task. */
 export function TaskRow({ task, projects, today, meta, end }: { task: Task; projects?: Project[]; today?: string; meta?: ReactNode; end?: ReactNode }) {
   const proj = projectName(task.projectIds, projects);
-  const bits: string[] = [];
+  const bits: ReactNode[] = [];
   if (task.dueDate && today) bits.push(formatRelative(task.dueDate, today));
   if (task.startTime) bits.push(task.startTime);
   if (proj) bits.push(proj);
-  if (task.attachmentIds.length) bits.push('📷');
-  if (task.links.length) bits.push('🔗');
+  if (task.attachmentIds.length) bits.push(<Icon key="img" name="image" size="xs" />);
+  if (task.links.length) bits.push(<Icon key="link" name="link" size="xs" />);
   // SPEC 5.0: a dense row — #id, status icon, one-line title, small meta.
   return (
     <div className={`drow ${task.status}`}>
@@ -51,23 +51,55 @@ export function TaskRow({ task, projects, today, meta, end }: { task: Task; proj
       <StatusDot status={task.status} onClick={() => void toggleDone(task.id)} label={`סמן ${task.title}`} />
       <button type="button" className="t" onClick={() => go(`/task/${task.id}`)}>
         <span className="tt">{task.title || 'ללא שם'}</span>
-        {isStuck(task) && <span className="badge" title={`נדחתה ${task.postponeCount} פעמים`}>🐢{task.postponeCount}</span>}
+        {isStuck(task) && <StuckBadge count={task.postponeCount} />}
         {task.waitingPersonId && isOpen(task) && <WaitingBadge personId={task.waitingPersonId} />}
-        {(meta ?? bits.length > 0) && <span className="m">{meta ?? bits.join(' · ')}</span>}
+        {(meta ?? bits.length > 0) && (
+          <span className="m">
+            {meta ??
+              bits.map((b, i) => (
+                <span key={i}>
+                  {i > 0 && ' · '}
+                  {b}
+                </span>
+              ))}
+          </span>
+        )}
       </button>
       {end}
     </div>
   );
 }
 
-/** R-WAI: "⏳ <שם>" */
+/** R-WAI: hourglass + name (R-UI-3) */
 function WaitingBadge({ personId }: { personId: string }) {
   const p = useLive(() => Q.person(personId), [personId]);
   if (!p) return null;
-  return <span className="badge blue">⏳ {p.name}</span>;
+  return (
+    <span className="badge blue">
+      <Icon name="hourglass" size="xs" /> {p.name}
+    </span>
+  );
 }
 
-/** Small status icon for dense rows: empty, half (doing), check (done), recycle (archived). Tap toggles done. */
+/** R-PRC / R-UI-3: "נדחתה 3×" */
+export function StuckBadge({ count }: { count: number }) {
+  return (
+    <span className="badge" title={`נדחתה ${count} פעמים`}>
+      נדחתה {count}×
+    </span>
+  );
+}
+
+/** R-UI-3: a status circle that is not a button (headers, labels). */
+export function StatusIcon({ status }: { status: Task['status'] }) {
+  return (
+    <span className={`sdot ${status}`} aria-hidden="true">
+      {status === 'done' && <Icon name="check" />}
+    </span>
+  );
+}
+
+/** Small status icon for dense rows: empty, half (doing), check (done), dashed (archived). Tap toggles done. */
 export function StatusDot({ status, onClick, label }: { status: Task['status']; onClick: () => void; label: string }) {
   return (
     <button
@@ -81,7 +113,6 @@ export function StatusDot({ status, onClick, label }: { status: Task['status']; 
       }}
     >
       {status === 'done' && <Icon name="check" />}
-      {status === 'archived' && '♲'}
     </button>
   );
 }

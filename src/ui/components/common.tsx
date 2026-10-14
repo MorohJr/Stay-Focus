@@ -217,10 +217,19 @@ export function Switch({ on, onChange, label }: { on: boolean; onChange: (v: boo
   return <button type="button" role="switch" aria-checked={on} aria-label={label} className={`switch ${on ? 'on' : ''}`} onClick={() => onChange(!on)} />;
 }
 
-export function Empty({ icon, children }: { icon?: string; children: ReactNode }) {
+/** Empty state. `icon` is a line icon name; `emoji` only for happy moments (R-UI-3). */
+export function Empty({ icon, emoji, children }: { icon?: string; emoji?: string; children: ReactNode }) {
   return (
     <div className="empty">
-      {icon && <span className="big">{icon}</span>}
+      {emoji ? (
+        <span className="big">{emoji}</span>
+      ) : (
+        icon && (
+          <span className="big-ic">
+            <Icon name={icon} />
+          </span>
+        )
+      )}
       {children}
     </div>
   );

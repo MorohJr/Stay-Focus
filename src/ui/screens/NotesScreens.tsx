@@ -51,7 +51,7 @@ export function NotesScreen() {
           </button>
         ))}
       </div>
-      {!list.length && <Empty icon="🗒️">{notes.length ? 'לא נמצאו פתקים.' : 'עוד אין פתקים. אפשר לרשום מהר עם כפתור + ולבחור "פתק".'}</Empty>}
+      {!list.length && <Empty icon="note">{notes.length ? 'לא נמצאו פתקים.' : 'עוד אין פתקים. אפשר לרשום מהר עם כפתור + ולבחור "פתק".'}</Empty>}
       {list.length > 0 && (
         <section className="card">
           {list.map((n) => {
@@ -117,7 +117,7 @@ export function NoteScreen({ id }: { id: string }) {
     return (
       <div className="page sub">
         <TopBar title="פתק" backTo="/notes" />
-        <Empty icon="🔍">הפתק לא נמצא.</Empty>
+        <Empty icon="search">הפתק לא נמצא.</Empty>
       </div>
     );
   }

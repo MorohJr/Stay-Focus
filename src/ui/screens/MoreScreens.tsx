@@ -86,7 +86,7 @@ export function SearchScreen() {
     <div className="page sub">
       <TopBar title="חיפוש" backTo="/" />
       <input className="input" type="search" autoFocus placeholder="משימות, פרויקטים, פתקים, מטרות…" value={q} onChange={(e) => setQ(e.target.value)} />
-      {q.trim().length >= 2 && !hits.length && <Empty icon="🔍">לא נמצא כלום.</Empty>}
+      {q.trim().length >= 2 && !hits.length && <Empty icon="search">לא נמצא כלום.</Empty>}
       {kinds.map((k) => (
         <div key={k}>
           <div className="hit-kind">{HIT_LABEL[k]}</div>

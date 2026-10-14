@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Sprint, Task, TaskStatus } from '../../domain/schemas';
 import { sprintNeedingReview, sprintStatus, SPRINT_STATUS_LABEL } from '../../domain/sprints';
-import { compareForDay, completion, isActiveOpen, isInbox, isOpen, isStuck, STATUS_EMOJI, STATUS_LABEL } from '../../domain/tasks';
+import { compareForDay, completion, isActiveOpen, isInbox, isOpen, isStuck, STATUS_LABEL } from '../../domain/tasks';
 import { isMilestoneLate, stuckForReview } from '../../domain/review';
 import { addDays, diffDays, formatDMY, formatRelative } from '../../domain/dates';
 import { setWeeklyGoals } from '../../services/people';
@@ -11,7 +11,7 @@ import { Q } from '../../services/queries';
 import { addToSprint, createTask, deleteTask, resolveStuck, restoreTasks, setSomeday, setStatus, updateTask } from '../../services/tasks';
 import { Bar, Empty, Tabs, TopBar, useToast } from '../components/common';
 import { Icon } from '../components/Icon';
-import { projectName, TaskRow } from '../components/tasks';
+import { projectName, StatusIcon, TaskRow } from '../components/tasks';
 import { ProjectIcon } from '../components/ProjectIcon';
 import { useClock, useLive } from '../hooks';
 import { back, go, replace } from '../router';
@@ -88,7 +88,7 @@ function Board({ tasks, sprintId }: { tasks: Task[]; sprintId: string }) {
   const [doneOpen, setDoneOpen] = useState(false);
   if (!tasks.length) {
     return (
-      <Empty icon="🏃">
+      <Empty icon="run">
         הספרינט של השבוע ריק.
         <br />
         <button type="button" className="linkbtn" onClick={() => replace('/sprint/plan')}>
@@ -108,11 +108,11 @@ function Board({ tasks, sprintId }: { tasks: Task[]; sprintId: string }) {
               <h5>
                 <button type="button" disabled={s !== 'done'} onClick={() => setDoneOpen(!doneOpen)}>
                   <span>
-                    {STATUS_EMOJI[s]} {STATUS_LABEL[s]}
+                    <StatusIcon status={s} /> {STATUS_LABEL[s]}
                   </span>
                   <span className="muted num">
                     {list.length}
-                    {s === 'done' && <Icon name="chev" size="xs" />}
+                    {s === 'done' && <Icon name="chev" size="xs" className="fold-ic" />}
                   </span>
                 </button>
               </h5>
@@ -188,7 +188,7 @@ export function Planning({ tasks, cur, next }: { tasks: Task[]; cur?: Sprint; ne
         <span>בקלוג: משימות בלי ספרינט</span>
         <span className="num">{backlog.length}</span>
       </div>
-      {!groups.length && <Empty icon="🎉">הבקלוג ריק.</Empty>}
+      {!groups.length && <Empty emoji="🎉">הבקלוג ריק.</Empty>}
       {groups.map((g) => (
         <section key={g.key} className="card">
           <h4>
@@ -365,7 +365,7 @@ export function ReviewScreen({ id }: { id?: string }) {
 }
 
 function ReviewLastWeek({ last, tasks, moves, setMoves }: { last?: Sprint; tasks: Task[]; moves: Record<string, ReviewMove>; setMoves: (m: Record<string, ReviewMove>) => void }) {
-  if (!last) return <Empty icon="🗓️">אין ספרינט מהשבוע שעבר. אפשר להמשיך לצעד הבא.</Empty>;
+  if (!last) return <Empty icon="cal">אין ספרינט מהשבוע שעבר. אפשר להמשיך לצעד הבא.</Empty>;
   const list = tasks.filter((t) => t.sprintId === last.id && !t.parentId);
   const done = list.filter((t) => t.status === 'done');
   const left = list.filter(isOpen);
@@ -435,15 +435,15 @@ function ReviewLastWeek({ last, tasks, moves, setMoves }: { last?: Sprint; tasks
 function ReviewStuck({ tasks, today }: { tasks: Task[]; today: string }) {
   const toast = useToast();
   const list = stuckForReview(tasks, today);
-  if (!list.length) return <Empty icon="🚀">שום דבר לא תקוע: אין משימות באיחור ואין משימות שנדחו שוב ושוב.</Empty>;
+  if (!list.length) return <Empty icon="check">שום דבר לא תקוע: אין משימות באיחור ואין משימות שנדחו שוב ושוב.</Empty>;
   return (
     <>
-      <p className="muted small" style={{ margin: '0 4px 10px' }}>משימות באיחור ומשימות שנדחו 3 פעמים ומעלה (🐢). החלט על כל אחת.</p>
+      <p className="muted small" style={{ margin: '0 4px 10px' }}>משימות באיחור ומשימות שנדחו 3 פעמים ומעלה. החלט על כל אחת.</p>
       <section className="card">
         {list.map((t) => (
           <div key={t.id} style={{ padding: '9px 0', borderBottom: '1px solid var(--line)' }}>
             <button type="button" style={{ display: 'block', textAlign: 'right', fontSize: 14.5, unicodeBidi: 'plaintext', width: '100%' }} onClick={() => go(`/task/${t.id}`)}>
-              {t.title} {isStuck(t) && <span className="tag warn">🐢 נדחתה {t.postponeCount}</span>}
+              {t.title} {isStuck(t) && <span className="tag warn">נדחתה {t.postponeCount}×</span>}
               {t.dueDate && t.dueDate < today && <span className="tag warn" style={{ marginInlineStart: 4 }}>{formatRelative(t.dueDate, today)}</span>}
             </button>
             <div className="chips tight" style={{ marginTop: 6 }}>
@@ -483,7 +483,7 @@ function ReviewProjects({ tasks, today }: { tasks: Task[]; today: string }) {
   const milestones = useLive(Q.milestones) ?? [];
   const [adding, setAdding] = useState<Record<string, string>>({});
   const active = projects.filter((p) => p.status === 'active');
-  if (!active.length) return <Empty icon="🎯">אין פרויקטים בעבודה.</Empty>;
+  if (!active.length) return <Empty icon="target">אין פרויקטים בעבודה.</Empty>;
   return (
     <>
       <p className="muted small" style={{ margin: '0 4px 10px' }}>לכל פרויקט פעיל צריך צעד הבא ברור. פרויקט בלי משימה פתוחה תקוע.</p>

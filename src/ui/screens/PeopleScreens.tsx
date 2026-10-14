@@ -53,7 +53,7 @@ export function PeopleScreen() {
       >
         <input className="input" placeholder="+ אדם חדש, למשל אמא" value={name} onChange={(e) => setName(e.target.value)} />
       </form>
-      {!list.length && <Empty icon="👥">עוד אין אנשים ברשימה.</Empty>}
+      {!list.length && <Empty icon="users">עוד אין אנשים ברשימה.</Empty>}
       {list.length > 0 && (
         <section className="card">
           {list.map((p) => {
@@ -94,7 +94,7 @@ export function PersonScreen({ id }: { id: string }) {
     return (
       <div className="page sub">
         <TopBar title="אדם" backTo="/people" />
-        <Empty icon="🔍">לא נמצא.</Empty>
+        <Empty icon="search">לא נמצא.</Empty>
       </div>
     );
   }
@@ -293,13 +293,13 @@ function CleanupRun({ ids: initial, tasks, today }: { ids: string[]; tasks: Task
     <div className="page sub">
       <TopBar title="ניקוי משימות" sub="להשאיר, לאולי פעם, לארכיון או למחוק" backTo="/more" stats={[{ v: ids.length, k: 'לסידור' }, { v: Math.min(i, ids.length), k: 'טופלו' }]} />
       {!ids.length ? (
-        <Empty icon="✨">
+        <Empty icon="sparkle">
           אין משימות ישנות לסדר.
           <br />
           כאן מופיעות משימות שלא נגעת בהן 60 יום, ומשימות שנדחו 3 פעמים ומעלה.
         </Empty>
       ) : done ? (
-        <Empty icon="🎉">
+        <Empty emoji="🎉">
           סיימת לעבור על {ids.length} משימות.
           <br />
           <button type="button" className="linkbtn" onClick={() => back('/more')}>
@@ -320,7 +320,7 @@ function CleanupRun({ ids: initial, tasks, today }: { ids: string[]; tasks: Task
           {t ? (
             <section className="card" style={{ marginTop: 14, padding: 18 }}>
               <div className="muted small">
-                {isStuck(t) ? `🐢 נדחתה ${t.postponeCount} פעמים` : `לא נגעת בה ${age} ימים`}
+                {isStuck(t) ? `נדחתה ${t.postponeCount} פעמים` : `לא נגעת בה ${age} ימים`}
                 {projectName(t.projectIds, projects) ? ` · ${projectName(t.projectIds, projects)}` : ''}
               </div>
               <button type="button" style={{ display: 'block', fontSize: 22, fontWeight: 800, margin: '8px 0 4px', textAlign: 'right', unicodeBidi: 'plaintext' }} onClick={() => go(`/task/${t.id}`)}>

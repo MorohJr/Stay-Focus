@@ -489,15 +489,22 @@ dialog.sheet::backdrop { background: rgba(0,0,0,.32); }
 /* R-SPR-5: on a phone the board is three stacked lists; "done" is folded */
 .col h5 button { display: flex; justify-content: space-between; width: 100%; color: inherit; font: inherit; cursor: default; }
 .col h5 button:not(:disabled) { cursor: pointer; }
-.col h5 .ico { display: none; }
+.col h5 .fold-ic { display: none; }
 @media (max-width: 699px) {
   .kanban { display: grid; gap: 10px; overflow: visible; margin: 0; padding: 0 0 8px; scroll-snap-type: none; }
   .kanban .col { width: auto; max-width: none; }
   .col.folded > :not(h5) { display: none; }
   .col.folded h5 { margin-bottom: 2px; }
-  .col h5 .ico { display: inline-block; vertical-align: -2px; margin-inline-start: 4px; transform: rotate(90deg); transition: transform .15s; }
-  .col.folded h5 .ico { transform: rotate(0deg); }
+  .col h5 .fold-ic { display: inline-block; vertical-align: -2px; margin-inline-start: 4px; transform: rotate(90deg); transition: transform .15s; }
+  .col.folded h5 .fold-ic { transform: rotate(0deg); }
 }
 
 /* weekly review: last week's summary block, inset like the other cards */
 .card.sumblock, .inner .card.sumblock { background: var(--hero); color: #fff; border: 1px solid var(--hero-line); border-radius: 16px; padding: 14px 16px; margin-bottom: 12px; }
+
+/* R-UI-3: empty states use a line icon in a soft circle */
+.empty .big-ic { width: 56px; height: 56px; border-radius: 50%; background: var(--surface2); color: var(--blue-text); display: grid; place-items: center; margin: 0 auto 10px; }
+.empty .big-ic .ico { width: 26px; height: 26px; }
+.drow .m .ico { vertical-align: -2px; }
+.badge .ico { vertical-align: -2px; }
+.seg .sdot, .col h5 .sdot { display: inline-grid; vertical-align: -3px; margin-inline-end: 3px; }

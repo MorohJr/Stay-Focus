@@ -39,7 +39,7 @@ export function ChallengesScreen() {
         </button>
       </TopBar>
       {!list.length && (
-        <Empty icon="🥇">
+        <Empty icon="shield">
           אתגר = תקופה עם חוקים (למשל 90 יום: רק מים, בלי סוכר, אימון כל יום). מסמנים כל יום בדף הבית, ורואים רצף.
           <br />
           <button type="button" className="linkbtn" onClick={() => go('/challenge/new')}>
@@ -148,7 +148,7 @@ function ChallengeDetail({ id, today }: { id: string; today: string }) {
     return (
       <div className="page sub">
         <TopBar title="אתגר" backTo="/challenges" />
-        <Empty icon="🔍">האתגר לא נמצא.</Empty>
+        <Empty icon="search">האתגר לא נמצא.</Empty>
       </div>
     );
   }
@@ -392,7 +392,7 @@ export function RecurringListScreen() {
         </button>
       </TopBar>
       {!list.length && (
-        <Empty icon="🔁">
+        <Empty icon="repeat">
           משימה חוזרת נוצרת לבד ביום הנכון, למשל "לתת כביסה" כל רביעי. היא מופיעה ב"הקבועים של היום".
           <br />
           <button type="button" className="linkbtn" onClick={() => go('/recurring/new')}>

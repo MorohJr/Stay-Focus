@@ -1,6 +1,5 @@
 import type { Priority, Project, Task, TaskStatus } from './schemas';
 
-export const STATUS_EMOJI: Record<TaskStatus, string> = { todo: '🍵', doing: '🔄', done: '✅', archived: '♲' };
 export const STATUS_LABEL: Record<TaskStatus, string> = { todo: 'לעשות', doing: 'בתהליך', done: 'בוצע', archived: 'בארכיון' };
 export const PRIORITY_LABEL: Record<Priority, string> = { low: 'נמוכה', medium: 'בינונית', high: 'גבוהה' };
 const PRIORITY_RANK: Record<Priority, number> = { high: 0, medium: 1, low: 2 };

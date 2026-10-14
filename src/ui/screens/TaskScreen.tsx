@@ -3,7 +3,7 @@ import { formatDMY, formatRelative, localDate } from '../../domain/dates';
 import { describeRule } from '../../domain/recurring';
 import type { Priority, Task, TaskStatus } from '../../domain/schemas';
 import { sprintStatus, SPRINT_STATUS_LABEL } from '../../domain/sprints';
-import { isStuck, PRIORITY_LABEL, STATUS_EMOJI, STATUS_LABEL } from '../../domain/tasks';
+import { isStuck, PRIORITY_LABEL, STATUS_LABEL } from '../../domain/tasks';
 import { top3 as top3Of } from '../../domain/today';
 import { Q } from '../../services/queries';
 import { addToTop3, createTask, deleteTask, removeFromTop3, resolveStuck, restoreTasks, setSomeday, setWaiting, updateTask } from '../../services/tasks';
@@ -11,7 +11,7 @@ import { PersonPicker } from './PeopleScreens';
 import { Empty, Switch, TopBar, useToast } from '../components/common';
 import { DraftInput, DraftTextarea, LabelsEditor, LinksEditor, PhotosEditor } from '../components/edit';
 import { Icon } from '../components/Icon';
-import { ProjectPicker, SprintPicker, TaskRow } from '../components/tasks';
+import { ProjectPicker, SprintPicker, StatusIcon, TaskRow } from '../components/tasks';
 import { useClock, useLive } from '../hooks';
 import { back, go, replace } from '../router';
 
@@ -38,7 +38,7 @@ export function TaskScreen({ id }: { id: string }) {
     return (
       <div className="page sub">
         <TopBar title="משימה" backTo="/tasks" />
-        <Empty icon="🔍">המשימה לא נמצאה. אולי נמחקה.</Empty>
+        <Empty icon="search">המשימה לא נמצאה. אולי נמחקה.</Empty>
       </div>
     );
   }
@@ -66,7 +66,7 @@ export function TaskScreen({ id }: { id: string }) {
         title={<DraftInput className="title-input" value={task.title} onSave={(v) => set({ title: v })} placeholder="שם המשימה" ariaLabel="שם המשימה" />}
         sub={
           <>
-            <span className="num">#{task.seq}</span> · {STATUS_EMOJI[task.status]} {STATUS_LABEL[task.status]}
+            <span className="num">#{task.seq}</span> · {STATUS_LABEL[task.status]}
             {parent && (
               <>
                 {' · '}
@@ -92,7 +92,9 @@ export function TaskScreen({ id }: { id: string }) {
       {isStuck(task) && (
         <section className="card" style={{ background: 'var(--warn-soft)', border: 0, marginTop: 10 }}>
           <h4 style={{ color: 'var(--warn)' }}>
-            <span>🐢 נדחתה {task.postponeCount} פעמים</span>
+            <span className="t">
+              <Icon name="turtle" size="sm" /> נדחתה {task.postponeCount} פעמים
+            </span>
           </h4>
           <p className="small" style={{ margin: '0 0 10px' }}>משהו פה לא עובד. מה עושים איתה?</p>
           <div className="chips tight">
@@ -131,7 +133,7 @@ export function TaskScreen({ id }: { id: string }) {
       <div className="seg" style={{ margin: '12px 0' }}>
         {STATUSES.map((s) => (
           <button key={s} type="button" className={task.status === s ? 'on' : ''} onClick={() => set({ status: s })}>
-            {STATUS_EMOJI[s]} {STATUS_LABEL[s]}
+            <StatusIcon status={s} /> {STATUS_LABEL[s]}
           </button>
         ))}
       </div>

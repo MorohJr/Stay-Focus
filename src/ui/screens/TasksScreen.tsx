@@ -70,7 +70,7 @@ export function InboxTab({ tasks }: { tasks: Task[] }) {
   const cur = sprints.find((s) => sprintStatus(s, today) === 'current');
   if (!list.length) {
     return (
-      <Empty icon="📭">
+      <Empty icon="inbox">
         הדואר הנכנס ריק.
         <br />
         כל מה שרושמים בכפתור + בלי תאריך, פרויקט או ספרינט מגיע לכאן לסידור.
@@ -228,7 +228,7 @@ function ByProjectTab({ tasks }: { tasks: Task[] }) {
       .filter((g) => g.list.length),
     { key: 'none', name: 'בלי פרויקט', list: open.filter((t) => t.projectIds.length === 0) },
   ].filter((g) => g.list.length);
-  if (!groups.length) return <Empty icon="✅">אין משימות פתוחות.</Empty>;
+  if (!groups.length) return <Empty icon="check">אין משימות פתוחות.</Empty>;
   return (
     <>
       {groups.map((g) => (
@@ -289,7 +289,7 @@ function WaitingTab({ tasks }: { tasks: Task[] }) {
   const list = tasks.filter((t) => isActiveOpen(t) && t.waitingPersonId);
   if (!list.length) {
     return (
-      <Empty icon="⏳">
+      <Empty icon="hourglass">
         אין משימות שממתינות למישהו.
         <br />
         במסך משימה בוחרים "ממתין ל..." כשהמשימה תלויה באדם אחר.
@@ -334,7 +334,7 @@ function SomedayTab({ tasks }: { tasks: Task[] }) {
   const list = tasks.filter((t) => isOpen(t) && t.someday).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   if (!list.length) {
     return (
-      <Empty icon="💭">
+      <Empty icon="cloud">
         "אולי פעם" ריק.
         <br />
         רעיונות שאתה לא מתחייב אליהם עכשיו נשמרים כאן, כדי שלא יעמיסו על הרשימות.
@@ -368,7 +368,7 @@ function DoneTab({ tasks }: { tasks: Task[] }) {
   const projects = useLive(Q.projects) ?? [];
   const [limit, setLimit] = useState(50);
   const list = tasks.filter((t) => t.status === 'done').sort((a, b) => (b.completedAt ?? '').localeCompare(a.completedAt ?? ''));
-  if (!list.length) return <Empty icon="🏁">עוד לא סיימת משימות. זה יגיע.</Empty>;
+  if (!list.length) return <Empty icon="flag">עוד לא סיימת משימות. זה יגיע.</Empty>;
   return (
     <section className="card">
       {list.slice(0, limit).map((t) => (
