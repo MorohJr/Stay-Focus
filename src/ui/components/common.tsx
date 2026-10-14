@@ -100,12 +100,48 @@ export interface HeadStat {
  * SPEC 5.0: the black header of every inner screen — back, actions, a big title, the screen's key
  * numbers, and white content rising over it. `cover` turns the block into the project's cover image.
  */
-export function TopBar({ title, backTo, children, stats, sub, lead, cover }: { title: ReactNode; backTo?: string | true; children?: ReactNode; stats?: HeadStat[]; sub?: ReactNode; lead?: ReactNode; cover?: string }) {
+/** R-UI-1: true once the element has scrolled out of view at the top. */
+function useScrolledPast<T extends Element>() {
+  const ref = useRef<T>(null);
+  const [past, setPast] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const io = new IntersectionObserver(([e]) => setPast(!e!.isIntersecting && e!.boundingClientRect.top < 0));
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return [ref, past] as const;
+}
+
+export function TopBar({ title, miniTitle, backTo, children, stats, sub, lead, cover }: { title: ReactNode; /** Text for the compact bar when `title` is an input. */ miniTitle?: string; backTo?: string | true; children?: ReactNode; stats?: HeadStat[]; sub?: ReactNode; lead?: ReactNode; cover?: string }) {
+  const [sentinel, past] = useScrolledPast<HTMLDivElement>();
+  const goBack = () => back(typeof backTo === 'string' ? backTo : '/');
   return (
     <header className={`shead ${cover ? 'cover' : ''}`} style={cover ? { backgroundImage: `linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.78)), url(${cover})` } : undefined}>
+      {/* R-UI-1: compact bar once the header scrolls away; tapping it returns to the top. */}
+      <div className={`shead-mini ${past ? 'on' : ''}`} aria-hidden={!past} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+        <div className="shead-mini-in">
+          {backTo && (
+            <button
+              type="button"
+              className="hbtn"
+              tabIndex={past ? 0 : -1}
+              onClick={(e) => {
+                e.stopPropagation();
+                goBack();
+              }}
+              aria-label="חזרה"
+            >
+              <Icon name="chevR" size="sm" />
+            </button>
+          )}
+          <span className="grow ellipsis">{typeof title === 'string' ? title : miniTitle}</span>
+        </div>
+      </div>
       <div className="shead-bar">
         {backTo && (
-          <button type="button" className="hbtn" onClick={() => back(typeof backTo === 'string' ? backTo : '/')} aria-label="חזרה">
+          <button type="button" className="hbtn" onClick={goBack} aria-label="חזרה">
             <Icon name="chevR" />
           </button>
         )}
@@ -129,13 +165,32 @@ export function TopBar({ title, backTo, children, stats, sub, lead, cover }: { t
           ))}
         </div>
       )}
+      <div ref={sentinel} className="shead-sentinel" />
     </header>
   );
 }
 
+/** R-UI-2: a long tab row scrolls, fades at the hidden edge, and keeps the active tab visible. */
 export function Tabs<T extends string>({ value, onChange, items }: { value: T; onChange: (v: T) => void; items: { id: T; label: ReactNode; count?: number }[] }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [fade, setFade] = useState({ start: false, end: false });
+  const measure = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    const scrolled = Math.abs(el.scrollLeft); // negative in RTL
+    const rest = el.scrollWidth - el.clientWidth - scrolled;
+    setFade((f) => (f.start === scrolled > 4 && f.end === rest > 4 ? f : { start: scrolled > 4, end: rest > 4 }));
+  }, []);
+  useEffect(() => {
+    ref.current?.querySelector('.on')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    measure();
+  }, [value, items.length, measure]);
+  useEffect(() => {
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [measure]);
   return (
-    <div className="tabs" role="tablist">
+    <div ref={ref} className={`tabs ${fade.start ? 'fade-s' : ''} ${fade.end ? 'fade-e' : ''}`} role="tablist" onScroll={measure}>
       {items.map((it) => (
         <button key={it.id} type="button" role="tab" aria-selected={value === it.id} className={value === it.id ? 'on' : ''} onClick={() => onChange(it.id)}>
           {it.label}

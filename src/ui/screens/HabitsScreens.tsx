@@ -8,7 +8,7 @@ import { getSettings, updateSettings } from '../../services/entity';
 import { addRoutineItem, createChallenge, cycleRule, deleteChallenge, deleteRecurring, deleteRoutineItem, moveRoutineItem, newRule, saveRecurring, updateChallenge, updateRoutineItem } from '../../services/habits';
 import { Q } from '../../services/queries';
 import { confirmAction, Empty, Seg, Switch, TopBar } from '../components/common';
-import { DraftInput } from '../components/edit';
+import { DayMonthPicker, DraftInput } from '../components/edit';
 import { Icon } from '../components/Icon';
 import { ProjectPicker } from '../components/tasks';
 import { useClock, useLive } from '../hooks';
@@ -163,6 +163,7 @@ function ChallengeDetail({ id, today }: { id: string; today: string }) {
     <div className="page sub">
       <TopBar
         backTo="/challenges"
+        miniTitle={c.name}
         title={<DraftInput className="title-input" value={c.name} onSave={(v) => void updateChallenge(c.id, { name: v })} ariaLabel="שם האתגר" />}
         sub={`${formatDMY(c.startDate)} עד ${formatDMY(c.endDate)} · ${c.rules.length} חוקים`}
         stats={[
@@ -440,13 +441,14 @@ function RecurringForm({ existing, today }: { existing?: Recurring; today: strin
   const [weeks, setWeeks] = useState(existing?.rule.type === 'interval' ? existing.rule.weeks : 2);
   const [day, setDay] = useState(existing?.rule.type === 'interval' ? existing.rule.day : new Date().getDay());
   const [dom, setDom] = useState(existing?.rule.type === 'monthly' ? existing.rule.dayOfMonth : 1);
+  const [ymd, setYmd] = useState(existing?.rule.type === 'yearly' ? { month: existing.rule.month, day: existing.rule.day } : { month: new Date().getMonth() + 1, day: new Date().getDate() });
   const [startTime, setStartTime] = useState(existing?.startTime ?? '');
   const [duration, setDuration] = useState(existing?.durationMin ?? 30);
   const [projectIds, setProjectIds] = useState<string[]>(existing?.projectIds ?? []);
   const [startDate, setStartDate] = useState(existing?.startDate ?? today);
   const [active, setActive] = useState(existing?.active ?? true);
   const [pick, setPick] = useState(false);
-  const rule: RecurrenceRule = type === 'daily' ? { type } : type === 'weekly' ? { type, days: days.length ? days : [0] } : type === 'interval' ? { type, weeks, day } : { type, dayOfMonth: dom };
+  const rule: RecurrenceRule = type === 'daily' ? { type } : type === 'weekly' ? { type, days: days.length ? days : [0] } : type === 'interval' ? { type, weeks, day } : type === 'monthly' ? { type, dayOfMonth: dom } : { type, ...ymd };
   const save = async () => {
     if (!title.trim()) return;
     await saveRecurring({ id: existing?.id, title: title.trim(), rule, startDate, startTime: startTime || undefined, durationMin: startTime ? duration : undefined, projectIds, active });
@@ -472,7 +474,7 @@ function RecurringForm({ existing, today }: { existing?: Recurring; today: strin
       </TopBar>
       <input className="title-input" placeholder="למשל: לתת כביסה" value={title} onChange={(e) => setTitle(e.target.value)} autoFocus={!existing} />
       <div style={{ margin: '12px 0' }}>
-        <Seg value={type} onChange={setType} items={[{ id: 'daily', label: 'כל יום' }, { id: 'weekly', label: 'ימים בשבוע' }, { id: 'interval', label: 'כל כמה שבועות' }, { id: 'monthly', label: 'חודשי' }]} />
+        <Seg value={type} onChange={setType} items={[{ id: 'daily', label: 'יומי' }, { id: 'weekly', label: 'ימים' }, { id: 'interval', label: 'כל X שבועות' }, { id: 'monthly', label: 'חודשי' }, { id: 'yearly', label: 'שנתי' }]} />
       </div>
       <section className="card">
         {type === 'weekly' && (
@@ -509,6 +511,12 @@ function RecurringForm({ existing, today }: { existing?: Recurring; today: strin
           <div className="field">
             <label htmlFor="rm">ביום בחודש</label>
             <input id="rm" type="number" min={1} max={31} className="mini-input" style={{ width: 70 }} value={dom} onChange={(e) => setDom(Math.min(31, Math.max(1, Number(e.target.value) || 1)))} />
+          </div>
+        )}
+        {type === 'yearly' && (
+          <div className="field">
+            <label htmlFor="ry-d">בתאריך</label>
+            <DayMonthPicker idPrefix="ry" day={ymd.day} month={ymd.month} onChange={(d, m) => setYmd({ day: d, month: m })} />
           </div>
         )}
         {type === 'daily' && <p className="muted small" style={{ margin: 0 }}>תיווצר משימה כל יום.</p>}

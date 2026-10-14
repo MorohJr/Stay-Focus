@@ -3,10 +3,11 @@ import * as D from './dates';
 import { activeBlockers, completion, isInbox, quadrantOf, taskTabsOrder, withStatus } from './tasks';
 import { missingSprintWeeks, sprintName, sprintNeedingReview, sprintRange, sprintStatus } from './sprints';
 import { describeRule, occursOn } from './recurring';
+import { birthdayInfo, describeBirthday } from './people';
 import { activeRoutineWindow, routineCard, routineDayStats } from './routine';
 import { challengeDay, dayMark, nextRuleValue, rulesCardVisible, streak } from './challenge';
 import { focusGoal, goalProgress } from './goals';
-import { dayBlocks, freeMinutes, greeting, moreToday, nextTask, nowCard, overdue, regulars, ringsAverage, ring, top3 } from './today';
+import { dayBlocks, dayCloseCard, freeMinutes, greeting, moreToday, nextTask, nowCard, overdue, regulars, ringsAverage, ring, top3 } from './today';
 import { DEFAULT_ROUTINES, type Challenge, type ChallengeLog, type Goal, type Project, type Recurring, type RoutineItem, type RoutineLog, type Sprint, type Task } from './schemas';
 
 const T0 = '2026-09-01T00:00:00.000Z';
@@ -123,6 +124,35 @@ describe('recurring', () => {
   it('describes rules in Hebrew', () => {
     expect(describeRule({ type: 'weekly', days: [3] })).toBe('כל רביעי');
     expect(describeRule({ type: 'interval', weeks: 2, day: 3 })).toBe('כל שבועיים ביום רביעי');
+    expect(describeRule({ type: 'yearly', month: 10, day: 14 })).toBe('כל שנה ב-14 באוקטובר');
+  });
+  it('yearly on month and day; Feb 29 falls on Feb 28 in common years (1.5)', () => {
+    const r = rec({ type: 'yearly', month: 10, day: 14 }, '2020-01-01');
+    expect(occursOn(r, '2026-10-14')).toBe(true);
+    expect(occursOn(r, '2027-10-14')).toBe(true);
+    expect(occursOn(r, '2026-10-15')).toBe(false);
+    expect(occursOn(r, '2026-11-14')).toBe(false);
+    const leap = rec({ type: 'yearly', month: 2, day: 29 }, '2020-01-01');
+    expect(occursOn(leap, '2027-02-28')).toBe(true);
+    expect(occursOn(leap, '2028-02-28')).toBe(false);
+    expect(occursOn(leap, '2028-02-29')).toBe(true);
+  });
+});
+
+describe('birthday (R-PPL-2)', () => {
+  it('days until the next birthday, rolling into next year', () => {
+    expect(birthdayInfo('10-26', '2026-10-14')).toMatchObject({ next: '2026-10-26', daysUntil: 12, age: undefined });
+    expect(birthdayInfo('10-01', '2026-10-14')).toMatchObject({ next: '2027-10-01', daysUntil: 352 });
+  });
+  it('age on the coming birthday when the year is known', () => {
+    expect(birthdayInfo('1991-10-26', '2026-10-14').age).toBe(35);
+    expect(birthdayInfo('1991-10-01', '2026-10-14').age).toBe(36);
+    expect(describeBirthday(birthdayInfo('1991-10-14', '2026-10-14'))).toBe('🎂 היום! (גיל 35)');
+    expect(describeBirthday(birthdayInfo('10-26', '2026-10-14'))).toBe('🎂 26 באוקטובר · בעוד 12 ימים');
+  });
+  it('Feb 29 is celebrated on Feb 28 in common years', () => {
+    expect(birthdayInfo('02-29', '2027-01-10').next).toBe('2027-02-28');
+    expect(birthdayInfo('02-29', '2028-01-10').next).toBe('2028-02-29');
   });
 });
 
@@ -267,5 +297,30 @@ describe('today', () => {
     expect(ring(0, 0).pct).toBeNull();
     expect(ringsAverage([ring(1, 2), ring(0, 0), ring(3, 4)])).toBe(63);
     expect(ringsAverage([ring(0, 0)])).toBeNull();
+  });
+});
+
+describe('day close (R-CLS)', () => {
+  const tasks = [
+    task({ id: 'top', dueDate: TODAY, top3Date: TODAY, top3Order: 1 }),
+    task({ id: 'more', dueDate: TODAY }),
+    task({ id: 'doneToday', dueDate: TODAY, status: 'done', completedAt: `${TODAY}T10:00:00` }),
+    task({ id: 'rec', dueDate: TODAY, recurringId: 'r' }),
+    task({ id: 'sub', dueDate: TODAY, parentId: 'more' }),
+    task({ id: 'tomorrow', dueDate: '2026-10-01' }),
+  ];
+  it('hidden before 20:00, shown from 20:00 until midnight', () => {
+    expect(dayCloseCard(tasks, TODAY, 19 * 60 + 59, undefined)).toBeUndefined();
+    expect(dayCloseCard(tasks, TODAY, 20 * 60, undefined)).toBeDefined();
+    expect(dayCloseCard(tasks, TODAY, 23 * 60 + 59, undefined)).toBeDefined();
+  });
+  it('lists open tasks of today (top 3 first), without recurring instances or subtasks', () => {
+    const c = dayCloseCard(tasks, TODAY, 21 * 60, undefined);
+    expect(c).toMatchObject({ closed: false, doneCount: 1 });
+    expect(c && !c.closed && c.open.map((t) => t.id)).toEqual(['top', 'more']);
+  });
+  it('collapses once closed today, and a past close does not count', () => {
+    expect(dayCloseCard(tasks, TODAY, 21 * 60, TODAY)).toEqual({ closed: true });
+    expect(dayCloseCard(tasks, TODAY, 21 * 60, '2026-09-29')).toMatchObject({ closed: false });
   });
 });

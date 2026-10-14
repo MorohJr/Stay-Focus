@@ -160,6 +160,18 @@ export async function postponeAllOverdue(today: string): Promise<void> {
   await db.tasks.bulkPut(late.map((t) => ({ ...t, dueDate: tomorrow, postponeCount: t.postponeCount + 1, updatedAt: now }))); // R-PRC
 }
 
+/** R-CLS "למחר": tomorrow, without a time or a top-3 slot; counts as a postpone (R-PRC). */
+export async function moveToTomorrow(ids: string[], today: string): Promise<void> {
+  const now = nowIso();
+  const tomorrow = addDays(today, 1);
+  await db.transaction('rw', db.tasks, async () => {
+    const list = (await db.tasks.bulkGet(ids)).filter((t): t is Task => !!t);
+    await db.tasks.bulkPut(
+      list.map((t) => ({ ...t, dueDate: tomorrow, startTime: undefined, top3Date: undefined, top3Order: undefined, postponeCount: t.postponeCount + 1, updatedAt: now })),
+    );
+  });
+}
+
 export async function addToSprint(ids: string[], sprintId: string | undefined): Promise<void> {
   const now = nowIso();
   await db.transaction('rw', db.tasks, async () => {

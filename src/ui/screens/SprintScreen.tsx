@@ -85,6 +85,7 @@ export function SprintScreen({ tab = 'board' }: { tab?: string }) {
 function Board({ tasks, sprintId }: { tasks: Task[]; sprintId: string }) {
   const projects = useLive(Q.projects) ?? [];
   const cols: TaskStatus[] = ['todo', 'doing', 'done'];
+  const [doneOpen, setDoneOpen] = useState(false);
   if (!tasks.length) {
     return (
       <Empty icon="🏃">
@@ -102,12 +103,18 @@ function Board({ tasks, sprintId }: { tasks: Task[]; sprintId: string }) {
         {cols.map((s) => {
           const list = tasks.filter((t) => t.status === s);
           return (
-            <div key={s} className="col">
+            <div key={s} className={`col ${s === 'done' && !doneOpen ? 'folded' : ''}`}>
+              {/* R-SPR-5: on a phone "done" is folded; its header opens it. */}
               <h5>
-                <span>
-                  {STATUS_EMOJI[s]} {STATUS_LABEL[s]}
-                </span>
-                <span className="muted num">{list.length}</span>
+                <button type="button" disabled={s !== 'done'} onClick={() => setDoneOpen(!doneOpen)}>
+                  <span>
+                    {STATUS_EMOJI[s]} {STATUS_LABEL[s]}
+                  </span>
+                  <span className="muted num">
+                    {list.length}
+                    {s === 'done' && <Icon name="chev" size="xs" />}
+                  </span>
+                </button>
               </h5>
               {list.map((t) => (
                 <div key={t.id} className="kc">
@@ -130,7 +137,7 @@ function Board({ tasks, sprintId }: { tasks: Task[]; sprintId: string }) {
         })}
       </div>
       <p className="muted small" style={{ margin: '6px 4px' }}>
-        החץ מעביר משימה לעמודה הבאה. מחליקים ימינה ושמאלה בין העמודות.
+        החץ מעביר משימה לשלב הבא.
       </p>
     </>
   );
@@ -337,7 +344,7 @@ export function ReviewScreen({ id }: { id?: string }) {
         </>
       )}
 
-      <div className="row" style={{ marginTop: 16, position: 'sticky', bottom: 0, background: '#fff', padding: '10px 0 calc(var(--safe-b) + 10px)', borderTop: '1px solid var(--line)' }}>
+      <div className="row" style={{ marginTop: 16, position: 'sticky', bottom: 0, background: 'var(--bg)', padding: '10px 0 calc(var(--safe-b) + 10px)', borderTop: '1px solid var(--line)' }}>
         {step > 0 && (
           <button type="button" className="btn grow" onClick={() => void go2(step - 1)}>
             חזרה
@@ -366,8 +373,8 @@ function ReviewLastWeek({ last, tasks, moves, setMoves }: { last?: Sprint; tasks
   const moveOf = (t: Task) => moves[t.id] ?? 'current';
   return (
     <>
-      <section className="card" style={{ background: '#111', color: '#fff', border: 0 }}>
-        <div className="muted small">{last.name}</div>
+      <section className="card sumblock">
+        <div className="small" style={{ opacity: 0.7 }}>{last.name}</div>
         <div style={{ fontSize: 34, fontWeight: 800, margin: '4px 0' }} className="num">
           {c.pct}%
         </div>

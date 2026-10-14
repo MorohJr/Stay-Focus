@@ -1,4 +1,4 @@
-import { dayOfWeek, diffDays, HE_DAYS, lastDayOfMonth, parseISODate, weekStart } from './dates';
+import { dayOfWeek, diffDays, HE_DAYS, HE_MONTHS, lastDayOfMonth, parseISODate, weekStart } from './dates';
 import type { Recurring, RecurrenceRule } from './schemas';
 
 /** Does the rule fall on this date? (SPEC 3.9) */
@@ -20,6 +20,11 @@ export function occursOn(r: Pick<Recurring, 'rule' | 'startDate' | 'endDate' | '
       const last = lastDayOfMonth(d.getFullYear(), d.getMonth() + 1);
       return d.getDate() === Math.min(rule.dayOfMonth, last);
     }
+    case 'yearly': {
+      const d = parseISODate(date);
+      if (d.getMonth() + 1 !== rule.month) return false;
+      return d.getDate() === Math.min(rule.day, lastDayOfMonth(d.getFullYear(), rule.month));
+    }
   }
 }
 
@@ -38,5 +43,7 @@ export function describeRule(rule: RecurrenceRule): string {
       return `${rule.weeks === 2 ? 'כל שבועיים' : `כל ${rule.weeks} שבועות`} ביום ${HE_DAYS[rule.day]}`;
     case 'monthly':
       return `כל ${rule.dayOfMonth} בחודש`;
+    case 'yearly':
+      return `כל שנה ב-${rule.day} ב${HE_MONTHS[rule.month - 1]}`;
   }
 }

@@ -39,9 +39,12 @@ export const SCHEMA_V3 = {
   milestones: 'id, projectId, dueDate',
 } as const;
 
-export type TableName = keyof typeof SCHEMA_V3;
-export const TABLE_NAMES = Object.keys(SCHEMA_V3) as TableName[];
-export const CURRENT_SCHEMA_VERSION = 3;
+/** v4 (14/10/2026, SPEC 1.5): no index changes. New fields (yearly rule, birthday, dayClosedOn) are optional. */
+export const SCHEMA_V4 = SCHEMA_V3;
+
+export type TableName = keyof typeof SCHEMA_V4;
+export const TABLE_NAMES = Object.keys(SCHEMA_V4) as TableName[];
+export const CURRENT_SCHEMA_VERSION = 4;
 
 export class StayFocusDB extends Dexie {
   tasks!: EntityTable<D.Task, 'id'>;
@@ -67,6 +70,7 @@ export class StayFocusDB extends Dexie {
     this.version(1).stores(SCHEMA_V1);
     this.version(2).stores({ ...SCHEMA_V2, infoCards: null });
     this.version(3).stores(SCHEMA_V3);
+    this.version(4).stores(SCHEMA_V4);
   }
 }
 

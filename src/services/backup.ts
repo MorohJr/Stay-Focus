@@ -102,6 +102,8 @@ export const MIGRATIONS: Record<number, (data: BackupData) => BackupData> = {
   1: ({ infoCards: _gone, ...rest }) => rest,
   // v2 → v3: people, agenda and milestones are new; new task fields get Zod defaults.
   2: (data) => ({ ...data, people: data.people ?? [], agenda: data.agenda ?? [], milestones: data.milestones ?? [] }),
+  // v3 → v4 (SPEC 1.5): only optional fields were added; old data is valid as is.
+  3: (data) => data,
 };
 
 function migrate(data: BackupData, fromVersion: number): BackupData {

@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { diffDays, formatRelative, localDate } from '../../domain/dates';
+import { birthdayInfo, describeBirthday } from '../../domain/people';
 import { cleanupCandidates, visibleAgenda } from '../../domain/review';
-import type { Task } from '../../domain/schemas';
+import type { Person, Task } from '../../domain/schemas';
 import { isOpen, isStuck } from '../../domain/tasks';
 import { addAgenda, createPerson, deleteAgenda, deletePerson, toggleAgenda, updatePerson } from '../../services/people';
 import { Q } from '../../services/queries';
 import { createTask, deleteTask, keepTask, restoreTasks, setSomeday, setStatus, setWaiting } from '../../services/tasks';
 import { Bar, confirmAction, Empty, Sheet, TopBar, useToast } from '../components/common';
-import { DraftInput, DraftTextarea } from '../components/edit';
+import { DayMonthPicker, DraftInput, DraftTextarea } from '../components/edit';
 import { Icon } from '../components/Icon';
 import { projectName, TaskRow } from '../components/tasks';
 import { useClock, useLive } from '../hooks';
@@ -107,6 +108,7 @@ export function PersonScreen({ id }: { id: string }) {
             {p.emoji}
           </button>
         }
+        miniTitle={p.name}
         title={<DraftInput className="title-input" value={p.name} onSave={(v) => v.trim() && void updatePerson(p.id, { name: v.trim() })} ariaLabel="שם" />}
         stats={[
           { v: agenda.filter((a) => !a.doneAt).length, k: 'לדבר על' },
@@ -189,8 +191,11 @@ export function PersonScreen({ id }: { id: string }) {
         </form>
       </section>
 
+      <div className="section-title">יום הולדת</div>
+      <BirthdayCard person={p} today={today} />
+
       <div className="section-title">הערות</div>
-      <DraftTextarea value={p.body} onSave={(v) => void updatePerson(p.id, { body: v })} placeholder="דברים שכדאי לזכור (ימי הולדת, העדפות, מה קורה אצלו)" rows={4} />
+      <DraftTextarea value={p.body} onSave={(v) => void updatePerson(p.id, { body: v })} placeholder="דברים שכדאי לזכור (העדפות, מה קורה אצלו)" rows={4} />
 
       <Sheet open={emojiOpen} onClose={() => setEmojiOpen(false)} title="אימוג'י">
         <div className="chips">
@@ -355,5 +360,52 @@ function CleanupRun({ ids: initial, tasks, today }: { ids: string[]; tasks: Task
         </>
       )}
     </div>
+  );
+}
+
+const pad2 = (n: number) => String(n).padStart(2, '0');
+
+/** R-PPL-2 */
+function BirthdayCard({ person, today }: { person: Person; today: string }) {
+  const bd = person.birthday;
+  const set = (day: number, month: number, year?: number) => void updatePerson(person.id, { birthday: `${year ? `${year}-` : ''}${pad2(month)}-${pad2(day)}` });
+  if (!bd) {
+    return (
+      <section className="card">
+        <button type="button" className="linkbtn" onClick={() => set(Number(today.slice(8)), Number(today.slice(5, 7)))}>
+          + הוסף יום הולדת
+        </button>
+      </section>
+    );
+  }
+  const info = birthdayInfo(bd, today);
+  const year = bd.length === 10 ? Number(bd.slice(0, 4)) : undefined;
+  return (
+    <section className="card">
+      <p className="bday">{describeBirthday(info)}</p>
+      <div className="field">
+        <label htmlFor="bd-d">תאריך</label>
+        <DayMonthPicker idPrefix="bd" day={info.day} month={info.month} onChange={(d, m) => set(d, m, year)} />
+      </div>
+      <div className="field">
+        <label htmlFor="bd-y">שנה (לא חובה)</label>
+        <input
+          id="bd-y"
+          type="number"
+          inputMode="numeric"
+          className="mini-input ltr"
+          style={{ width: 90 }}
+          placeholder="—"
+          defaultValue={year ?? ''}
+          onBlur={(e) => {
+            const y = Number(e.target.value);
+            set(info.day, info.month, y >= 1900 && y <= Number(today.slice(0, 4)) ? y : undefined);
+          }}
+        />
+      </div>
+      <button type="button" className="linkbtn muted" onClick={() => void updatePerson(person.id, { birthday: undefined })}>
+        הסר יום הולדת
+      </button>
+    </section>
   );
 }

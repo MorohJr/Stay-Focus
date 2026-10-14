@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { HE_MONTHS } from '../../domain/dates';
 import type { Attachment, Link } from '../../domain/schemas';
 import { addAttachment, deleteAttachment, linkLabel, normalizeLink } from '../../services/misc';
 import { shrinkImage } from '../../services/platform';
@@ -168,5 +169,27 @@ export function LabelsEditor({ labels, onChange }: { labels: string[]; onChange:
         <input className="mini-input" style={{ width: '100%', fontFamily: 'var(--font)' }} placeholder="+ תגית" value={text} onChange={(e) => setText(e.target.value)} />
       </form>
     </div>
+  );
+}
+
+/** Day + month picker (yearly rule, birthday). */
+export function DayMonthPicker({ day, month, onChange, idPrefix }: { day: number; month: number; onChange: (day: number, month: number) => void; idPrefix: string }) {
+  return (
+    <span className="val">
+      <select id={`${idPrefix}-d`} aria-label="יום" className="mini-input" value={day} onChange={(e) => onChange(Number(e.target.value), month)}>
+        {Array.from({ length: 31 }, (_, i) => (
+          <option key={i} value={i + 1}>
+            {i + 1}
+          </option>
+        ))}
+      </select>
+      <select id={`${idPrefix}-m`} aria-label="חודש" className="mini-input" value={month} onChange={(e) => onChange(day, Number(e.target.value))}>
+        {HE_MONTHS.map((m, i) => (
+          <option key={m} value={i + 1}>
+            {m}
+          </option>
+        ))}
+      </select>
+    </span>
   );
 }

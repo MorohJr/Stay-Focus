@@ -7,11 +7,12 @@ import { routineCard, routineDayStats, itemsOf, ROUTINE_LABEL } from '../../doma
 import type { Project, Task } from '../../domain/schemas';
 import { sprintNeedingReview, sprintStatus } from '../../domain/sprints';
 import { completion, isInbox } from '../../domain/tasks';
-import { DAY_END, DAY_START, dayBlocks, formatDuration, freeMinutes, greeting, moreToday, nextTask, nowCard, overdue, regulars, ring, ringsAverage, top3 } from '../../domain/today';
+import { DAY_END, DAY_START, dayBlocks, dayCloseCard, formatDuration, freeMinutes, greeting, moreToday, nextTask, nowCard, overdue, regulars, ring, ringsAverage, top3 } from '../../domain/today';
+import { updateSettings } from '../../services/entity';
 import { cycleRule, toggleRoutineItem } from '../../services/habits';
 import { Q } from '../../services/queries';
 import { describeWeather } from '../../services/weather';
-import { addToTop3, moveToToday, postponeAllOverdue, postponeTask, removeFromTop3, setStatus, toggleDone } from '../../services/tasks';
+import { addToTop3, moveToToday, moveToTomorrow, postponeAllOverdue, postponeTask, removeFromTop3, setStatus, toggleDone } from '../../services/tasks';
 import { Bar, Rings } from '../components/common';
 import { Icon } from '../components/Icon';
 import { Box, PostponeSheet, projectName, TaskPickerSheet } from '../components/tasks';
@@ -40,6 +41,7 @@ export function TodayScreen() {
   const now = nowCard(tasks, today, nowMin);
   const next = nextTask(tasks, today, nowMin);
   const rCard = routineCard(settings.routines, routineItems, routineLogs, today, nowMin);
+  const close = dayCloseCard(tasks, today, nowMin, settings.dayClosedOn);
   const ch = activeChallenge(challenges, today);
   const top = top3(tasks, today);
   const late = overdue(tasks, today);
@@ -210,6 +212,44 @@ export function TodayScreen() {
           )}
         </section>
       )}
+
+      {/* 4a. Day close (R-CLS), optional, 20:00 until midnight */}
+      {close &&
+        (close.closed ? (
+          <section className="card">
+            <div className="done-line">
+              <Icon name="moon" size="sm" /> היום נסגר ✓
+            </div>
+          </section>
+        ) : (
+          <section className="card">
+            <h4>
+              <span className="t">
+                <Icon name="moon" size="sm" /> סגירת יום
+              </span>
+              {close.open.length > 1 && (
+                <button type="button" className="minibtn" onClick={() => void moveToTomorrow(close.open.map((t) => t.id), today)}>
+                  הכול למחר
+                </button>
+              )}
+            </h4>
+            <p className="close-sum">{close.open.length ? `סיימת ${close.doneCount} משימות היום. מה עובר למחר?` : `סיימת ${close.doneCount} משימות היום. הכול נסגר להיום 🎉`}</p>
+            {close.open.map((t) => (
+              <div key={t.id} className="todo">
+                <Box status={t.status} onClick={() => void toggleDone(t.id)} label={`סמן ${t.title}`} />
+                <button type="button" className="txt" onClick={() => go(`/task/${t.id}`)}>
+                  {t.title}
+                </button>
+                <button type="button" className="minibtn" onClick={() => void moveToTomorrow([t.id], today)}>
+                  למחר
+                </button>
+              </div>
+            ))}
+            <button type="button" className="btn primary block" style={{ marginTop: 10 }} onClick={() => void updateSettings({ dayClosedOn: today })}>
+              סגרתי את היום
+            </button>
+          </section>
+        ))}
 
       {/* 5. Challenge rules (R-CHL-2) */}
       {ch && rulesCardVisible(ch, challengeLogs, today) && (
@@ -390,14 +430,14 @@ export function TodayScreen() {
         </div>
         <div className="lg">
           <span>
-            <i style={{ background: 'rgba(17,17,17,.16)' }} />
+            <i style={{ background: 'var(--routine-block)' }} />
             שגרה
           </span>
           <span>
             <i style={{ background: 'var(--blue)' }} />3 החשובים
           </span>
           <span>
-            <i style={{ background: '#111' }} />
+            <i style={{ background: 'var(--ink)' }} />
             משימות
           </span>
         </div>

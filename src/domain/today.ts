@@ -1,4 +1,4 @@
-import { minutesOf } from './dates';
+import { localDate, minutesOf } from './dates';
 import { routineWindows } from './routine';
 import type { RoutineSettings, Task } from './schemas';
 import { compareForDay, isOpen } from './tasks';
@@ -162,4 +162,19 @@ export function formatDuration(min: number): string {
   if (min < 60) return `${min} דק׳`;
   const h = min / 60;
   return `${Number.isInteger(h) ? h : h.toFixed(1)} שעות`;
+}
+
+/** R-CLS: the optional day close shows from 20:00 until midnight. */
+export const DAY_CLOSE_START = 20 * 60;
+
+export type DayCloseCard = { closed: true } | { closed: false; doneCount: number; open: Task[] };
+
+/** R-CLS */
+export function dayCloseCard(tasks: Task[], today: string, nowMin: number, dayClosedOn: string | undefined): DayCloseCard | undefined {
+  if (nowMin < DAY_CLOSE_START) return undefined;
+  if (dayClosedOn === today) return { closed: true };
+  const doneCount = tasks.filter((t) => t.status === 'done' && t.completedAt && localDate(t.completedAt) === today).length;
+  const tops = top3(tasks, today).filter(isOpen);
+  const rest = moreToday(tasks, today).filter(isOpen);
+  return { closed: false, doneCount, open: [...tops, ...rest] };
 }

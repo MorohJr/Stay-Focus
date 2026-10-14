@@ -62,6 +62,7 @@ export function TaskScreen({ id }: { id: string }) {
     <div className="page sub">
       <TopBar
         backTo="/tasks"
+        miniTitle={task.title}
         title={<DraftInput className="title-input" value={task.title} onSave={(v) => set({ title: v })} placeholder="שם המשימה" ariaLabel="שם המשימה" />}
         sub={
           <>

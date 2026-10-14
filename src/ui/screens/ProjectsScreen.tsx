@@ -226,6 +226,7 @@ export function ProjectScreen({ id }: { id: string }) {
             <ProjectIcon project={p} size={50} radius={14} />
           </button>
         }
+        miniTitle={p.name}
         title={<DraftInput className="title-input" value={p.name} onSave={(v) => set({ name: v })} placeholder="שם הפרויקט" ariaLabel="שם הפרויקט" />}
         sub={[PROJECT_STATUS_LABEL[p.status], areas.find((a) => a.id === p.areaId)?.name, blockers.length ? `🔒 חסום ע"י ${blockers.map((b) => b.name).join(', ')}` : ''].filter(Boolean).join(' · ')}
         stats={[
@@ -550,6 +551,7 @@ export function GoalScreen({ id }: { id: string }) {
       <TopBar
         backTo="/projects/goals"
         lead={<span style={{ fontSize: 30 }}>{g.status === 'achieved' ? '🏆' : '🏔️'}</span>}
+        miniTitle={g.title}
         title={<DraftInput className="title-input" value={g.title} onSave={(v) => set({ title: v })} placeholder="המטרה" ariaLabel="המטרה" />}
         sub={focus?.id === g.id ? 'בפוקוס בדף הבית' : undefined}
         stats={[

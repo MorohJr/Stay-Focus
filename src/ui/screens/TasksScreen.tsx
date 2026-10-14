@@ -86,7 +86,7 @@ export function InboxTab({ tasks }: { tasks: Task[] }) {
         {list.map((t) => (
           <div key={t.id}>
             <TaskRow task={t} today={today} meta={`נרשם ${formatRelative(localDate(t.createdAt), today)}`} />
-            <div className="chips tight scroll" style={{ margin: '0 54px 8px 0', paddingBottom: 2 }}>
+            <div className="chips tight" style={{ margin: '0 54px 8px 0', paddingBottom: 2 }}>
               <label className="chip out" style={{ position: 'relative' }}>
                 <Icon name="cal" size="xs" /> תאריך
                 <input type="date" aria-label="תאריך" style={{ position: 'absolute', inset: 0, opacity: 0 }} onChange={(e) => e.target.value && void updateTask(t.id, { dueDate: e.target.value })} />

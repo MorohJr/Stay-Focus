@@ -127,6 +127,7 @@ export function NoteScreen({ id }: { id: string }) {
     <div className="page sub">
       <TopBar
         backTo="/notes"
+        miniTitle={n.title || 'פתק'}
         title={<DraftInput className="title-input" value={n.title} onSave={(v) => set({ title: v })} placeholder="כותרת" autoFocus={!n.title && !n.body} ariaLabel="כותרת" />}
         sub={`עודכן ${formatRelative(localDate(n.updatedAt), today)}${n.pinned ? ' · 📌 נעוץ' : ''}`}
       >

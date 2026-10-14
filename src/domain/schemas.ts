@@ -86,7 +86,9 @@ export const Sprint = z.object({
 export type Sprint = z.infer<typeof Sprint>;
 
 /** 3.14 */
-export const Person = z.object({ ...base, name: z.string(), emoji: z.string().default('🙂'), body: z.string().default('') });
+/** birthday: `MM-DD`, or `YYYY-MM-DD` when the year is known (R-PPL-2). */
+export const Birthday = z.string().regex(/^(\d{4}-)?(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/);
+export const Person = z.object({ ...base, name: z.string(), emoji: z.string().default('🙂'), body: z.string().default(''), birthday: Birthday.optional() });
 export type Person = z.infer<typeof Person>;
 
 export const AgendaItem = z.object({ ...base, personId: z.string(), text: z.string(), doneAt: z.string().optional() });
@@ -161,6 +163,8 @@ export const RecurrenceRule = z.discriminatedUnion('type', [
   z.object({ type: z.literal('weekly'), days: z.array(z.int().min(0).max(6)).min(1) }),
   z.object({ type: z.literal('interval'), weeks: z.int().min(1), day: z.int().min(0).max(6) }),
   z.object({ type: z.literal('monthly'), dayOfMonth: z.int().min(1).max(31) }),
+  // 1.5: every year on month/day (Feb 29 → Feb 28 in common years).
+  z.object({ type: z.literal('yearly'), month: z.int().min(1).max(12), day: z.int().min(1).max(31) }),
 ]);
 export type RecurrenceRule = z.infer<typeof RecurrenceRule>;
 
@@ -219,6 +223,8 @@ export const Settings = z.object({
   routines: RoutineSettings,
   lastBackupAt: z.string().optional(),
   seqCounter: z.int(),
+  /** Last date "סגרתי את היום" was pressed (R-CLS). */
+  dayClosedOn: isoDate.optional(),
   updatedAt: z.string(),
 });
 export type Settings = z.infer<typeof Settings>;

@@ -7,7 +7,7 @@ import { ensureSeed, getSettings } from './entity';
 import { addAttachment, removeProjectImage, setProjectImage } from './misc';
 import { createProject, deleteProject, ensureSprints, materializeRecurring, reviewSprint, setFocusGoal, createGoal } from './planning';
 import { cycleRule, createChallenge, toggleRoutineItem, saveRecurring } from './habits';
-import { addToTop3, createTask, deleteTask, moveTop3, postponeAllOverdue, postponeTask, resolveStuck, restoreTasks, setSomeday, setWaiting, updateTask } from './tasks';
+import { addToTop3, createTask, deleteTask, moveTop3, moveToTomorrow, postponeAllOverdue, postponeTask, resolveStuck, restoreTasks, setSomeday, setWaiting, updateTask } from './tasks';
 import { addAgenda, addMilestone, createPerson, deletePerson } from './people';
 
 const TODAY = '2026-09-30';
@@ -116,6 +116,22 @@ describe('1.3 features', () => {
     expect(await db.milestones.count()).toBe(1);
     await deleteProject(p.id);
     expect(await db.milestones.count()).toBe(0);
+  });
+
+  it('R-CLS: "למחר" clears time and top 3 and counts as a postpone', async () => {
+    const t = await createTask({ title: 'x', dueDate: TODAY, startTime: '21:00' });
+    await addToTop3(t.id, TODAY);
+    await moveToTomorrow([t.id], TODAY);
+    const after = (await db.tasks.get(t.id))!;
+    expect([after.dueDate, after.startTime, after.top3Date, after.postponeCount]).toEqual(['2026-10-01', undefined, undefined, 1]);
+  });
+
+  it('migrates a v3 backup (no birthday, dayClosedOn or yearly rule) to v4', async () => {
+    await createPerson('דנה');
+    const file = JSON.parse(await exportBackup());
+    file.schemaVersion = 3;
+    await restoreBackup(await parseBackup(JSON.stringify(file)));
+    expect((await db.people.toArray())[0]!.birthday).toBeUndefined();
   });
 
   it('migrates a v2 backup to v3', async () => {
