@@ -9,7 +9,7 @@ import { createProject, deleteProject, ensureSprints, materializeRecurring, revi
 import { cycleRule, createChallenge, toggleRoutineItem, saveRecurring } from './habits';
 import { addToTop3, createTask, deleteTask, moveTop3, moveToTomorrow, postponeAllOverdue, postponeTask, resolveStuck, restoreTasks, setSomeday, setWaiting, updateTask } from './tasks';
 import { addAgenda, addMilestone, createPerson, deletePerson } from './people';
-import { addOnboardingTask, finishOnboarding, startChallenge } from './onboarding';
+import { addOnboardingTask, finishOnboarding, restartOnboarding, startChallenge } from './onboarding';
 import { wipeAll } from './backup';
 import Dexie from 'dexie';
 import { SCHEMA_V4, StayFocusDB } from '../db/db';
@@ -292,6 +292,14 @@ describe('onboarding (R-ONB)', () => {
     await wipeAll();
     await ensureSeed();
     expect((await getSettings()).onboardedAt).toBeUndefined();
+  });
+
+  it('R-ONB-5: showing the intro again clears the mark and keeps the data', async () => {
+    await createTask({ title: 'a' });
+    await finishOnboarding(TODAY);
+    await restartOnboarding();
+    expect((await getSettings()).onboardedAt).toBeUndefined();
+    expect(await db.tasks.count()).toBe(1);
   });
 
   it('R-ONB-4: finishing runs the daily jobs (sprints + today\'s recurring tasks)', async () => {

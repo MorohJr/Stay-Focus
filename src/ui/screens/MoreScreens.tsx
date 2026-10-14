@@ -4,6 +4,7 @@ import { backupFileName, BackupError, exportBackup, markBackupDone, parseBackup,
 import { assertNotDemo, exitDemo, loadDemo } from '../../services/demo';
 import { ensureSeed, updateSettings } from '../../services/entity';
 import { deleteArea, saveArea } from '../../services/misc';
+import { restartOnboarding } from '../../services/onboarding';
 import { runDaily } from '../../services/planning';
 import { currentPosition, saveFile } from '../../services/platform';
 import { Q } from '../../services/queries';
@@ -360,6 +361,15 @@ export function SettingsScreen() {
           <label htmlFor="un">השם שלך</label>
           <DraftInput className="mini-input" value={settings.userName} onSave={(v) => void updateSettings({ userName: v.trim() })} ariaLabel="השם שלך" />
         </div>
+      </section>
+      <div className="section-title">היכרות</div>
+      <section className="card">
+        <p className="small" style={{ marginTop: 0 }}>
+          החלוניות וההסבר על האפליקציה, וצעד לכל סוג נתונים. הנתונים שלך נשארים כמו שהם, ובכל צעד רואים מה כבר קיים.
+        </p>
+        <button type="button" className="btn block" disabled={!!demo} onClick={() => void restartOnboarding()}>
+          <Icon name="play" size="sm" /> הצג שוב את ההיכרות
+        </button>
       </section>
       <div className="section-title">מצב הדגמה</div>
       <section className="card">

@@ -11,6 +11,11 @@ export async function finishOnboarding(today: string): Promise<void> {
   await runDaily(today);
 }
 
+/** R-ONB-5: opens the intro again; the data stays as it is. */
+export async function restartOnboarding(): Promise<void> {
+  await updateSettings({ onboardedAt: undefined });
+}
+
 /** R-ONB-3 step 6: a task with its destination; the star puts it in today's top 3. */
 export async function addOnboardingTask(title: string, dest: TaskDestination, star: boolean, today: string) {
   if (!title.trim()) return undefined;
