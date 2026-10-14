@@ -225,6 +225,8 @@ export const Settings = z.object({
   seqCounter: z.int(),
   /** Last date "סגרתי את היום" was pressed (R-CLS). */
   dayClosedOn: isoDate.optional(),
+  /** When the first-run intro was finished or skipped (R-ONB-1). */
+  onboardedAt: z.string().optional(),
   updatedAt: z.string(),
 });
 export type Settings = z.infer<typeof Settings>;

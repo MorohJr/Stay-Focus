@@ -20,7 +20,7 @@ import { back, go, replace } from '../router';
 
 type Tab = 'active' | 'planning' | 'goals' | 'archive';
 export const PROJECT_STATUS_LABEL: Record<ProjectStatus, string> = { planning: 'תכנון', active: 'בעבודה', done: 'הושלם', archived: 'בארכיון' };
-const ICONS = ['🎯', '🌐', '💪', '🏠', '❤️', '🎓', '💻', '💰', '🧩', '🎬', '📚', '✈️', '🐶', '🚗', '🕍', '🦷', '🧠', '📈'];
+export const PROJECT_ICONS = ['🎯', '🌐', '💪', '🏠', '❤️', '🎓', '💻', '💰', '🧩', '🎬', '📚', '✈️', '🐶', '🚗', '🕍', '🦷', '🧠', '📈'];
 
 export function ProjectsScreen({ tab = 'active' }: { tab?: string }) {
   const t = (['active', 'planning', 'goals', 'archive'].includes(tab) ? tab : 'active') as Tab;
@@ -369,7 +369,7 @@ export function ProjectScreen({ id }: { id: string }) {
         </div>
         <p className="muted small" style={{ margin: '0 2px 8px' }}>{p.logoId ? 'כשיש לוגו הוא מוצג במקום האייקון.' : 'או בחר אייקון:'}</p>
         <div className="chips">
-          {ICONS.map((ic) => (
+          {PROJECT_ICONS.map((ic) => (
             <button
               key={ic}
               type="button"

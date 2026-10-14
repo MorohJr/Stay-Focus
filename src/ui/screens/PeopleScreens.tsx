@@ -14,7 +14,7 @@ import { projectName, TaskRow } from '../components/tasks';
 import { useClock, useLive } from '../hooks';
 import { back, go } from '../router';
 
-const EMOJIS = ['🙂', '❤️', '👩', '👨', '👵', '👴', '👧', '👦', '🧑‍💼', '🤝', '⭐', '🐶'];
+export const PERSON_EMOJIS = ['🙂', '❤️', '👩', '👨', '👵', '👴', '👧', '👦', '🧑‍💼', '🤝', '⭐', '🐶'];
 
 // ---------------------------------------------------------------------------
 // People (R-PPL)
@@ -199,7 +199,7 @@ export function PersonScreen({ id }: { id: string }) {
 
       <Sheet open={emojiOpen} onClose={() => setEmojiOpen(false)} title="אימוג'י">
         <div className="chips">
-          {EMOJIS.map((e) => (
+          {PERSON_EMOJIS.map((e) => (
             <button
               key={e}
               type="button"

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CURRENT_SCHEMA_VERSION, TABLE_NAMES, db, type TableName } from '../db/db';
+import { CURRENT_SCHEMA_VERSION, TABLE_NAMES, USER_DATA_TABLES, db, type TableName } from '../db/db';
 import * as S from '../domain/schemas';
 import { SETTINGS_ID } from '../domain/schemas';
 import { nowIso } from './entity';
@@ -104,6 +104,8 @@ export const MIGRATIONS: Record<number, (data: BackupData) => BackupData> = {
   2: (data) => ({ ...data, people: data.people ?? [], agenda: data.agenda ?? [], milestones: data.milestones ?? [] }),
   // v3 → v4 (SPEC 1.5): only optional fields were added; old data is valid as is.
   3: (data) => data,
+  // v4 → v5 (SPEC 1.7): a restored old backup belongs to someone who already uses the app (R-ONB-1).
+  4: (data) => ({ ...data, settings: (data.settings ?? []).map((s) => ({ onboardedAt: (s as { updatedAt?: string }).updatedAt, ...(s as object) })) }),
 };
 
 function migrate(data: BackupData, fromVersion: number): BackupData {
@@ -170,7 +172,7 @@ export async function restoreBackup(backup: ParsedBackup): Promise<void> {
 
 /** Is there anything worth backing up? (R-TOD-10) */
 export async function hasUserData(): Promise<boolean> {
-  const counts = await Promise.all([db.tasks.count(), db.projects.count(), db.notes.count(), db.goals.count(), db.challenges.count(), db.routineItems.count()]);
+  const counts = await Promise.all(USER_DATA_TABLES.map((t) => db.table(t).count()));
   return counts.some((c) => c > 0);
 }
 

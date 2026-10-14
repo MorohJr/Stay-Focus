@@ -508,3 +508,83 @@ dialog.sheet::backdrop { background: rgba(0,0,0,.32); }
 .drow .m .ico { vertical-align: -2px; }
 .badge .ico { vertical-align: -2px; }
 .seg .sdot, .col h5 .sdot { display: inline-grid; vertical-align: -3px; margin-inline-end: 3px; }
+
+/* =========================================================================
+   SPEC 5.13 (R-ONB): the intro — rotating slides on a dark block, then steps.
+   ========================================================================= */
+.onb { min-height: 100dvh; background: var(--hero); color: #fff; display: flex; flex-direction: column; padding: calc(var(--safe-t) + 14px) 20px calc(var(--safe-b) + 18px); position: relative; overflow: hidden; touch-action: pan-y; user-select: none; }
+.onb::before { content: ''; position: absolute; inset-inline-end: -70px; top: -70px; width: 240px; height: 240px; border-radius: 50%; background: var(--blue); opacity: .45; filter: blur(6px); pointer-events: none; }
+.onb > * { position: relative; z-index: 1; max-width: 520px; width: 100%; margin-inline: auto; }
+.onb-top { display: flex; align-items: center; justify-content: space-between; min-height: 40px; }
+.onb-brand { font-family: var(--font-num); font-weight: 800; letter-spacing: .2px; font-size: 15px; direction: ltr; }
+.onb-skip { color: #c9cff7; font-weight: 600; font-size: 14px; padding: 8px 4px; }
+.onb-slide { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 18px 0 8px; animation: onb-in .35s ease-out; }
+@keyframes onb-in { from { opacity: 0; transform: translateX(-18px); } to { opacity: 1; transform: none; } }
+.onb-ic { width: 54px; height: 54px; border-radius: 17px; background: rgba(255,255,255,.12); display: grid; place-items: center; margin-bottom: 14px; }
+.onb-ic .ico { width: 28px; height: 28px; color: #c9cff7; }
+.onb h1 { margin: 0 0 8px; font-size: 30px; font-weight: 800; letter-spacing: -.4px; line-height: 1.15; }
+.onb p { margin: 0 0 18px; color: #c4c4be; font-size: 15px; line-height: 1.6; min-height: 4.8em; }
+.onb-demo { background: var(--bg); color: var(--ink); border: 1px solid var(--hero-line); border-radius: 20px; padding: 14px; box-shadow: 0 18px 40px rgba(0,0,0,.35); font-size: 13px; min-height: 168px; }
+.onb-dots { display: flex; justify-content: center; gap: 7px; margin: 16px auto 14px; }
+.onb-dots button { width: 7px; height: 7px; border-radius: 99px; background: rgba(255,255,255,.28); transition: width .25s, background .25s; }
+.onb-dots button.on { width: 22px; background: #fff; }
+.onb-actions { display: grid; gap: 4px; }
+.onb-next { color: #c9cff7; font-weight: 600; font-size: 14px; padding: 10px; }
+/* the little app previews inside the slides */
+.onb-mini-hero { background: var(--hero); border: 1px solid var(--hero-line); color: #fff; border-radius: 14px; padding: 10px 12px; margin-bottom: 10px; display: grid; gap: 3px; }
+.onb-mini-hero .k { font-size: 10.5px; color: #b6bdf0; font-weight: 600; }
+.onb-mini-hero b { font-size: 15px; }
+.onb-mini-hero > i { height: 4px; border-radius: 9px; background: rgba(255,255,255,.14); margin-top: 6px; overflow: hidden; display: block; }
+.onb-mini-hero > i > i { display: block; height: 100%; background: var(--blue); }
+.onb-mini-h { font-size: 11px; font-weight: 700; color: var(--muted); margin: 0 0 6px; }
+.onb-mini-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.onb-mini-row:last-child { border-bottom: 0; }
+.onb-mini-row .ico { color: var(--muted); }
+.onb-mini-row.done .grow { text-decoration: line-through; opacity: .45; }
+.onb-mini-row .minibar { width: 54px; height: 4px; border-radius: 4px; background: var(--track); overflow: hidden; flex: none; }
+.onb-mini-row .minibar i { display: block; height: 100%; background: var(--blue); }
+.onb-mini-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.onb-mini-cols > div { background: var(--surface2); border-radius: 10px; padding: 7px; display: grid; gap: 5px; align-content: start; min-height: 130px; }
+.onb-mini-cols b { font-size: 11px; }
+.onb-mini-cols span { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px; font-size: 11.5px; }
+.onb-mini-list { display: grid; gap: 12px; padding: 8px 2px; font-size: 14px; }
+.onb-mini-list span { display: flex; align-items: center; gap: 10px; }
+.onb-mini-list .ico { color: var(--blue-text); }
+/* steps */
+.onb-progress { display: flex; gap: 3px; margin: 0 0 14px; }
+.onb-progress i { flex: 1; height: 4px; border-radius: 4px; background: var(--track); }
+.onb-progress i.on { background: var(--blue); }
+.onb-hint { margin: 6px 4px 10px; line-height: 1.55; }
+.card .onb-hint { margin: 6px 0 2px; }
+.onb-label { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 14px; margin-bottom: 8px; }
+.inner .card.boxed { margin-bottom: 10px; }
+.inner .card.boxed .field { border-bottom-color: var(--surface3); }
+.onb-foot { display: flex; gap: 8px; margin-top: 16px; position: sticky; bottom: 0; background: var(--bg); padding: 10px 0 calc(var(--safe-b) + 10px); border-top: 1px solid var(--line); z-index: 5; }
+.onb-flow { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.onb-flow .chip { background: var(--surface); font-weight: 600; }
+.onb-flow .ico { color: var(--muted); }
+.onb-row { border-bottom: 1px solid var(--line); padding: 7px 2px; }
+.onb-row:last-child { border-bottom: 0; }
+.onb-row-main { display: flex; align-items: center; gap: 8px; min-height: 26px; font-size: 14px; }
+.onb-row .lead { flex: none; display: inline-grid; place-items: center; min-width: 20px; font-size: 16px; color: var(--muted); }
+.onb-row .tt { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; unicode-bidi: plaintext; text-align: right; }
+.onb-row .tt .input.bare { font-size: 14px; }
+.onb-row .m { font-size: 11px; color: var(--muted); white-space: nowrap; flex: none; }
+.onb-sub { margin: 4px 28px 2px 0; }
+.onb-subrow { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 5px 0; }
+.onb-subrow .ico { color: var(--muted); }
+.onb-subrow .grow { unicode-bidi: plaintext; text-align: right; }
+.onb-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+.onb-star.on { color: var(--blue); fill: var(--blue); }
+.onb-starbtn { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--surface); color: var(--muted); flex: none; border: 1px solid var(--line); }
+.onb-starbtn.on { background: var(--blue); color: #fff; border-color: var(--blue); }
+.onb-starbtn.on .ico { fill: currentColor; }
+.onb-starbtn:disabled { opacity: .4; }
+.onb-icons { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; margin: 8px 0 2px; }
+.onb-icons::-webkit-scrollbar { display: none; }
+.onb-icons button { flex: none; width: 38px; height: 38px; border-radius: 11px; font-size: 19px; display: grid; place-items: center; background: var(--surface); }
+.onb-icons button.on { box-shadow: inset 0 0 0 2px var(--blue); background: var(--blue-soft); }
+.onb-done-h { font-size: 20px; font-weight: 800; margin: 2px 4px 12px; }
+.onb-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
+.onb-tiles .stat { padding: 8px; }
+.onb-tiles .stat .v { font-size: 18px; }

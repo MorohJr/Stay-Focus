@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
+import { needsOnboarding } from '../domain/onboarding';
 import { exitDemo } from '../services/demo';
 import { ensureSeed } from '../services/entity';
 import { runDaily } from '../services/planning';
@@ -15,6 +16,7 @@ import { ChallengeScreen, ChallengesScreen, RecurringListScreen, RecurringScreen
 import { AreasScreen, BackupScreen, MoreScreen, SearchScreen, SettingsScreen, WeatherScreen } from './screens/MoreScreens';
 import { CleanupScreen, PeopleScreen, PersonScreen } from './screens/PeopleScreens';
 import { NewNoteScreen, NoteScreen, NotesScreen } from './screens/NotesScreens';
+import { OnboardingScreen } from './screens/OnboardingScreen';
 import { GoalScreen, NewProjectScreen, ProjectScreen, ProjectsScreen } from './screens/ProjectsScreen';
 import { ReviewScreen, SprintScreen, SprintViewScreen } from './screens/SprintScreen';
 import { NewTaskScreen, TaskScreen } from './screens/TaskScreen';
@@ -96,6 +98,8 @@ export function App() {
   const { today } = useClock();
   const [capture, setCapture] = useState(false);
   const lastDay = useRef<string>('');
+  const settings = useLive(Q.settings);
+  const demo = useLive(Q.demo);
 
   // Start-up: defaults, daily jobs (R-SPR-1, R-REC-1), storage protection, weather.
   useEffect(() => {
@@ -115,7 +119,19 @@ export function App() {
     void refreshWeather();
   }, [ready, today]);
 
-  if (!ready) return null;
+  if (!ready || demo === undefined) return null;
+  // R-ONB-1: first run, and again after "delete all data" (settings back to defaults).
+  if (needsOnboarding(settings, demo))
+    return (
+      <ToastProvider>
+        <div className="app">
+          <UpdateBanner />
+          <div className="inner">
+            <OnboardingScreen />
+          </div>
+        </div>
+      </ToastProvider>
+    );
   const top = route[0] ?? '';
   const main = MAIN.has(top) && route.length <= 2;
   const activeTab = OWNER[top] ?? top;

@@ -9,6 +9,10 @@ import { createProject, deleteProject, ensureSprints, materializeRecurring, revi
 import { cycleRule, createChallenge, toggleRoutineItem, saveRecurring } from './habits';
 import { addToTop3, createTask, deleteTask, moveTop3, moveToTomorrow, postponeAllOverdue, postponeTask, resolveStuck, restoreTasks, setSomeday, setWaiting, updateTask } from './tasks';
 import { addAgenda, addMilestone, createPerson, deletePerson } from './people';
+import { addOnboardingTask, finishOnboarding, startChallenge } from './onboarding';
+import { wipeAll } from './backup';
+import Dexie from 'dexie';
+import { SCHEMA_V4, StayFocusDB } from '../db/db';
 
 const TODAY = '2026-09-30';
 
@@ -277,5 +281,62 @@ describe('backup and demo', () => {
     expect(await isDemoMode()).toBe(false);
     expect((await db.tasks.toArray()).map((t) => t.title)).toEqual(['אמיתי']);
     expect((await getSettings()).id).toBe(SETTINGS_ID);
+  });
+});
+
+describe('onboarding (R-ONB)', () => {
+  it('R-ONB-1: first run needs the intro; finishing marks it; wiping all data brings it back', async () => {
+    expect((await getSettings()).onboardedAt).toBeUndefined();
+    await finishOnboarding(TODAY);
+    expect((await getSettings()).onboardedAt).toBeTruthy();
+    await wipeAll();
+    await ensureSeed();
+    expect((await getSettings()).onboardedAt).toBeUndefined();
+  });
+
+  it('R-ONB-4: finishing runs the daily jobs (sprints + today\'s recurring tasks)', async () => {
+    await saveRecurring({ title: 'כביסה', rule: { type: 'daily' }, startDate: TODAY });
+    await finishOnboarding(TODAY);
+    expect((await db.tasks.toArray()).map((t) => t.title)).toContain('כביסה');
+    expect(await db.sprints.count()).toBeGreaterThanOrEqual(2);
+  });
+
+  it('R-ONB-3: tasks land where chosen, the star adds to top 3; challenge starts today', async () => {
+    const a = await addOnboardingTask('a', { kind: 'today' }, true, TODAY);
+    expect(a).toBeTruthy();
+    const saved = (await db.tasks.get(a!.id))!;
+    expect(saved.dueDate).toBe(TODAY);
+    expect(saved.top3Date).toBe(TODAY);
+    const b = await addOnboardingTask('b', { kind: 'inbox' }, true, TODAY);
+    expect((await db.tasks.get(b!.id))!.dueDate).toBe(TODAY); // R-TOD-4: top 3 gives today's date
+    expect(await addOnboardingTask('  ', { kind: 'inbox' }, false, TODAY)).toBeUndefined();
+    const c = await startChallenge(' 30 יום ', 30, ['רק מים', ''], TODAY);
+    expect(c).toMatchObject({ name: '30 יום', startDate: TODAY, endDate: '2026-10-29' });
+    expect(c.rules).toHaveLength(1);
+  });
+
+  it('R-ONB-1: an old backup counts as onboarded (migration v4 → v5)', async () => {
+    const text = await exportBackup();
+    const old = JSON.parse(text);
+    old.schemaVersion = 4;
+    const parsed = await parseBackup(JSON.stringify(old));
+    expect((parsed.tables.settings[0] as { onboardedAt?: string }).onboardedAt).toBeTruthy();
+  });
+
+  it('R-ONB-1: upgrading a device with data to db v5 skips the intro; an empty one does not', async () => {
+    for (const withData of [true, false]) {
+      const name = `upgrade-${withData}`;
+      const v4 = new Dexie(name);
+      v4.version(4).stores(SCHEMA_V4);
+      await v4.open();
+      await v4.table('settings').add({ id: SETTINGS_ID, userName: 'x', routines: {}, seqCounter: 0, updatedAt: '2026-10-01T00:00:00.000Z' });
+      if (withData) await v4.table('notes').add({ id: 'n1', title: 'n' });
+      v4.close();
+      const v5 = new StayFocusDB(name);
+      await v5.open();
+      expect((await v5.settings.get(SETTINGS_ID))!.onboardedAt).toBe(withData ? '2026-10-01T00:00:00.000Z' : undefined);
+      v5.close();
+      await Dexie.delete(name);
+    }
   });
 });

@@ -438,7 +438,7 @@ export function SettingsScreen() {
 // Areas and templates
 // ---------------------------------------------------------------------------
 
-const COLORS = ['#3346c4', '#16a34a', '#ea580c', '#7c3aed', '#db2777', '#0891b2', '#ca8a04', '#111111'];
+export const AREA_COLORS = ['#3346c4', '#16a34a', '#ea580c', '#7c3aed', '#db2777', '#0891b2', '#ca8a04', '#111111'];
 
 export function AreasScreen() {
   const areas = useLive(Q.areas) ?? [];
@@ -454,7 +454,7 @@ export function AreasScreen() {
           <div key={a.id} className="field">
             <span className="row grow">
               <select className="mini-input" aria-label="צבע" value={a.color} onChange={(e) => void saveArea({ ...a, color: e.target.value })} style={{ width: 44, background: a.color, color: 'transparent' }}>
-                {COLORS.map((c) => (
+                {AREA_COLORS.map((c) => (
                   <option key={c} value={c} style={{ background: c }}>
                     {c}
                   </option>
@@ -472,7 +472,7 @@ export function AreasScreen() {
           onSubmit={(e) => {
             e.preventDefault();
             if (!name.trim()) return;
-            void saveArea({ name: name.trim(), color: COLORS[areas.length % COLORS.length]! });
+            void saveArea({ name: name.trim(), color: AREA_COLORS[areas.length % AREA_COLORS.length]! });
             setName('');
           }}
         >
