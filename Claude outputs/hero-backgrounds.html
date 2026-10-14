@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>רקע לבלוקים השחורים · 8 הצעות</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;800&family=Rubik:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --ink: #111; --blue: #3346c4; --muted: #7a7a74; --line: #ececea; --s2: #f5f5f4; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e9e9e6; font-family: Heebo, sans-serif; color: var(--ink); padding: 24px 16px 40px; }
+  h1 { margin: 0 0 4px; font-size: 24px; font-weight: 800; }
+  .lead { margin: 0 0 20px; color: #55554f; font-size: 14px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 18px; max-width: 1320px; }
+  .opt { background: #fff; border-radius: 22px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,.08); }
+  .opt-h { padding: 12px 14px 10px; display: flex; gap: 10px; align-items: baseline; }
+  .opt-h b { font-family: Rubik, sans-serif; font-size: 20px; color: var(--blue); }
+  .opt-h span { font-weight: 700; font-size: 15px; }
+  .opt-h small { display: block; color: var(--muted); font-size: 12px; font-weight: 400; margin-top: 1px; }
+
+  /* the dark block, shared by header and "now" card */
+  .dk { position: relative; overflow: hidden; background: #111; color: #fff; }
+  .dk > * { position: relative; z-index: 1; }
+  .dk::before { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+
+  .head { padding: 16px 16px 34px; }
+  .head .bar { display: flex; gap: 6px; margin-bottom: 8px; }
+  .head .bar i { width: 30px; height: 30px; border-radius: 10px; background: rgba(255,255,255,.1); display: block; }
+  .head h2 { margin: 0; font-size: 23px; font-weight: 800; }
+  .head .sub { font-size: 12px; color: #b9b9b4; margin-top: 2px; }
+  .head .stats { display: flex; gap: 18px; margin-top: 12px; font-size: 10.5px; color: #b9b9b4; }
+  .head .stats b { display: block; color: #fff; font-family: Rubik, sans-serif; font-size: 18px; }
+  .body { background: #fff; border-radius: 20px 20px 0 0; margin-top: -20px; position: relative; z-index: 2; padding: 14px; }
+  .row { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 7px 0; border-bottom: 1px solid var(--line); }
+  .row i { width: 15px; height: 15px; border-radius: 50%; border: 1.7px solid #cfcfca; flex: none; }
+  .now { border-radius: 20px; padding: 14px; margin-top: 12px; }
+  .now .k { font-size: 11px; font-weight: 600; color: #b6bdf0; }
+  .now .t { font-size: 19px; font-weight: 800; margin: 4px 0 2px; }
+  .now .m { font-size: 11.5px; color: #b9b9b4; }
+  .now .p { height: 4px; border-radius: 9px; background: rgba(255,255,255,.14); margin-top: 10px; overflow: hidden; }
+  .now .p i { display: block; width: 45%; height: 100%; background: var(--blue); }
+  .now .btns { display: flex; gap: 6px; margin-top: 10px; }
+  .now .btns span { font-size: 12px; font-weight: 700; padding: 7px 12px; border-radius: 11px; background: rgba(255,255,255,.14); }
+  .now .btns span:first-child { background: var(--blue); }
+
+  /* 0. today: the blurred indigo circle */
+  .o0 .dk::before { inset: auto; inset-inline-end: -46px; top: -46px; width: 160px; height: 160px; border-radius: 50%; background: var(--blue); opacity: .45; filter: blur(4px); }
+  /* 1. clean black */
+  .o1 .dk::before { display: none; }
+  .o1 .dk { box-shadow: inset 0 3px 0 var(--blue); }
+  /* 2. soft corner glow */
+  .o2 .dk::before { background: radial-gradient(120% 90% at 0% 0%, rgba(51,70,196,.62), rgba(51,70,196,.12) 45%, transparent 70%); }
+  /* 3. concentric rings */
+  .o3 .dk::before { background: repeating-radial-gradient(circle at 0% 0%, transparent 0 16px, rgba(110,125,240,.42) 16px 17.5px); -webkit-mask-image: radial-gradient(circle at 0% 0%, #000 25%, transparent 72%); mask-image: radial-gradient(circle at 0% 0%, #000 25%, transparent 72%); }
+  /* 4. dot grid */
+  .o4 .dk::before { background: radial-gradient(rgba(255,255,255,.22) 1px, transparent 1.6px) 0 0 / 13px 13px; -webkit-mask-image: linear-gradient(120deg, transparent 30%, #000 100%); mask-image: linear-gradient(120deg, transparent 30%, #000 100%); }
+  /* 5. diagonal lines */
+  .o5 .dk::before { background: repeating-linear-gradient(135deg, rgba(110,125,240,.38) 0 1.2px, transparent 1.2px 11px); -webkit-mask-image: linear-gradient(110deg, transparent 35%, #000 95%); mask-image: linear-gradient(110deg, transparent 35%, #000 95%); }
+  /* 6. waves */
+  .o6 .dk::before { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='120' viewBox='0 0 400 120' preserveAspectRatio='none'%3E%3Cg fill='none' stroke='%235566e6' stroke-width='1.4'%3E%3Cpath d='M0 70 C80 30 160 110 240 70 S360 40 400 60' opacity='.75'/%3E%3Cpath d='M0 85 C80 45 160 125 240 85 S360 55 400 75' opacity='.5'/%3E%3Cpath d='M0 100 C80 60 160 140 240 100 S360 70 400 90' opacity='.3'/%3E%3C/g%3E%3C/svg%3E") bottom / 100% 70% no-repeat; }
+  /* 7. aurora: indigo + violet */
+  .o7 .dk::before { background: radial-gradient(60% 80% at 8% 0%, rgba(51,70,196,.75), transparent 70%), radial-gradient(50% 70% at 40% 10%, rgba(124,58,237,.45), transparent 70%); filter: blur(10px); inset: -20px; }
+  /* 8. deep indigo block */
+  .o8 .dk { background: linear-gradient(155deg, #3346c4 0%, #232f8f 55%, #161c5a 100%); }
+  .o8 .dk::before { display: none; }
+  .o8 .now .p i, .o8 .now .btns span:first-child { background: #fff; color: #1b2380; }
+  .o8 .now .k { color: #d6dbff; }
+
+  .cur { outline: 3px dashed #c9c9c4; outline-offset: -3px; }
+</style>
+</head>
+<body>
+<h1>רקע לבלוקים השחורים</h1>
+<p class="lead">איך זה ייראה בכותרת השחורה של המסכים, בכרטיס "עכשיו" במסך היום ובחלוניות ההיכרות. הראשון מימין הוא העיצוב של היום, להשוואה.</p>
+<div class="grid" id="grid"></div>
+<script>
+const OPTS = [
+  ['0', 'היום', 'עיגול אינדיגו מטושטש בפינה'],
+  ['1', 'שחור נקי', 'בלי קישוט, רק פס אינדיגו דק למעלה'],
+  ['2', 'זוהר רך', 'אור אינדיגו שנמס מהפינה, בלי צורה'],
+  ['3', 'טבעות', 'עיגולים דקים מהפינה, כמו הטבעות של ההתקדמות'],
+  ['4', 'רשת נקודות', 'נקודות קטנות שנעלמות לכיוון הטקסט'],
+  ['5', 'קווים אלכסוניים', 'פסים דקים באינדיגו בצד אחד'],
+  ['6', 'גלים', 'שלושה קווי גל דקים בתחתית'],
+  ['7', 'אורורה', 'ענן אינדיגו וסגול, רך ועמוק'],
+  ['8', 'אינדיגו עמוק', 'הבלוק עצמו כחול כהה במקום שחור'],
+];
+document.getElementById('grid').innerHTML = OPTS.map(([n, name, d]) => `
+  <div class="opt o${n} ${n === '0' ? 'cur' : ''}">
+    <div class="opt-h"><b>${n === '0' ? '—' : n}</b><span>${name}<small>${d}</small></span></div>
+    <div class="dk head">
+      <div class="bar"><i></i></div>
+      <h2>משימות</h2>
+      <div class="sub">לפי פרויקט · 24 פתוחות</div>
+      <div class="stats"><span><b>24</b>פתוחות</span><span><b>5</b>להיום</span><span><b>2</b>באיחור</span></div>
+    </div>
+    <div class="body">
+      <div class="row"><i></i>להתקשר לבנק</div>
+      <div class="row"><i></i>לעצב לוגו לאתר</div>
+      <div class="dk now">
+        <div class="k">עכשיו · 09:30–10:30</div>
+        <div class="t">לכתוב את ההצעה ללקוח</div>
+        <div class="m">אתר אישי · נשארו 35 דק׳</div>
+        <div class="p"><i></i></div>
+        <div class="btns"><span>✓ סיימתי</span><span>דחה</span></div>
+      </div>
+    </div>
+  </div>`).join('');
+</script>
+</body>
+</html>
