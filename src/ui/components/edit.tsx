@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { HE_MONTHS } from '../../domain/dates';
 import type { Attachment, Link } from '../../domain/schemas';
+import { titleSize } from '../../domain/tasks';
 import { addAttachment, deleteAttachment, linkLabel, normalizeLink } from '../../services/misc';
 import { shrinkImage } from '../../services/platform';
 import { Q } from '../../services/queries';
 import { useLive } from '../hooks';
-import { confirmAction } from './common';
+import { Btn, confirmAction } from './common';
 import { Icon } from './Icon';
 
 /** Text that saves itself: on blur, and 600ms after typing stops. Keeps typing smooth with live data. */
@@ -53,6 +54,39 @@ export function DraftInput({ value, onSave, className = 'input', placeholder, au
   );
 }
 
+/** R-UI-6: the title of a task or note. Wraps to more lines and shrinks when it's long; Enter still finishes. */
+export function DraftTitle({ value, onSave, placeholder, autoFocus, ariaLabel }: { value: string; onSave: (v: string) => void; placeholder?: string; autoFocus?: boolean; ariaLabel?: string }) {
+  const { draft, change, flush } = useDraft(value, onSave);
+  const ref = useRef<HTMLTextAreaElement>(null);
+  const size = titleSize(draft);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, [draft, size]);
+  return (
+    <textarea
+      ref={ref}
+      rows={1}
+      className={`title-input title-${size}`}
+      value={draft}
+      placeholder={placeholder}
+      autoFocus={autoFocus}
+      aria-label={ariaLabel ?? placeholder}
+      enterKeyHint="done"
+      onChange={(e) => change(e.target.value.replace(/\s*\n\s*/g, ' '))}
+      onBlur={(e) => flush(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          e.currentTarget.blur();
+        }
+      }}
+    />
+  );
+}
+
 export function DraftTextarea({ value, onSave, placeholder, rows = 5, className = 'textarea' }: { value: string; onSave: (v: string) => void; placeholder?: string; rows?: number; className?: string }) {
   const { draft, change, flush } = useDraft(value, onSave);
   return <textarea className={className} rows={rows} value={draft} placeholder={placeholder} aria-label={placeholder} onChange={(e) => change(e.target.value)} onBlur={(e) => flush(e.target.value)} />;
@@ -87,9 +121,9 @@ export function LinksEditor({ links, onChange }: { links: Link[]; onChange: (l: 
         }}
       >
         <input className="input" inputMode="url" placeholder="הדבק קישור…" value={url} onChange={(e) => setUrl(e.target.value)} dir="ltr" />
-        <button type="submit" className="btn" disabled={!url.trim()}>
+        <Btn type="submit" className="btn" why={!url.trim() && 'הדבק קישור קודם'}>
           הוסף
-        </button>
+        </Btn>
       </form>
     </div>
   );

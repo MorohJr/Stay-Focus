@@ -79,11 +79,12 @@ export async function deleteChallenge(id: string): Promise<void> {
 // Recurring rules
 // ---------------------------------------------------------------------------
 
-export async function saveRecurring(input: Partial<Recurring> & Pick<Recurring, 'title' | 'rule' | 'startDate'>): Promise<Recurring> {
-  const existing = input.id ? await db.recurring.get(input.id) : undefined;
+export async function saveRecurring({ id, ...input }: Partial<Recurring> & Pick<Recurring, 'title' | 'rule' | 'startDate'>): Promise<Recurring> {
+  const existing = id ? await db.recurring.get(id) : undefined;
+  // The form passes id: undefined for a new rule; it must not wipe the generated id.
   const r: Recurring = existing
     ? { ...existing, ...input, updatedAt: nowIso() }
-    : { ...stamps(), body: '', projectIds: [], labels: [], active: true, ...input };
+    : { body: '', projectIds: [], labels: [], active: true, ...input, ...stamps() };
   await db.recurring.put(r);
   return r;
 }

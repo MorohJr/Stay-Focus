@@ -15,7 +15,7 @@ import { currentPosition } from '../../services/platform';
 import { Q } from '../../services/queries';
 import { addToSprint, deleteTask } from '../../services/tasks';
 import { refreshWeather, searchPlaces, type Place } from '../../services/weather';
-import { Seg, TopBar } from '../components/common';
+import { Btn, Seg, TopBar } from '../components/common';
 import { DayMonthPicker } from '../components/edit';
 import { Icon } from '../components/Icon';
 import { useClock, useLive } from '../hooks';
@@ -96,9 +96,9 @@ export function OnboardingScreen() {
             יאללה, מתחילים 🎉
           </button>
         ) : (
-          <button type="button" className="btn primary grow" disabled={!ok} onClick={() => void goTo(step + 1)}>
+          <Btn type="button" className="btn primary grow" why={!ok && 'צריך לכתוב איך לקרוא לך'} onClick={() => void goTo(step + 1)}>
             הבא
-          </button>
+          </Btn>
         )}
       </div>
     </div>
@@ -478,9 +478,9 @@ function WeatherPicker() {
             }}
           >
             <input className="input" placeholder="שם עיר, למשל תל אביב" value={q} onChange={(e) => setQ(e.target.value)} />
-            <button type="submit" className="btn" disabled={!q.trim()}>
+            <Btn type="submit" className="btn" why={!q.trim() && 'כתוב שם של עיר'}>
               חפש
-            </button>
+            </Btn>
           </form>
           {results.map((p) => (
             <button key={`${p.lat},${p.lon}`} type="button" className="opt" onClick={() => void choose(p)}>
@@ -597,9 +597,9 @@ function StepAreas() {
           }}
         >
           <input className="input" placeholder="+ תחום חדש, למשל בריאות" value={name} onChange={(e) => setName(e.target.value)} />
-          <button type="submit" className="btn" disabled={!name.trim()}>
+          <Btn type="submit" className="btn" why={!name.trim() && 'צריך לכתוב שם קודם'}>
             הוסף
-          </button>
+          </Btn>
         </form>
       </section>
     </>
@@ -658,9 +658,9 @@ function StepGoals() {
           <label htmlFor="og-d">תאריך יעד</label>
           <input id="og-d" type="date" className="mini-input" value={date} onChange={(e) => setDate(e.target.value)} />
         </div>
-        <button type="submit" className="btn primary block" disabled={!title.trim()}>
+        <Btn type="submit" className="btn primary block" why={!title.trim() && 'צריך לכתוב את המטרה'}>
           הוסף מטרה
-        </button>
+        </Btn>
       </form>
       <Added title="המטרות שלך" count={goals.length}>
         {goals.map((g) => (
@@ -730,9 +730,9 @@ function StepProjects() {
         <div style={{ margin: '8px 0' }}>
           <Seg value={status} onChange={setStatus} items={[{ id: 'active', label: 'בעבודה עכשיו' }, { id: 'planning', label: 'בתכנון' }]} />
         </div>
-        <button type="submit" className="btn primary block" disabled={!name.trim()}>
+        <Btn type="submit" className="btn primary block" why={!name.trim() && 'צריך לכתוב שם לפרויקט'}>
           הוסף פרויקט
-        </button>
+        </Btn>
       </form>
       <Added title="הפרויקטים שלך" count={projects.length}>
         {projects.map((p) => (
@@ -818,16 +818,16 @@ function StepTasks({ today }: { today: string }) {
       >
         <div className="addrow" style={{ marginTop: 0 }}>
           <input ref={input} className="input" placeholder="למשל: להתקשר לבנק" value={title} onChange={(e) => setTitle(e.target.value)} />
-          <button
+          <Btn
             type="button"
             className={`onb-starbtn ${star ? 'on' : ''}`}
             aria-pressed={star}
             aria-label="ל-3 החשובים היום"
-            disabled={top3Count >= 3}
+            why={top3Count >= 3 && '3 החשובים של היום כבר מלאים'}
             onClick={() => setStar(!star)}
           >
             <Icon name="star" />
-          </button>
+          </Btn>
         </div>
         <div className="chips" style={{ marginTop: 8 }}>
           {(
@@ -860,9 +860,9 @@ function StepTasks({ today }: { today: string }) {
         <Hint>
           {star ? 'הכוכב מוסיף אותה ל-3 החשובים של היום.' : top3Count >= 3 ? '3 החשובים של היום כבר מלאים.' : 'כוכב = אחת מ-3 החשובות של היום.'}
         </Hint>
-        <button type="submit" className="btn primary block" disabled={!title.trim() || !dest}>
+        <Btn type="submit" className="btn primary block" why={!title.trim() ? 'צריך לכתוב את המשימה קודם' : !dest && 'בחר לאן המשימה נכנסת'}>
           הוסף משימה
-        </button>
+        </Btn>
       </form>
       <Added title="המשימות שלך" count={list.length}>
         {list.map((t) => (
@@ -997,9 +997,9 @@ function StepRecurring({ today }: { today: string }) {
         <p className="small" style={{ margin: '4px 0 8px', color: 'var(--blue-text)', fontWeight: 600 }}>
           {describeRule(rule)}
         </p>
-        <button type="submit" className="btn primary block" disabled={!title.trim() || (type === 'weekly' && !days.length)}>
+        <Btn type="submit" className="btn primary block" why={!title.trim() ? 'צריך לכתוב את המשימה קודם' : type === 'weekly' && !days.length && 'בחר לפחות יום אחד'}>
           הוסף משימה חוזרת
-        </button>
+        </Btn>
       </form>
       <Added title="המשימות החוזרות שלך" count={list.length}>
         {list.map((r) => (
@@ -1149,9 +1149,9 @@ function StepChallenge({ today }: { today: string }) {
             />
           </div>
         ))}
-        <button type="submit" className="btn primary block" style={{ marginTop: 10 }} disabled={!name.trim() || !rules.some((r) => r.trim())}>
+        <Btn type="submit" className="btn primary block" style={{ marginTop: 10 }} why={!name.trim() ? 'צריך לכתוב שם לאתגר' : !rules.some((r) => r.trim()) && 'צריך לפחות חוק אחד'}>
           התחל אתגר
-        </button>
+        </Btn>
       </form>
       <Added title="האתגרים שלך" count={list.length}>
         {list.map((c) => (
@@ -1207,9 +1207,9 @@ function StepPeople() {
           {hasBday && <DayMonthPicker idPrefix="opp" day={bday.day} month={bday.month} onChange={(day, month) => setBday({ day, month })} />}
         </div>
         <input className="input" style={{ marginTop: 6 }} placeholder="נושא לדבר עליו בפעם הבאה (לא חובה)" value={topic} onChange={(e) => setTopic(e.target.value)} />
-        <button type="submit" className="btn primary block" style={{ marginTop: 10 }} disabled={!name.trim()}>
+        <Btn type="submit" className="btn primary block" style={{ marginTop: 10 }} why={!name.trim() && 'צריך לכתוב שם קודם'}>
           הוסף אדם
-        </button>
+        </Btn>
       </form>
       <Added title="האנשים שלך" count={people.length}>
         {people.map((p) => {
@@ -1269,9 +1269,9 @@ function StepNotes() {
             </button>
           ))}
         </div>
-        <button type="submit" className="btn primary block" disabled={!title.trim() && !body.trim()}>
+        <Btn type="submit" className="btn primary block" why={!title.trim() && !body.trim() && 'צריך לכתוב כותרת או תוכן'}>
           שמור פתק
-        </button>
+        </Btn>
       </form>
       <Added title="הפתקים שלך" count={notes.length}>
         {notes.map((n) => (

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import * as D from './dates';
-import { activeBlockers, completion, isInbox, quadrantOf, taskTabsOrder, withStatus } from './tasks';
+import { activeBlockers, completion, isInbox, quadrantOf, taskTabsOrder, titleSize, withStatus } from './tasks';
 import { missingSprintWeeks, sprintName, sprintNeedingReview, sprintRange, sprintStatus } from './sprints';
 import { describeRule, occursOn } from './recurring';
 import { birthdayInfo, describeBirthday } from './people';
@@ -322,5 +322,13 @@ describe('day close (R-CLS)', () => {
   it('collapses once closed today, and a past close does not count', () => {
     expect(dayCloseCard(tasks, TODAY, 21 * 60, TODAY)).toEqual({ closed: true });
     expect(dayCloseCard(tasks, TODAY, 21 * 60, '2026-09-29')).toMatchObject({ closed: false });
+  });
+});
+
+describe('R-UI-6 title size', () => {
+  it('shrinks with length', () => {
+    expect(titleSize('לקנות חלב')).toBe('l');
+    expect(titleSize('להתקשר לבנק ולשאול על ההלוואה')).toBe('m');
+    expect(titleSize('להתקשר לבנק ולשאול על ההלוואה, ואז לשלוח להם את הטפסים במייל')).toBe('s');
   });
 });

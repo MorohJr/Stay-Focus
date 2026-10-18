@@ -7,7 +7,7 @@ import { ROUTINE_LABEL } from '../../domain/routine';
 import { getSettings, updateSettings } from '../../services/entity';
 import { addRoutineItem, createChallenge, cycleRule, deleteChallenge, deleteRecurring, deleteRoutineItem, moveRoutineItem, newRule, saveRecurring, updateChallenge, updateRoutineItem } from '../../services/habits';
 import { Q } from '../../services/queries';
-import { confirmAction, Empty, Seg, Switch, TopBar } from '../components/common';
+import { Btn, confirmAction, Empty, Seg, Switch, TopBar } from '../components/common';
 import { DayMonthPicker, DraftInput } from '../components/edit';
 import { Icon } from '../components/Icon';
 import { ProjectPicker } from '../components/tasks';
@@ -130,9 +130,9 @@ function NewChallenge({ today }: { today: string }) {
             </div>
           ))}
         </section>
-        <button type="submit" className="btn primary block" disabled={!name.trim() || !rules.some((r) => r.trim())}>
+        <Btn type="submit" className="btn primary block" why={!name.trim() ? 'צריך לכתוב שם לאתגר' : !rules.some((r) => r.trim()) && 'צריך לפחות חוק אחד'}>
           התחל אתגר
-        </button>
+        </Btn>
       </form>
     </div>
   );
@@ -555,9 +555,9 @@ function RecurringForm({ existing, today }: { existing?: Recurring; today: strin
           <Switch label="פעילה" on={active} onChange={setActive} />
         </div>
       </section>
-      <button type="button" className="btn primary block" disabled={!title.trim()} onClick={() => void save()}>
+      <Btn type="button" className="btn primary block" why={!title.trim() && 'צריך לכתוב שם למשימה החוזרת'} onClick={() => void save()}>
         שמור
-      </button>
+      </Btn>
       <ProjectPicker open={pick} onClose={() => setPick(false)} selected={projectIds} onChange={setProjectIds} />
     </div>
   );

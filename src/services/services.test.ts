@@ -188,6 +188,12 @@ describe('planning', () => {
     expect(all.find((t) => t.dueDate === TODAY)!.status).toBe('todo');
   });
 
+  it('saveRecurring from the form (id: undefined) still gets an id', async () => {
+    const r = await saveRecurring({ id: undefined, title: 'כביסה', rule: { type: 'daily' }, startDate: TODAY, startTime: undefined });
+    expect(r.id).toBeTruthy();
+    expect((await db.recurring.get(r.id))!.title).toBe('כביסה');
+  });
+
   it('deleting a project unlinks tasks; R-GOL-2 single focus', async () => {
     const p = await createProject({ name: 'p' }, ['first step']);
     expect(await db.tasks.where('projectIds').equals(p.id).count()).toBe(1);

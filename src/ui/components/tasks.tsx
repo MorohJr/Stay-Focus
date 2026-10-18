@@ -8,7 +8,7 @@ import { Q } from '../../services/queries';
 import { createTask, postponeTask, toggleDone, type Postpone } from '../../services/tasks';
 import { useClock, useLive } from '../hooks';
 import { go } from '../router';
-import { Seg, Sheet, useToast } from './common';
+import { Btn, Seg, Sheet, useToast } from './common';
 import { Icon } from './Icon';
 import { ProjectIcon } from './ProjectIcon';
 
@@ -208,9 +208,9 @@ export function PostponeSheet({ task, onClose }: { task: Task | undefined; onClo
       <div className="opt">
         <Icon name="cal" />
         <input type="date" className="mini-input grow" value={custom} min={today} onChange={(e) => setCustom(e.target.value)} aria-label="תאריך" />
-        <button type="button" className="minibtn dark" disabled={!custom} onClick={() => custom && void run({ date: custom })}>
+        <Btn type="button" className="minibtn dark" why={!custom && 'בחר תאריך קודם'} onClick={() => custom && void run({ date: custom })}>
           דחה
-        </button>
+        </Btn>
       </div>
     </Sheet>
   );
@@ -238,10 +238,10 @@ export function TaskPickerSheet({ open, onClose, onPick, exclude, title }: { ope
     <Sheet open={open} onClose={onClose} title={title}>
       <div className="addrow" style={{ marginTop: 0, marginBottom: 8 }}>
         <input className="input" placeholder="משימה חדשה…" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} />
-        <button
+        <Btn
           type="button"
           className="btn primary"
-          disabled={!newTitle.trim()}
+          why={!newTitle.trim() && 'צריך לכתוב משהו קודם'}
           onClick={async () => {
             const t = await createTask({ title: newTitle, dueDate: today });
             setNewTitle('');
@@ -249,7 +249,7 @@ export function TaskPickerSheet({ open, onClose, onPick, exclude, title }: { ope
           }}
         >
           הוסף
-        </button>
+        </Btn>
       </div>
       <input className="input" placeholder="חיפוש…" value={q} onChange={(e) => setQ(e.target.value)} style={{ marginBottom: 6 }} />
       {groups.map((g) => (
@@ -317,9 +317,9 @@ export function QuickCapture({ open, onClose }: { open: boolean; onClose: () => 
         <p className="muted small" style={{ margin: '10px 2px' }}>
           {kind === 'task' ? 'בלי תאריך, פרויקט או ספרינט, המשימה נכנסת לדואר הנכנס לסידור אחר כך.' : 'הפתק נשמר ברשימת הפתקים.'}
         </p>
-        <button type="submit" className="btn primary block" disabled={!text.trim()}>
+        <Btn type="submit" className="btn primary block" why={!text.trim() && 'צריך לכתוב משהו קודם'}>
           שמור
-        </button>
+        </Btn>
       </form>
     </Sheet>
   );

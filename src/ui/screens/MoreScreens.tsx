@@ -10,7 +10,7 @@ import { currentPosition, saveFile } from '../../services/platform';
 import { Q } from '../../services/queries';
 import { searchAll, type SearchHit } from '../../services/search';
 import { describeWeather, refreshWeather, searchPlaces, type Place } from '../../services/weather';
-import { confirmAction, Empty, TopBar, useToast } from '../components/common';
+import { Btn, confirmAction, Empty, TopBar, useToast } from '../components/common';
 import { DraftInput } from '../components/edit';
 import { Icon } from '../components/Icon';
 import { useClock, useLive } from '../hooks';
@@ -191,9 +191,9 @@ export function BackupScreen() {
         <p className="muted small" style={{ marginTop: 0 }}>
           קובץ אחד עם כל הנתונים והתמונות. באייפון בוחרים "שמור בקבצים" (למשל ב-iCloud Drive).
         </p>
-        <button type="button" className="btn primary block" disabled={busy || !!demo} onClick={() => void doExport()}>
+        <Btn type="button" className="btn primary block" why={demo ? 'בזמן הדגמה הגיבוי חסום. קודם "החזר את הנתונים שלי"' : busy && 'רגע, עוד עובד…'} onClick={() => void doExport()}>
           <Icon name="download" size="sm" /> גבה עכשיו
-        </button>
+        </Btn>
       </section>
       <section className="card">
         <h4>
@@ -205,9 +205,9 @@ export function BackupScreen() {
           מחליף את כל מה שיש במכשיר הזה בנתונים מהקובץ.
         </p>
         <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => e.target.files?.[0] && void onFile(e.target.files[0])} />
-        <button type="button" className="btn block" disabled={busy || !!demo} onClick={() => fileRef.current?.click()}>
+        <Btn type="button" className="btn block" why={demo ? 'בזמן הדגמה השחזור חסום. קודם "החזר את הנתונים שלי"' : busy && 'רגע, עוד עובד…'} onClick={() => fileRef.current?.click()}>
           בחר קובץ גיבוי
-        </button>
+        </Btn>
         {error && <div className="banner warn" style={{ marginTop: 10 }}>{error}</div>}
         {parsed && (
           <div style={{ marginTop: 12 }}>
@@ -309,9 +309,9 @@ export function WeatherScreen() {
           }}
         >
           <input className="input" placeholder="שם עיר, למשל תל אביב" value={q} onChange={(e) => setQ(e.target.value)} />
-          <button type="submit" className="btn" disabled={!q.trim()}>
+          <Btn type="submit" className="btn" why={!q.trim() && 'כתוב שם של עיר'}>
             חפש
-          </button>
+          </Btn>
         </form>
         {results.map((p) => (
           <button key={`${p.lat},${p.lon}`} type="button" className="opt" onClick={() => void choose(p)}>
@@ -368,9 +368,9 @@ export function SettingsScreen() {
         <p className="small" style={{ marginTop: 0 }}>
           החלוניות וההסבר על האפליקציה, וצעד לכל סוג נתונים. הנתונים שלך נשארים כמו שהם, ובכל צעד רואים מה כבר קיים.
         </p>
-        <button type="button" className="btn block" disabled={!!demo} onClick={() => void restartOnboarding()}>
+        <Btn type="button" className="btn block" why={!!demo && 'לא זמין בזמן הדגמה. קודם "החזר את הנתונים שלי"'} onClick={() => void restartOnboarding()}>
           <Icon name="play" size="sm" /> הצג שוב את ההיכרות
-        </button>
+        </Btn>
       </section>
       <div className="section-title">מצב הדגמה</div>
       <section className="card">
@@ -425,10 +425,10 @@ export function SettingsScreen() {
         <p className="small muted" style={{ marginTop: 0 }}>
           מוחק את כל הנתונים במכשיר הזה ומתחיל מאפס. כדאי לגבות קודם.
         </p>
-        <button
+        <Btn
           type="button"
           className="btn danger block"
-          disabled={!!demo || busy}
+          why={demo ? 'לא זמין בזמן הדגמה. קודם "החזר את הנתונים שלי"' : busy && 'רגע, עוד עובד…'}
           onClick={async () => {
             if (!confirmAction('למחוק את כל הנתונים במכשיר הזה?')) return;
             if (!confirmAction('בטוח לגמרי? אי אפשר לבטל.')) return;
@@ -439,7 +439,7 @@ export function SettingsScreen() {
           }}
         >
           מחק את כל הנתונים
-        </button>
+        </Btn>
       </section>
     </div>
   );

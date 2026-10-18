@@ -4,7 +4,7 @@ import type { NoteKind } from '../../domain/schemas';
 import { createNote, deleteEmptyNotes, deleteNote, noteTitle, updateNote } from '../../services/planning';
 import { Q } from '../../services/queries';
 import { confirmAction, Empty, TopBar } from '../components/common';
-import { DraftInput, DraftTextarea, LinksEditor, PhotosEditor } from '../components/edit';
+import { DraftTextarea, DraftTitle, LinksEditor, PhotosEditor } from '../components/edit';
 import { Icon } from '../components/Icon';
 import { ProjectPicker } from '../components/tasks';
 import { useClock, useLive } from '../hooks';
@@ -128,7 +128,7 @@ export function NoteScreen({ id }: { id: string }) {
       <TopBar
         backTo="/notes"
         miniTitle={n.title || 'פתק'}
-        title={<DraftInput className="title-input" value={n.title} onSave={(v) => set({ title: v })} placeholder="כותרת" autoFocus={!n.title && !n.body} ariaLabel="כותרת" />}
+        title={<DraftTitle value={n.title} onSave={(v) => set({ title: v })} placeholder="כותרת" autoFocus={!n.title && !n.body} ariaLabel="כותרת" />}
         sub={`עודכן ${formatRelative(localDate(n.updatedAt), today)}${n.pinned ? ' · 📌 נעוץ' : ''}`}
       >
         <button type="button" className="iconbtn" aria-label={n.pinned ? 'בטל נעיצה' : 'נעץ'} onClick={() => set({ pinned: !n.pinned })} style={{ background: n.pinned ? 'var(--blue)' : undefined }}>

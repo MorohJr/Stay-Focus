@@ -8,8 +8,8 @@ import { top3 as top3Of } from '../../domain/today';
 import { Q } from '../../services/queries';
 import { addToTop3, createTask, deleteTask, removeFromTop3, resolveStuck, restoreTasks, setSomeday, setWaiting, updateTask } from '../../services/tasks';
 import { PersonPicker } from './PeopleScreens';
-import { Empty, Switch, TopBar, useToast } from '../components/common';
-import { DraftInput, DraftTextarea, LabelsEditor, LinksEditor, PhotosEditor } from '../components/edit';
+import { Btn, Empty, Switch, TopBar, useToast } from '../components/common';
+import { DraftTextarea, DraftTitle, LabelsEditor, LinksEditor, PhotosEditor } from '../components/edit';
 import { Icon } from '../components/Icon';
 import { ProjectPicker, SprintPicker, StatusIcon, TaskRow } from '../components/tasks';
 import { useClock, useLive } from '../hooks';
@@ -63,7 +63,7 @@ export function TaskScreen({ id }: { id: string }) {
       <TopBar
         backTo="/tasks"
         miniTitle={task.title}
-        title={<DraftInput className="title-input" value={task.title} onSave={(v) => set({ title: v })} placeholder="שם המשימה" ariaLabel="שם המשימה" />}
+        title={<DraftTitle value={task.title} onSave={(v) => set({ title: v })} placeholder="שם המשימה" ariaLabel="שם המשימה" />}
         sub={
           <>
             <span className="num">#{task.seq}</span> · {STATUS_LABEL[task.status]}
@@ -345,12 +345,12 @@ export function NewTaskScreen({ preset }: { preset?: string }) {
         <input ref={input} className="title-input" placeholder="מה צריך לעשות?" value={title} onChange={(e) => setTitle(e.target.value)} enterKeyHint="next" />
         <p className="muted small">Enter שומר ומאפשר להוסיף עוד אחת.</p>
         <div className="row" style={{ marginTop: 14 }}>
-          <button type="submit" className="btn primary grow" disabled={!title.trim()}>
+          <Btn type="submit" className="btn primary grow" why={!title.trim() && 'צריך לכתוב את המשימה קודם'}>
             שמור והוסף עוד
-          </button>
-          <button type="button" className="btn grow" disabled={!title.trim()} onClick={() => void save(true)}>
+          </Btn>
+          <Btn type="button" className="btn grow" why={!title.trim() && 'צריך לכתוב את המשימה קודם'} onClick={() => void save(true)}>
             שמור ופתח
-          </button>
+          </Btn>
         </div>
       </form>
     </div>

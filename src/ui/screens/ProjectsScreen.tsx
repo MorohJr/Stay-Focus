@@ -11,7 +11,7 @@ import { isMilestoneLate, milestoneStats, nextMilestone } from '../../domain/rev
 import { removeProjectImage, setProjectImage } from '../../services/misc';
 import { shrinkImage } from '../../services/platform';
 import { ProjectCover, ProjectIcon, useBlobUrl } from '../components/ProjectIcon';
-import { Bar, confirmAction, Empty, Seg, Sheet, Tabs, TopBar } from '../components/common';
+import { Bar, Btn, confirmAction, Empty, Seg, Sheet, Tabs, TopBar } from '../components/common';
 import { DraftInput, DraftTextarea } from '../components/edit';
 import { Icon } from '../components/Icon';
 import { TaskRow } from '../components/tasks';
@@ -491,9 +491,9 @@ export function NewProjectScreen() {
             </select>
           </div>
         </section>
-        <button type="submit" className="btn primary block" disabled={!name.trim()}>
+        <Btn type="submit" className="btn primary block" why={!name.trim() && 'צריך לכתוב שם לפרויקט'}>
           צור פרויקט
-        </button>
+        </Btn>
       </form>
     </div>
   );
@@ -526,9 +526,9 @@ export function GoalScreen({ id }: { id: string }) {
         >
           <input className="title-input" autoFocus placeholder="למשל: 500K₪ עד גיל 35" value={title} onChange={(e) => setTitle(e.target.value)} />
           <p className="muted small">אחרי השמירה אפשר להוסיף תאריך יעד, תיאור ולחבר פרויקטים.</p>
-          <button type="submit" className="btn primary block" disabled={!title.trim()}>
+          <Btn type="submit" className="btn primary block" why={!title.trim() && 'צריך לכתוב את המטרה'}>
             צור מטרה
-          </button>
+          </Btn>
         </form>
       </div>
     );

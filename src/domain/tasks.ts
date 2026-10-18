@@ -86,3 +86,9 @@ export const QUADRANT_LABEL: Record<Quadrant, { title: string; sub: string }> = 
   delegate: { title: 'האצל', sub: 'דחוף, לא חשוב' },
   drop: { title: 'וותר', sub: 'לא דחוף ולא חשוב' },
 };
+
+/** R-UI-6: a long title wraps and gets smaller so the whole thing fits in the header. */
+export function titleSize(title: string): 'l' | 'm' | 's' {
+  const n = title.trim().length;
+  return n <= 22 ? 'l' : n <= 50 ? 'm' : 's';
+}

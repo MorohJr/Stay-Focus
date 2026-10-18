@@ -7,7 +7,7 @@ import { isOpen, isStuck } from '../../domain/tasks';
 import { addAgenda, createPerson, deleteAgenda, deletePerson, toggleAgenda, updatePerson } from '../../services/people';
 import { Q } from '../../services/queries';
 import { createTask, deleteTask, keepTask, restoreTasks, setSomeday, setStatus, setWaiting } from '../../services/tasks';
-import { Bar, confirmAction, Empty, Sheet, TopBar, useToast } from '../components/common';
+import { Bar, Btn, confirmAction, Empty, Sheet, TopBar, useToast } from '../components/common';
 import { DayMonthPicker, DraftInput, DraftTextarea } from '../components/edit';
 import { Icon } from '../components/Icon';
 import { projectName, TaskRow } from '../components/tasks';
@@ -241,9 +241,9 @@ export function PersonPicker({ open, onClose, value, onChange }: { open: boolean
         }}
       >
         <input className="input" placeholder="אדם חדש…" value={name} onChange={(e) => setName(e.target.value)} />
-        <button type="submit" className="btn" disabled={!name.trim()}>
+        <Btn type="submit" className="btn" why={!name.trim() && 'צריך לכתוב שם קודם'}>
           הוסף
-        </button>
+        </Btn>
       </form>
       {value && (
         <button type="button" className="opt" onClick={() => pick(undefined)}>

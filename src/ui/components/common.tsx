@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { Icon } from './Icon';
 import { back } from '../router';
 import { todayISO, weekNumber } from '../../domain/dates';
@@ -203,6 +203,57 @@ export function Tabs<T extends string>({ value, onChange, items }: { value: T; o
         </button>
       ))}
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// R-UI-5: a button that can't be pressed says why (red bubble) instead of doing nothing.
+// aria-disabled, not disabled: a disabled button gets no tap, so it couldn't explain itself.
+// The bubble is a fixed sibling (not a toast) so it also shows inside sheets.
+// ---------------------------------------------------------------------------
+
+interface Why {
+  text: string;
+  x: number;
+  y: number;
+  below: boolean;
+  arrow: number;
+}
+
+export function Btn({ why, onClick, className, children, ...rest }: ButtonHTMLAttributes<HTMLButtonElement> & { why?: string | false | null }) {
+  const [msg, setMsg] = useState<Why | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  return (
+    <>
+      <button
+        type="button"
+        {...rest}
+        className={`${className ?? ''}${why ? ' off' : ''}`}
+        aria-disabled={why ? true : undefined}
+        onClick={(e) => {
+          if (why) {
+            e.preventDefault(); // also stops a form submit (Enter in a field clicks the submit button)
+            const r = e.currentTarget.getBoundingClientRect();
+            const mid = r.left + r.width / 2;
+            const x = Math.min(Math.max(mid, 150), window.innerWidth - 150);
+            const below = r.top < 80;
+            clearTimeout(timer.current);
+            setMsg({ text: why, x, y: below ? r.bottom + 10 : r.top - 10, below, arrow: mid - x });
+            timer.current = setTimeout(() => setMsg(null), 3500);
+            return;
+          }
+          onClick?.(e);
+        }}
+      >
+        {children}
+      </button>
+      {msg && why && (
+        <span className={`why${msg.below ? ' below' : ''}`} role="alert" style={{ left: msg.x, top: msg.y, ['--arrow' as string]: `${msg.arrow}px` }}>
+          {msg.text}
+        </span>
+      )}
+    </>
   );
 }
 
