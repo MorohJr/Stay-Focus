@@ -116,6 +116,7 @@
 /* ---------- Today header + "now" (R-UI-4 lives on in the deep jade card) ---------- */
 .gl .hdr .hello { font-size: 34px; font-weight: 700; letter-spacing: -0.6px; line-height: 1.08; }
 .gl .hdr .date { font-size: 13.5px; }
+.gl .hdr .gear { width: 44px; height: 44px; }
 .gl .hero { border-radius: 28px; padding: 20px; border: 0; box-shadow: 0 18px 40px rgba(18, 60, 47, 0.26); }
 .gl .hero .ttl { font-size: 26px; font-weight: 700; letter-spacing: -0.4px; }
 .gl .hero .meta { color: #b6d8c9; }
@@ -190,7 +191,7 @@
 .gl .nav a.on,
 .gl .nav a.on .ico { color: #fff; }
 .gl .nav a.on::after { content: ''; position: absolute; bottom: 1px; width: 5px; height: 5px; border-radius: 50%; background: var(--mint-hi); }
-.gl .fab { border-radius: 50%; width: 58px; height: 58px; background: var(--blue); color: #fff; bottom: calc(var(--safe-b) + 12px + 64px + 14px); box-shadow: 0 14px 30px rgba(18, 138, 95, 0.42); transition: transform 0.3s var(--ease); view-transition-name: gl-fab; }
+.gl .fab { border-radius: 50%; width: 52px; height: 52px; background: var(--blue); color: #fff; box-shadow: 0 8px 20px rgba(18, 138, 95, 0.45); transition: transform 0.3s var(--ease); }
 .gl .fab:active { transform: scale(0.88) rotate(90deg); }
 .gl .page { padding-bottom: calc(var(--nav-h) + var(--safe-b) + 100px); }
 .gl .page.sub { padding-bottom: calc(var(--safe-b) + 50px); }
@@ -392,7 +393,6 @@
 ::view-transition-old(root) { animation: gl-vt-out 0.22s ease backwards; }
 ::view-transition-new(root) { animation: gl-fade 0.3s ease backwards; }
 ::view-transition-group(gl-nav),
-::view-transition-group(gl-fab),
 ::view-transition-group(gl-rail),
 ::view-transition-group(gl-dtop) { animation: none; }
 

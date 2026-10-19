@@ -34,6 +34,7 @@ export function ProjectsScreen({ tab = 'active' }: { tab?: string }) {
     <div className="page">
       <TopBar
         title="פרויקטים"
+        more
         stats={[
           { v: count(['active']), k: 'בעבודה', icon: 'target' },
           { v: count(['planning']), k: 'בתכנון', icon: 'edit' },

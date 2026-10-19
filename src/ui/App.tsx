@@ -30,8 +30,9 @@ const TABS = [
   { id: 'tasks', label: 'משימות', icon: 'tasks' },
   { id: 'sprint', label: 'ספרינט', icon: 'sprint' },
   { id: 'projects', label: 'פרויקטים', icon: 'target' },
-  { id: 'more', label: 'עוד', icon: 'more' },
 ];
+/** Desktop tabs also show "more" (on the phone it's the gear at the top, R-NAV-1). */
+const DTABS = [...TABS, { id: 'more', label: 'עוד', icon: 'more' }];
 /** R-UI-12 (glass, desktop): quick actions on the dark rail. */
 const RAIL = [
   { to: '/search', label: 'חיפוש', icon: 'search' },
@@ -169,11 +170,14 @@ export function App() {
         <div className={top === '' ? 'today-wrap' : 'inner'}>{screenFor(route)}</div>
         {main && (
           <>
-            <button type="button" className="fab" aria-label="רישום מהיר" onClick={() => setCapture(true)}>
-              <Icon name="plus" />
-            </button>
+            {/* R-NAV-1: two tabs, the + in the middle, two tabs */}
             <nav className="nav" aria-label="ניווט ראשי">
-              {TABS.map((t) => (
+              {TABS.map((t, i) => [
+                i === 2 && (
+                  <button key="add" type="button" className="fab" aria-label="רישום מהיר" onClick={() => setCapture(true)}>
+                    <Icon name="plus" />
+                  </button>
+                ),
                 <a
                   key={t.id}
                   href={`#/${t.id}`}
@@ -186,8 +190,8 @@ export function App() {
                 >
                   <Icon name={t.icon} />
                   {t.label}
-                </a>
-              ))}
+                </a>,
+              ])}
             </nav>
           </>
         )}
@@ -209,7 +213,7 @@ function DesktopChrome({ active, onCapture }: { active: string; onCapture: () =>
           Stay Focus
         </span>
         <nav className="dtabs" aria-label="מסכים">
-          {TABS.map((t) => (
+          {DTABS.map((t) => (
             <a
               key={t.id}
               href={`#/${t.id}`}

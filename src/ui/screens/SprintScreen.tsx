@@ -34,6 +34,7 @@ export function SprintScreen({ tab = 'board' }: { tab?: string }) {
     <div className="page">
       <TopBar
         title={cur ? cur.name.split(' · ')[0] : 'ספרינט'}
+        more
         sub={cur ? `ספרינט נוכחי · ${formatDMY(cur.startDate)} עד ${formatDMY(cur.endDate)}` : undefined}
         stats={cur ? [
           { v: `${c.pct}%`, k: 'הושלם', icon: 'chart' },

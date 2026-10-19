@@ -36,6 +36,7 @@ export function TasksScreen({ tab }: { tab?: string }) {
     <div className="page">
       <TopBar
         title="משימות"
+        more
         stats={[
           { v: open.length, k: 'פתוחות', icon: 'tasks' },
           { v: open.filter((x) => x.dueDate === today).length, k: 'להיום', icon: 'today' },

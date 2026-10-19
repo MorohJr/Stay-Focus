@@ -38,7 +38,7 @@ export function MoreScreen() {
   );
   return (
     <div className="page">
-      <TopBar title="עוד" stats={[{ v: counts.notes, k: 'פתקים', icon: 'note' }, { v: counts.people, k: 'אנשים', icon: 'users' }, { v: counts.challenges, k: 'אתגרים', icon: 'shield' }]} />
+      <TopBar title="עוד" backTo="/" stats={[{ v: counts.notes, k: 'פתקים', icon: 'note' }, { v: counts.people, k: 'אנשים', icon: 'users' }, { v: counts.challenges, k: 'אתגרים', icon: 'shield' }]} />
       <section className="card">
         {row('/summaries', 'chart', 'סיכומים: שנתיים ושבועיים', undefined, true)}
         {row('/notes', 'note', 'פתקים', counts.notes ? String(counts.notes) : undefined, true)}

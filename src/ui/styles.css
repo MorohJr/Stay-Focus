@@ -127,6 +127,7 @@ img { max-width: 100%; }
 
 /* ---------- header (today) ---------- */
 .hdr { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 14px; }
+.hdr .gear { flex: none; width: 38px; height: 38px; padding: 0; color: var(--ink2); }
 .hdr .date { font-size: 13px; color: var(--muted); }
 .hdr .hello { margin: 3px 0 0; font-size: 26px; font-weight: 800; letter-spacing: -.3px; line-height: 1.15; }
 .pills { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
@@ -250,7 +251,8 @@ img { max-width: 100%; }
 .nav a { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10.5px; color: var(--nav-off); min-width: 56px; padding: 6px 0; }
 .nav a.on { color: var(--ink); font-weight: 700; }
 .nav a.on .ico { color: var(--blue); }
-.fab { position: fixed; z-index: 21; bottom: calc(var(--nav-h) + var(--safe-b) + 16px); inset-inline-start: max(16px, calc(50% - 305px)); width: 56px; height: 56px; border-radius: 18px; display: grid; place-items: center; background: var(--ink); color: var(--on-ink); box-shadow: 0 10px 24px rgba(0,0,0,.22); }
+/* R-NAV-1: the + sits in the middle of the bar */
+.fab { flex: none; width: 50px; height: 50px; border-radius: 16px; display: grid; place-items: center; background: var(--ink); color: var(--on-ink); box-shadow: 0 6px 16px rgba(0,0,0,.2); }
 .fab .ico { width: 26px; height: 26px; stroke-width: 2.4; }
 .fab:active { transform: scale(.96); }
 

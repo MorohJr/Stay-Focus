@@ -15,7 +15,7 @@ import { cycleRule, toggleRoutineItem } from '../../services/habits';
 import { Q } from '../../services/queries';
 import { describeWeather } from '../../services/weather';
 import { addToTop3, moveToToday, moveToTomorrow, postponeAllOverdue, postponeTask, removeFromTop3, setStatus, toggleDone } from '../../services/tasks';
-import { Bar, Num, Rings } from '../components/common';
+import { Bar, MoreButton, Num, Rings } from '../components/common';
 import { Icon } from '../components/Icon';
 import { Box, PostponeSheet, projectName, TaskPickerSheet } from '../components/tasks';
 import { useClock, useLive } from '../hooks';
@@ -99,7 +99,8 @@ export function TodayScreen() {
 
       {/* 1. Header */}
       <div className="hdr">
-        <div>
+        <MoreButton className="pill gear" />
+        <div className="grow">
           <div className="date">{formatLong(today)}</div>
           <h1 className="hello">
             {greeting(nowMin)}

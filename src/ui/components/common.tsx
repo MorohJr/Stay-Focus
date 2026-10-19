@@ -1,6 +1,6 @@
 import { cloneElement, createContext, Fragment, isValidElement, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode, type RefObject } from 'react';
 import { Icon } from './Icon';
-import { back } from '../router';
+import { back, go } from '../router';
 import { todayISO, weekNumber } from '../../domain/dates';
 import { reducedMotion, useGlass } from '../design';
 
@@ -205,7 +205,16 @@ function useScrolledPast<T extends Element>() {
   return [ref, past] as const;
 }
 
-export function TopBar({ title, miniTitle, backTo, children, stats, sub, lead, cover }: { title: ReactNode; /** Text for the compact bar when `title` is an input. */ miniTitle?: string; backTo?: string | true; children?: ReactNode; stats?: HeadStat[]; sub?: ReactNode; lead?: ReactNode; cover?: string }) {
+/** R-NAV-1: the button to the "more" screen, top right like a settings button. */
+export function MoreButton({ className }: { className: string }) {
+  return (
+    <button type="button" className={className} aria-label="עוד" onClick={() => go('/more')}>
+      <Icon name="settings" />
+    </button>
+  );
+}
+
+export function TopBar({ title, miniTitle, backTo, more, children, stats, sub, lead, cover }: { title: ReactNode; /** Text for the compact bar when `title` is an input. */ miniTitle?: string; backTo?: string | true; /** R-NAV-1: the gear to "more", top right (main screens). */ more?: boolean; children?: ReactNode; stats?: HeadStat[]; sub?: ReactNode; lead?: ReactNode; cover?: string }) {
   const [sentinel, past] = useScrolledPast<HTMLDivElement>();
   const glass = useGlass();
   const goBack = () => back(typeof backTo === 'string' ? backTo : '/');
@@ -237,6 +246,7 @@ export function TopBar({ title, miniTitle, backTo, children, stats, sub, lead, c
             <Icon name="chevR" />
           </button>
         )}
+        {more && !backTo && <MoreButton className="hbtn" />}
         <span className="grow" />
         {children}
       </div>
