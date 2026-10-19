@@ -5,8 +5,9 @@ import { sprintStatus } from '../../domain/sprints';
 import { DAY_PART_LABEL, completedIn, yearsWithData, yearSummary, type DayPart, type EventKind, type TimelineMonth, type YearInput } from '../../domain/yearReview';
 import { Q } from '../../services/queries';
 import { markYearSeen, saveYearAnswers } from '../../services/yearReview';
-import { Bars, Gantt, Heatmap, HBars } from '../components/charts';
-import { Empty, Seg, Tabs, TopBar } from '../components/common';
+import { Bars, Donut, Gantt, Heatmap, HBars, StackedBars } from '../components/charts';
+import { CountUp, Empty, Num, Seg, Tabs, TopBar } from '../components/common';
+import { useGlass } from '../design';
 import { DraftTextarea } from '../components/edit';
 import { Icon } from '../components/Icon';
 import { ProjectIcon } from '../components/ProjectIcon';
@@ -43,6 +44,7 @@ export function YearScreen({ year: param }: { year?: string }) {
   const review = useLive(() => Q.yearReview(year), [year]);
   const s = useMemo(() => (input ? yearSummary(input, year, today) : undefined), [input, year, today]);
   const years = useMemo(() => (input ? yearsWithData(input, today) : [year]), [input, today, year]);
+  const glass = useGlass();
   useEffect(() => {
     void markYearSeen(year); // R-YIR-1
   }, [year]);
@@ -113,6 +115,13 @@ export function YearScreen({ year: param }: { year?: string }) {
             />
           </Section>
 
+          {/* R-YIR-5 (glass look): the same months, split by area */}
+          {glass && s.areas.length > 1 && (
+            <Section title="בכל חודש, לפי תחום">
+              <StackedBars months={s.areaMonths} series={s.areas.map((a) => ({ key: a.id || 'none', name: a.name, color: a.color }))} labels={HE_MONTHS.map((m) => m.slice(0, 3))} describe={(i) => `${HE_MONTHS[i]} ${year}`} />
+            </Section>
+          )}
+
           {/* 5. Heatmap */}
           <Section title="השנה, יום אחרי יום">
             <Heatmap year={year} daily={s.daily} today={today} />
@@ -140,7 +149,11 @@ export function YearScreen({ year: param }: { year?: string }) {
           {/* 8. By area */}
           {s.areas.length > 0 && (
             <Section title="לפי תחום">
-              <HBars rows={s.areas.map((a) => ({ key: a.id || 'none', label: <><i className="dot" style={{ background: a.color }} /> {a.name}</>, value: a.count, pct: a.pct, color: a.color }))} />
+              {glass ? (
+                <Donut rows={s.areas.map((a) => ({ key: a.id || 'none', label: a.name, value: a.count, pct: a.pct, color: a.color }))} total={k.tasks} unit="משימות" center={<CountUp to={k.tasks} />} />
+              ) : (
+                <HBars rows={s.areas.map((a) => ({ key: a.id || 'none', label: <><i className="dot" style={{ background: a.color }} /> {a.name}</>, value: a.count, pct: a.pct, color: a.color }))} />
+              )}
             </Section>
           )}
 
@@ -202,7 +215,9 @@ function Kpi({ k, v, sub }: { k: string; v: ReactNode; sub?: ReactNode }) {
   return (
     <div className="kpi">
       <div className="kpi-k">{k}</div>
-      <div className="kpi-v num">{v}</div>
+      <div className="kpi-v num">
+        <Num>{v}</Num>
+      </div>
       {sub && <div className="kpi-s">{sub}</div>}
     </div>
   );

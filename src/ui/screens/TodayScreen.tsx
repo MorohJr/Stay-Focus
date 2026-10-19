@@ -15,7 +15,7 @@ import { cycleRule, toggleRoutineItem } from '../../services/habits';
 import { Q } from '../../services/queries';
 import { describeWeather } from '../../services/weather';
 import { addToTop3, moveToToday, moveToTomorrow, postponeAllOverdue, postponeTask, removeFromTop3, setStatus, toggleDone } from '../../services/tasks';
-import { Bar, Rings } from '../components/common';
+import { Bar, Num, Rings } from '../components/common';
 import { Icon } from '../components/Icon';
 import { Box, PostponeSheet, projectName, TaskPickerSheet } from '../components/tasks';
 import { useClock, useLive } from '../hooks';
@@ -299,7 +299,9 @@ export function TodayScreen() {
       <section className="card">
         <h4>
           <span>3 החשובים היום</span>
-          <small className="num">{top.filter((t) => t.status === 'done').length} מתוך 3</small>
+          <small className="num">
+            <Num>{top.filter((t) => t.status === 'done').length}</Num> מתוך 3
+          </small>
         </h4>
         {top.map((t) => (
           <div key={t.id} className={`todo ${t.status === 'done' ? 'done' : ''}`}>
@@ -394,7 +396,9 @@ export function TodayScreen() {
       <section className="card more">
         <h4>
           <span>עוד להיום</span>
-          <small className="num">{more.filter((t) => t.status !== 'done').length}</small>
+          <small className="num">
+            <Num>{more.filter((t) => t.status !== 'done').length}</Num>
+          </small>
         </h4>
         {more.map((t) => (
           <div key={t.id} className={`mrow ${t.status === 'done' ? 'done' : ''}`}>
@@ -476,7 +480,7 @@ export function TodayScreen() {
             <Rings rings={[{ pct: rings[0]!.pct, color: 'var(--blue)' }, { pct: rings[1]!.pct, color: 'var(--ink)' }, { pct: rings[2]!.pct, color: 'var(--blue-light)' }]} />
             <div className="c">
               <div className="num" style={{ fontSize: 19, fontWeight: 800 }}>
-                {avg === null ? '—' : `${avg}%`}
+                <Num>{avg === null ? '—' : `${avg}%`}</Num>
               </div>
               <div className="muted" style={{ fontSize: 11 }}>
                 ממוצע
@@ -512,7 +516,10 @@ export function TodayScreen() {
       {/* 13. Inbox */}
       <button type="button" className="card nextcard" onClick={() => go('/tasks/inbox')}>
         <Icon name="inbox" size="sm" />
-        <span>{inboxCount ? <><b className="num">{inboxCount}</b> פריטים בדואר הנכנס</> : 'הדואר הנכנס ריק'}</span>
+        <span>{inboxCount ? <><b className="num">
+                <Num>{inboxCount}</Num>
+              </b>{' '}
+              פריטים בדואר הנכנס</> : 'הדואר הנכנס ריק'}</span>
         <span className="when linkbtn">
           {inboxCount ? 'לסדר' : 'פתח'} <Icon name="chev" size="xs" />
         </span>
@@ -563,7 +570,10 @@ function GoalCard({ goal, projects, tasks }: { goal: ReturnType<typeof focusGoal
       <Bar pct={pct} thick />
       <div className="sub2">
         <span>
-          <span className="num ltr">{pct}%</span> · {goal.progressMode === 'manual' ? 'עדכון ידני' : `${linked.length} פרויקטים`}
+          <span className="num ltr">
+            <Num>{pct}</Num>%
+          </span>{' '}
+          · {goal.progressMode === 'manual' ? 'עדכון ידני' : `${linked.length} פרויקטים`}
         </span>
       </div>
       {linked.length > 0 && (

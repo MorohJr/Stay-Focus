@@ -8,6 +8,7 @@ import { requestPersistentStorage } from '../services/platform';
 import { Q } from '../services/queries';
 import { refreshWeather } from '../services/weather';
 import { ToastProvider } from './components/common';
+import { reducedMotion, useGlass } from './design';
 import { Icon } from './components/Icon';
 import { QuickCapture } from './components/tasks';
 import { useClock, useLive } from './hooks';
@@ -31,6 +32,18 @@ const TABS = [
   { id: 'projects', label: 'פרויקטים', icon: 'target' },
   { id: 'more', label: 'עוד', icon: 'more' },
 ];
+/** R-UI-12 (glass, desktop): quick actions on the dark rail. */
+const RAIL = [
+  { to: '/search', label: 'חיפוש', icon: 'search' },
+  { to: '/tasks/inbox', label: 'דואר נכנס', icon: 'inbox' },
+  { to: '/tasks/calendar', label: 'יומן', icon: 'cal' },
+  { to: '/notes', label: 'פתקים', icon: 'note' },
+  { to: '/people', label: 'אנשים', icon: 'users' },
+  { to: '/challenges', label: 'אתגרים', icon: 'shield' },
+  { sep: true },
+  { to: '/backup', label: 'גיבוי', icon: 'download' },
+  { to: '/settings', label: 'הגדרות', icon: 'settings' },
+] as const;
 /** Screens that show the bottom nav and the + button. */
 const MAIN = new Set(['', 'tasks', 'sprint', 'projects', 'more', 'notes', 'challenges', 'recurring', 'people', 'summaries']);
 const OWNER: Record<string, string> = { notes: 'more', challenges: 'more', recurring: 'more', people: 'more', summaries: 'more' };
@@ -105,6 +118,13 @@ export function App() {
   const lastDay = useRef<string>('');
   const settings = useLive(Q.settings);
   const demo = useLive(Q.demo);
+  const glass = useGlass();
+  // R-UI-11: a short loading skeleton when the app opens (glass look)
+  const [warm, setWarm] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setWarm(true), reducedMotion() ? 0 : 650);
+    return () => clearTimeout(t);
+  }, []);
 
   // Start-up: defaults, daily jobs (R-SPR-1, R-REC-1), storage protection, weather.
   useEffect(() => {
@@ -124,7 +144,7 @@ export function App() {
     void refreshWeather();
   }, [ready, today]);
 
-  if (!ready || demo === undefined) return null;
+  if (!ready || demo === undefined || (glass && !warm)) return glass ? <Skeleton /> : null;
   // R-ONB-1: first run, and again after "delete all data" (settings back to defaults).
   if (needsOnboarding(settings, demo))
     return (
@@ -145,7 +165,8 @@ export function App() {
       <div className="app">
         <UpdateBanner />
         <DemoBanner />
-        <div className={top === '' ? '' : 'inner'}>{screenFor(route)}</div>
+        {glass && <DesktopChrome active={activeTab} onCapture={() => setCapture(true)} />}
+        <div className={top === '' ? 'today-wrap' : 'inner'}>{screenFor(route)}</div>
         {main && (
           <>
             <button type="button" className="fab" aria-label="רישום מהיר" onClick={() => setCapture(true)}>
@@ -173,6 +194,76 @@ export function App() {
         <QuickCapture open={capture} onClose={() => setCapture(false)} />
       </div>
     </ToastProvider>
+  );
+}
+
+/** R-DSK-1 / R-UI-12: on a wide screen, the main tabs on top and a dark rail of quick actions. CSS shows it from 1024px. */
+function DesktopChrome({ active, onCapture }: { active: string; onCapture: () => void }) {
+  return (
+    <>
+      <header className="dtop">
+        <span className="dbrand">
+          <i aria-hidden="true">
+            <b />
+          </i>
+          Stay Focus
+        </span>
+        <nav className="dtabs" aria-label="מסכים">
+          {TABS.map((t) => (
+            <a
+              key={t.id}
+              href={`#/${t.id}`}
+              className={active === t.id ? 'on' : ''}
+              aria-current={active === t.id ? 'page' : undefined}
+              onClick={(e) => {
+                e.preventDefault();
+                go(`/${t.id}`);
+              }}
+            >
+              {t.label}
+            </a>
+          ))}
+        </nav>
+      </header>
+      <aside className="rail" aria-label="פעולות מהירות">
+        <button type="button" className="add" aria-label="רישום מהיר" data-tip="רישום מהיר" onClick={onCapture}>
+          <Icon name="plus" />
+        </button>
+        <i className="sep" />
+        {RAIL.map((r, i) =>
+          'sep' in r ? (
+            <i key={i} className="sep" />
+          ) : (
+            <button key={r.to} type="button" aria-label={r.label} data-tip={r.label} onClick={() => go(r.to)}>
+              <Icon name={r.icon} />
+            </button>
+          ),
+        )}
+      </aside>
+    </>
+  );
+}
+
+/** R-UI-11: shimmering placeholders: a title, a row of numbers, a few cards. */
+function Skeleton() {
+  return (
+    <div className="app" aria-busy="true" aria-label="טוען">
+      <div className="page skel">
+        <i className="sk" style={{ height: 22, width: '38%' }} />
+        <i className="sk" style={{ height: 40, width: '62%', marginTop: 10 }} />
+        <div className="sk-row">
+          <i className="sk sk-c" />
+          <i className="sk sk-c" />
+          <i className="sk sk-c" />
+        </div>
+        <div className="sk-grid">
+          <i className="sk" style={{ height: 190 }} />
+          <i className="sk" style={{ height: 150 }} />
+          <i className="sk" style={{ height: 150 }} />
+          <i className="sk" style={{ height: 120 }} />
+        </div>
+      </div>
+    </div>
   );
 }
 

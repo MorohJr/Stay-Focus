@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { Sprint, Task, TaskStatus } from '../../domain/schemas';
 import { sprintNeedingReview, sprintStatus, SPRINT_STATUS_LABEL } from '../../domain/sprints';
 import { compareForDay, completion, isActiveOpen, isInbox, isOpen, isStuck, STATUS_LABEL } from '../../domain/tasks';
@@ -13,6 +13,8 @@ import { Bar, Empty, Tabs, TopBar, useToast } from '../components/common';
 import { Icon } from '../components/Icon';
 import { projectName, StatusIcon, TaskRow } from '../components/tasks';
 import { ProjectIcon } from '../components/ProjectIcon';
+import { QuickView, useBoardDrag, useFlip } from '../components/board';
+import { useGlass } from '../design';
 import { useClock, useLive } from '../hooks';
 import { back, go, replace } from '../router';
 
@@ -34,10 +36,10 @@ export function SprintScreen({ tab = 'board' }: { tab?: string }) {
         title={cur ? cur.name.split(' · ')[0] : 'ספרינט'}
         sub={cur ? `ספרינט נוכחי · ${formatDMY(cur.startDate)} עד ${formatDMY(cur.endDate)}` : undefined}
         stats={cur ? [
-          { v: `${c.pct}%`, k: 'הושלם' },
-          { v: <span className="ltr">{c.done}/{c.total}</span>, k: 'משימות' },
-          { v: tasks.filter((x) => x.sprintId === cur.id && x.status === 'doing').length, k: 'בתהליך' },
-          { v: diffDays(today, cur.endDate) + 1, k: 'ימים נשארו' },
+          { v: `${c.pct}%`, k: 'הושלם', icon: 'chart' },
+          { v: <span className="ltr">{c.done}/{c.total}</span>, k: 'משימות', icon: 'tasks' },
+          { v: tasks.filter((x) => x.sprintId === cur.id && x.status === 'doing').length, k: 'בתהליך', icon: 'run' },
+          { v: diffDays(today, cur.endDate) + 1, k: 'ימים נשארו', icon: 'cal' },
         ] : undefined}
       >
         <button type="button" className="minibtn dark" onClick={() => go(review ? `/review/${review.id}` : '/review')}>
@@ -86,6 +88,20 @@ function Board({ tasks, sprintId }: { tasks: Task[]; sprintId: string }) {
   const projects = useLive(Q.projects) ?? [];
   const cols: TaskStatus[] = ['todo', 'doing', 'done'];
   const [doneOpen, setDoneOpen] = useState(false);
+  // Glass look: drag between columns (R-SPR-6) and the quick view (R-UI-13).
+  const glass = useGlass();
+  const toast = useToast();
+  const box = useRef<HTMLDivElement>(null);
+  const flipFrom = useFlip(box, glass);
+  const [quick, setQuick] = useState<{ task: Task; from: DOMRect }>();
+  const startDrag = useBoardDrag(box, flipFrom, (id, to) => {
+    const t = tasks.find((x) => x.id === id);
+    if (!t) return;
+    const prev = t.status;
+    void setStatus(id, to);
+    if (to === 'done') setDoneOpen(true);
+    toast({ message: `"${t.title}" ← ${STATUS_LABEL[to]}`, action: { label: 'בטל', run: () => void setStatus(id, prev) } });
+  });
   if (!tasks.length) {
     return (
       <Empty icon="run">
@@ -99,11 +115,11 @@ function Board({ tasks, sprintId }: { tasks: Task[]; sprintId: string }) {
   }
   return (
     <>
-      <div className="kanban">
+      <div className="kanban" ref={box}>
         {cols.map((s) => {
           const list = tasks.filter((t) => t.status === s);
           return (
-            <div key={s} className={`col ${s === 'done' && !doneOpen ? 'folded' : ''}`}>
+            <div key={s} data-s={s} className={`col ${s === 'done' && !doneOpen ? 'folded' : ''}`}>
               {/* R-SPR-5: on a phone "done" is folded; its header opens it. */}
               <h5>
                 <button type="button" disabled={s !== 'done'} onClick={() => setDoneOpen(!doneOpen)}>
@@ -117,8 +133,13 @@ function Board({ tasks, sprintId }: { tasks: Task[]; sprintId: string }) {
                 </button>
               </h5>
               {list.map((t) => (
-                <div key={t.id} className="kc">
-                  <button type="button" className="grow" style={{ textAlign: 'start' }} onClick={() => go(`/task/${t.id}`)}>
+                <div key={t.id} className="kc" data-id={t.id} onPointerDown={glass ? (e) => startDrag(e, t.id) : undefined}>
+                  <button
+                    type="button"
+                    className="grow"
+                    style={{ textAlign: 'start' }}
+                    onClick={(e) => (glass ? setQuick({ task: t, from: e.currentTarget.closest('.kc')!.getBoundingClientRect() }) : go(`/task/${t.id}`))}
+                  >
                     <span style={{ textDecoration: s === 'done' ? 'line-through' : undefined, opacity: s === 'done' ? 0.6 : 1 }}>{t.title}</span>
                     {projectName(t.projectIds, projects) && <span className="tag" style={{ justifySelf: 'start' }}>{projectName(t.projectIds, projects)}</span>}
                   </button>
@@ -136,7 +157,9 @@ function Board({ tasks, sprintId }: { tasks: Task[]; sprintId: string }) {
           );
         })}
       </div>
+      {quick && <QuickView task={quick.task} from={quick.from} onClose={() => setQuick(undefined)} />}
       <p className="muted small" style={{ margin: '6px 4px' }}>
+        {glass && 'גרור כרטיס לעמודה אחרת (בטלפון: לחיצה ארוכה), או לחץ עליו לפתיחה. '}
         החץ מעביר משימה לשלב הבא.
       </p>
     </>

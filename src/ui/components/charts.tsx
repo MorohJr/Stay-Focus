@@ -166,3 +166,74 @@ export function Gantt({ spans, year, today, onOpen, icon }: { spans: ProjectSpan
     </div>
   );
 }
+
+/** R-YIR-5 (glass look): completed tasks per month, stacked by area. Tap a month for its numbers. */
+export function StackedBars({ months, series, labels, describe }: { months: number[][]; series: { key: string; name: string; color: string }[]; labels: string[]; describe: (i: number) => string }) {
+  const [sel, setSel] = useState<number>();
+  const max = Math.max(1, ...months.map((m) => m.reduce((a, b) => a + b, 0)));
+  return (
+    <figure className="chart">
+      <div className="sbars" role="list">
+        {months.map((m, i) => {
+          const sum = m.reduce((a, b) => a + b, 0);
+          return (
+            <button key={i} type="button" role="listitem" className={`sbar ${i === sel ? 'sel' : ''}`} aria-label={`${describe(i)}: ${sum}`} onClick={() => setSel(sel === i ? undefined : i)} style={{ ['--i' as string]: i }}>
+              <span className="sbar-area">
+                <span className="sbar-stack" style={{ height: `${(sum / max) * 100}%` }}>
+                  {m.map((v, k) => (v > 0 ? <i key={k} style={{ flexGrow: v, background: series[k]!.color }} /> : null))}
+                </span>
+              </span>
+              <span className="bar-lab">{labels[i]}</span>
+            </button>
+          );
+        })}
+      </div>
+      {sel !== undefined && (
+        <figcaption className="chart-cap">
+          {describe(sel)}:{' '}
+          {series
+            .map((s, k) => ({ s, v: months[sel]![k]! }))
+            .filter((x) => x.v > 0)
+            .map((x) => `${x.s.name} ${x.v}`)
+            .join(' · ') || 'אין'}
+        </figcaption>
+      )}
+    </figure>
+  );
+}
+
+/** R-YIR-5 (glass look): shares as a ring that draws itself, the total in the middle. */
+export function Donut({ rows, total, unit, center }: { rows: { key: string; label: ReactNode; value: number; pct: number; color: string }[]; total: number; unit: string; center: ReactNode }) {
+  const r = 58;
+  const C = 2 * Math.PI * r;
+  const gap = rows.length > 1 ? 4 : 0;
+  const arc = (v: number) => (C * v) / Math.max(1, total);
+  const starts = rows.map((_, i) => rows.slice(0, i).reduce((sum, x) => sum + arc(x.value), 0));
+  return (
+    <div className="donut">
+      <div className="dw">
+        <svg width="148" height="148" viewBox="0 0 148 148" aria-hidden="true">
+          <circle cx="74" cy="74" r={r} fill="none" stroke="var(--track)" strokeWidth="16" />
+          {rows.map((x, i) => {
+            const len = Math.max(0, arc(x.value) - gap);
+            const off = -starts[i]!;
+            return <circle key={x.key} className="dseg" cx="74" cy="74" r={r} fill="none" stroke={x.color} strokeWidth="16" strokeLinecap="round" strokeDasharray={`${len} ${C}`} strokeDashoffset={off} style={{ ['--i' as string]: i, ['--len' as string]: len }} />;
+          })}
+        </svg>
+        <div className="c">
+          <b className="num">{center}</b>
+          <small>{unit}</small>
+        </div>
+      </div>
+      <div className="dleg">
+        {rows.map((x) => (
+          <div key={x.key}>
+            <i style={{ background: x.color }} />
+            <span className="grow ellipsis">{x.label}</span>
+            <b className="num">{x.pct}%</b>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

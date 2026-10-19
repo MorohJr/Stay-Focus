@@ -24,7 +24,6 @@ export default defineConfig({
         lang: 'he',
         dir: 'rtl',
         display: 'standalone',
-        orientation: 'portrait',
         start_url: base,
         scope: base,
         theme_color: '#ffffff',

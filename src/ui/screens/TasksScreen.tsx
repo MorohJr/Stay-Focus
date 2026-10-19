@@ -37,10 +37,10 @@ export function TasksScreen({ tab }: { tab?: string }) {
       <TopBar
         title="משימות"
         stats={[
-          { v: open.length, k: 'פתוחות' },
-          { v: open.filter((x) => x.dueDate === today).length, k: 'להיום' },
-          { v: overdue(tasks, today).length, k: 'באיחור' },
-          { v: inboxCount, k: 'בדואר נכנס' },
+          { v: open.length, k: 'פתוחות', icon: 'tasks' },
+          { v: open.filter((x) => x.dueDate === today).length, k: 'להיום', icon: 'today' },
+          { v: overdue(tasks, today).length, k: 'באיחור', icon: 'alert' },
+          { v: inboxCount, k: 'בדואר נכנס', icon: 'inbox' },
         ]}
       >
         <button type="button" className="iconbtn" aria-label="חיפוש" onClick={() => go('/search')}>

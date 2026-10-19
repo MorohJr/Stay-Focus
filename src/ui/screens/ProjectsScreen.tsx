@@ -11,10 +11,11 @@ import { isMilestoneLate, milestoneStats, nextMilestone } from '../../domain/rev
 import { removeProjectImage, setProjectImage } from '../../services/misc';
 import { shrinkImage } from '../../services/platform';
 import { ProjectCover, ProjectIcon, useBlobUrl } from '../components/ProjectIcon';
-import { Bar, Btn, confirmAction, Empty, Seg, Sheet, Tabs, TopBar } from '../components/common';
+import { Bar, Btn, confirmAction, Empty, Num, Seg, Sheet, Tabs, TopBar } from '../components/common';
 import { DraftInput, DraftTextarea } from '../components/edit';
 import { Icon } from '../components/Icon';
 import { TaskRow } from '../components/tasks';
+import { useGlass } from '../design';
 import { useClock, useLive } from '../hooks';
 import { back, go, replace } from '../router';
 
@@ -34,10 +35,10 @@ export function ProjectsScreen({ tab = 'active' }: { tab?: string }) {
       <TopBar
         title="פרויקטים"
         stats={[
-          { v: count(['active']), k: 'בעבודה' },
-          { v: count(['planning']), k: 'בתכנון' },
-          { v: goals.filter((g) => g.status === 'active').length, k: 'מטרות' },
-          { v: count(['done']), k: 'הושלמו' },
+          { v: count(['active']), k: 'בעבודה', icon: 'target' },
+          { v: count(['planning']), k: 'בתכנון', icon: 'edit' },
+          { v: goals.filter((g) => g.status === 'active').length, k: 'מטרות', icon: 'mountain' },
+          { v: count(['done']), k: 'הושלמו', icon: 'check' },
         ]}
       >
         <button type="button" className="iconbtn" aria-label="חדש" onClick={() => go(t === 'goals' ? '/goal/new' : '/project/new')}>
@@ -90,9 +91,11 @@ function ProjectGroups({ projects, all, tasks, areas, empty }: { projects: Proje
             </span>
             <span className="num">{g.list.length}</span>
           </div>
-          {g.list.sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name, 'he')).map((p) => (
-            <ProjectCard key={p.id} p={p} all={all} tasks={tasks} />
-          ))}
+          <div className="pgrid">
+            {g.list.sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name, 'he')).map((p) => (
+              <ProjectCard key={p.id} p={p} all={all} tasks={tasks} />
+            ))}
+          </div>
         </div>
       ))}
     </>
@@ -105,6 +108,62 @@ function ProjectCard({ p, all, tasks }: { p: Project; all: Project[]; tasks: Tas
   const nextMs = nextMilestone(ms);
   const c = projectCompletion(p, tasks);
   const blockers = activeBlockers(p, all);
+  const glass = useGlass();
+  if (glass) {
+    // Glass look: a card with a progress ring around the icon (R-PRJ-6).
+    return (
+      <button type="button" className="card pcard-g" onClick={() => go(`/project/${p.id}`)}>
+        {p.coverId && (
+          <div className="pc-cover">
+            <ProjectCover project={p} height={56} />
+          </div>
+        )}
+        <span className="pc-top">
+          <span className="pring" style={{ ['--p' as string]: c.pct }}>
+            <ProjectIcon project={p} size={44} radius={22} />
+          </span>
+          <span className="grow">
+            <span className="name">{p.name}</span>
+            <span className="sub">
+              {nextMs ? (
+                <>
+                  <Icon name="milestone" size="xs" /> {nextMs.title}
+                </>
+              ) : (
+                PROJECT_STATUS_LABEL[p.status]
+              )}
+            </span>
+          </span>
+        </span>
+        <span className="pc-panel">
+          <span>
+            <small>משימות פתוחות</small>
+            <b className="num">
+              <Num>{c.total - c.done}</Num>
+            </b>
+          </span>
+          <span>
+            <small>יעד</small>
+            <b>{p.endDate ? formatDMY(p.endDate) : '—'}</b>
+          </span>
+        </span>
+        <span className="pc-prog">
+          <span className="bar">
+            <i style={{ width: `${c.pct}%` }} />
+          </span>
+          <b className="num ltr">
+            <Num>{c.pct}</Num>%
+          </b>
+        </span>
+        <span className="pc-foot">
+          <span className="chip">{PROJECT_STATUS_LABEL[p.status]}</span>
+          {p.priority === 'high' && <span className="tag red">גבוהה</span>}
+          {blockers.length > 0 && <span className="tag g">🔒 {blockers[0]!.name}</span>}
+          {nextMs && isMilestoneLate(nextMs, today) && <span className="tag warn">אבן דרך באיחור</span>}
+        </span>
+      </button>
+    );
+  }
   // SPEC 5.0: a dense row; the cover (R-PRJ-3) is a thin strip above it.
   return (
     <button type="button" style={{ display: 'block', width: '100%', textAlign: 'start' }} onClick={() => go(`/project/${p.id}`)}>

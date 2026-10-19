@@ -182,6 +182,18 @@ export function areaBreakdown(done: Task[], projects: Project[], areas: Area[]):
     .sort((a, b) => (a.id === '' ? 1 : b.id === '' ? -1 : b.count - a.count));
 }
 
+/** R-YIR-5: completed tasks per month, split by area (same areas and order as areaBreakdown). months[m][i] = count. */
+export function monthlyByArea(done: Task[], projects: Project[], areas: Area[]): { areas: AreaShare[]; months: number[][] } {
+  const list = areaBreakdown(done, projects, areas);
+  const months = Array.from({ length: 12 }, () => Array<number>(list.length).fill(0));
+  for (const t of done) {
+    const area = t.projectIds.map((id) => projects.find((p) => p.id === id)?.areaId).find(Boolean) ?? '';
+    const i = list.findIndex((x) => x.id === area);
+    months[Number(doneDay(t)!.slice(5, 7)) - 1]![i]!++;
+  }
+  return { areas: list, months };
+}
+
 // ---------------------------------------------------------------------------
 // Habits, weeks, people, notes
 // ---------------------------------------------------------------------------
@@ -302,6 +314,7 @@ export function yearSummary(input: YearInput, year: number, today: string) {
   const projectsDone = input.projects.filter((p) => p.doneAt && inYear(localDate(p.doneAt), year));
   const spans = projectSpans(input.projects, input.tasks, year, today);
   const areas = areaBreakdown(done, input.projects, input.areas);
+  const areaMonths = monthlyByArea(done, input.projects, input.areas).months;
   const sprints = sprintStats(input.sprints, input.tasks, year, today);
   const kpi = {
     tasks: done.length,
@@ -342,6 +355,7 @@ export function yearSummary(input: YearInput, year: number, today: string) {
     parts,
     spans,
     areas,
+    areaMonths,
     sprints,
     routine: routineRate(input.routineItems, input.routineLogs, year, today),
     challenges: challengeStats(input.challenges, input.challengeLogs, year, today),

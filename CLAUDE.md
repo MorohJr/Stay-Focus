@@ -22,7 +22,7 @@
 
 ## סטאק
 
-TypeScript strict · React 19 + Vite · Dexie + dexie-react-hooks · Zod · date-fns · vite-plugin-pwa · Vitest + fake-indexeddb · ESLint. CSS רגיל עם tokens ב-`src/ui/styles.css`. עיצוב: רקע לבן, שחור, הדגשה ירקן `#128A5F` (הטוקן עדיין נקרא `--blue`), בלוקים כהים בירקן עמוק עם קווי גובה ומספר השבוע (R-UI-4).
+TypeScript strict · React 19 + Vite · Dexie + dexie-react-hooks · Zod · date-fns · vite-plugin-pwa · Vitest + fake-indexeddb · ESLint. CSS רגיל עם tokens ב-`src/ui/styles.css`. עיצוב: שני מראות עם מתג (R-UI-7). חדש (ברירת מחדל): רקע קרם, כרטיסי זכוכית, ירקן/ירקן עמוק/שחור/חול (`src/ui/glass.css`). קלאסי: רקע לבן, שחור, הדגשה ירקן `#128A5F` (הטוקן עדיין נקרא `--blue`), בלוקים כהים בירקן עמוק עם קווי גובה ומספר השבוע (R-UI-4).
 
 ## מוסכמות
 
@@ -65,4 +65,5 @@ export PATH="$HOME/.local/node/bin:$PATH"
 - 14/10/2026 (1.8): צבע ההדגשה ירקן בכל האפליקציה ובאייקון. הבלוקים הכהים (`--hero-grad`, `--topo`, `.wk` ב-`TopBar` ובהיכרות) במקום העיגול המטושטש. כפתור "הצג שוב את ההיכרות" בהגדרות (R-ONB-5). 76 בדיקות.
 - 14/10/2026 (1.9): סיכום שנתי (R-YIR, `domain/yearReview.ts`, `screens/YearScreens.tsx`, גרפים ב-`components/charts.tsx`) ומסך "סיכומים" ב"עוד". doneAt לפרויקט, achievedAt למטרה, טבלת yearReviews. מסד גרסה 6. מספר השבוע (`.wk`) בצד שמאל עם `left` פיזי (האלמנט LTR). 87 בדיקות.
 - 18/10/2026 (1.10): תוקנה שמירת משימה חוזרת חדשה (`saveRecurring` דרס את המזהה ב-undefined). כפתור לא לחיץ = `Btn` עם `why` (R-UI-5, בועה אדומה; לא `disabled`). כותרת משימה/פתק = `DraftTitle` שעובר שורה וקטן (R-UI-6). 89 בדיקות.
+- 19/10/2026 (1.11): עיצוב "זכוכית" (סעיף 5.0א) לצד הקלאסי, עם מתג בהגדרות (R-UI-7). `src/ui/design.ts` שם את המחלקה `gl` על `<html>` (נשמר ב-localStorage), וכל כללי העיצוב החדש ב-`src/ui/glass.css` תחת `.gl` בלבד, כך שהקלאסי זהה ל-1.10 (נבדק בהשוואת צילומים). רכיבים שמתנהגים אחרת בעיצוב החדש בודקים `useGlass()`: מספרים שעולים (`CountUp`/`Num`/`countify` ב-common), גלולה מחליקה בלשוניות, גרירה וחלון מהיר בלוח (`components/board.tsx`), כרטיס פרויקט עם טבעת, גרפים לפי תחום (`StackedBars`, `Donut`). מחשב (R-DSK): `DesktopChrome` ב-App מ-1024px. מעבר מסך דרך View Transitions ב-`router.ts`. אנימציות ב-CSS עם `backwards` ולא `both` (אחרת `transform` נשאר ושובר `position: fixed` של הכותרת המתכווצת). שמות מחלקות חדשים: לבדוק שלא מתנגשים בקיימים (`.todo`, `.done` הם שורות משימה). 90 בדיקות.
 - קובץ ייבוא מ-Notion: `import/` (לא ב-git, נתונים אישיים, המאגר ציבורי).

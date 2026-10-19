@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Area, Challenge, ChallengeLog, Goal, Milestone, Project, Sprint, Task } from './schemas';
 import { finishedAt } from './tasks';
 import {
-  activeDayStats, areaBreakdown, challengeStats, completedIn, dailyCounts, dayPart, monthlyCounts, onTimeRate, projectSpans, sprintStats,
+  activeDayStats, areaBreakdown, challengeStats, completedIn, dailyCounts, dayPart, monthlyByArea, monthlyCounts, onTimeRate, projectSpans, sprintStats,
   timeline, weekdayCounts, yearBanner, yearFraction, yearsWithData, yearSummary, type YearInput,
 } from './yearReview';
 
@@ -65,6 +65,20 @@ describe('year review (R-YIR)', () => {
     const ps = [project({ id: 'p1', areaId: 'w' })];
     const r = areaBreakdown([doneOn('2026-01-01'), doneOn('2026-01-02', { projectIds: ['p1'] }), doneOn('2026-01-03', { projectIds: ['p1'] })], ps, areas);
     expect(r.map((x) => [x.name, x.count, x.pct])).toEqual([['עבודה', 2, 67], ['בלי תחום', 1, 33]]);
+  });
+
+  it('R-YIR-5: per month by area, in the same order as the area breakdown', () => {
+    const areas: Area[] = [
+      { id: 'w', name: 'עבודה', color: '#111', order: 0, createdAt: T0, updatedAt: T0 },
+      { id: 'h', name: 'בית', color: '#222', order: 1, createdAt: T0, updatedAt: T0 },
+    ];
+    const ps = [project({ id: 'p1', areaId: 'w' }), project({ id: 'p2', areaId: 'h' })];
+    const done = [doneOn('2026-01-05', { projectIds: ['p1'] }), doneOn('2026-01-20', { projectIds: ['p1'] }), doneOn('2026-03-02', { projectIds: ['p2'] }), doneOn('2026-03-03')];
+    const r = monthlyByArea(done, ps, areas);
+    expect(r.areas.map((a) => a.name)).toEqual(['עבודה', 'בית', 'בלי תחום']);
+    expect(r.months[0]).toEqual([2, 0, 0]);
+    expect(r.months[2]).toEqual([0, 1, 1]);
+    expect(r.months.flat().reduce((x, y) => x + y, 0)).toBe(4);
   });
 
   it('sprints, challenges and the timeline', () => {

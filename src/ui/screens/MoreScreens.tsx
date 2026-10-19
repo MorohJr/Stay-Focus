@@ -10,7 +10,8 @@ import { currentPosition, saveFile } from '../../services/platform';
 import { Q } from '../../services/queries';
 import { searchAll, type SearchHit } from '../../services/search';
 import { describeWeather, refreshWeather, searchPlaces, type Place } from '../../services/weather';
-import { Btn, confirmAction, Empty, TopBar, useToast } from '../components/common';
+import { Btn, confirmAction, Empty, Seg, TopBar, useToast } from '../components/common';
+import { setDesign, useDesign } from '../design';
 import { DraftInput } from '../components/edit';
 import { Icon } from '../components/Icon';
 import { useClock, useLive } from '../hooks';
@@ -37,7 +38,7 @@ export function MoreScreen() {
   );
   return (
     <div className="page">
-      <TopBar title="עוד" stats={[{ v: counts.notes, k: 'פתקים' }, { v: counts.people, k: 'אנשים' }, { v: counts.challenges, k: 'אתגרים' }]} />
+      <TopBar title="עוד" stats={[{ v: counts.notes, k: 'פתקים', icon: 'note' }, { v: counts.people, k: 'אנשים', icon: 'users' }, { v: counts.challenges, k: 'אתגרים', icon: 'shield' }]} />
       <section className="card">
         {row('/summaries', 'chart', 'סיכומים: שנתיים ושבועיים', undefined, true)}
         {row('/notes', 'note', 'פתקים', counts.notes ? String(counts.notes) : undefined, true)}
@@ -353,6 +354,7 @@ export function SettingsScreen() {
   const { today, now } = useClock();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
+  const design = useDesign();
   if (!settings) return <div className="page sub" />;
   return (
     <div className="page sub">
@@ -362,6 +364,14 @@ export function SettingsScreen() {
           <label htmlFor="un">השם שלך</label>
           <DraftInput className="mini-input" value={settings.userName} onSave={(v) => void updateSettings({ userName: v.trim() })} ariaLabel="השם שלך" />
         </div>
+      </section>
+      {/* R-UI-7 */}
+      <div className="section-title">עיצוב</div>
+      <section className="card">
+        <Seg value={design} onChange={setDesign} items={[{ id: 'glass', label: 'חדש' }, { id: 'classic', label: 'קלאסי' }]} />
+        <p className="small muted" style={{ margin: '8px 0 0' }}>
+          "קלאסי" מחזיר בדיוק את העיצוב הקודם. הבחירה נשמרת במכשיר הזה בלבד ולא נוגעת בנתונים.
+        </p>
       </section>
       <div className="section-title">היכרות</div>
       <section className="card">

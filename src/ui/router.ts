@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { flushSync } from 'react-dom';
+import { reducedMotion } from './design';
 
 /** Hash routing (`#/task/abc`) so GitHub Pages needs no 404 fallback (SPEC 6.3). */
 
@@ -11,8 +13,14 @@ export function useRoute(): string[] {
   const [route, setRoute] = useState(current);
   useEffect(() => {
     const on = () => {
-      setRoute(current());
-      window.scrollTo(0, 0);
+      const next = () => {
+        setRoute(current());
+        window.scrollTo(0, 0);
+      };
+      // R-UI-11 (glass): the old screen fades out with a blur while the new one comes in.
+      const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
+      if (document.documentElement.classList.contains('gl') && doc.startViewTransition && !reducedMotion()) doc.startViewTransition(() => flushSync(next));
+      else next();
     };
     window.addEventListener('hashchange', on);
     return () => window.removeEventListener('hashchange', on);

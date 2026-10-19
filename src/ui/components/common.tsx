@@ -1,7 +1,8 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import { cloneElement, createContext, Fragment, isValidElement, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode, type RefObject } from 'react';
 import { Icon } from './Icon';
 import { back } from '../router';
 import { todayISO, weekNumber } from '../../domain/dates';
+import { reducedMotion, useGlass } from '../design';
 
 // ---------------------------------------------------------------------------
 // Bottom sheet: native <dialog> for focus and Escape handling
@@ -95,6 +96,95 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 export interface HeadStat {
   v: ReactNode;
   k: string;
+  /** Glass look (R-UI-8): a line icon in a circle beside the number. */
+  icon?: string;
+}
+
+// ---------------------------------------------------------------------------
+// R-UI-10: numbers count up (glass look only)
+// ---------------------------------------------------------------------------
+
+/** Counts from what is on screen to `to`: from 0 on mount, from the old value on change. */
+export function CountUp({ to }: { to: number }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const shown = useRef(0);
+  const decimals = Number.isInteger(to) ? 0 : 1;
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const fmt = (n: number) => n.toFixed(decimals);
+    const from = shown.current;
+    if (reducedMotion() || from === to) {
+      shown.current = to;
+      el.textContent = fmt(to);
+      return;
+    }
+    el.textContent = fmt(from);
+    let raf = 0;
+    const t0 = performance.now();
+    const step = (now: number) => {
+      const p = Math.min(1, (now - t0) / 1000);
+      shown.current = from + (to - from) * (1 - Math.pow(1 - p, 4));
+      el.textContent = fmt(p < 1 ? shown.current : to);
+      if (p < 1) raf = requestAnimationFrame(step);
+      else shown.current = to;
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [to, decimals]);
+  return <span ref={ref} className="num" />;
+}
+
+/** Every number inside (plain numbers, digits in text, nested elements) counts up. */
+export function countify(node: ReactNode): ReactNode {
+  if (typeof node === 'number') return Number.isFinite(node) ? <CountUp to={node} /> : node;
+  if (typeof node === 'string') {
+    const parts = node.split(/(\d+(?:\.\d+)?)/);
+    return parts.length === 1 ? node : parts.map((x, i) => (i % 2 ? <CountUp key={i} to={Number(x)} /> : x));
+  }
+  if (Array.isArray(node)) return node.map((n, i) => <Fragment key={i}>{countify(n as ReactNode)}</Fragment>);
+  if (isValidElement<{ children?: ReactNode }>(node) && node.props.children !== undefined) return cloneElement(node, undefined, countify(node.props.children));
+  return node;
+}
+
+/** Counts up in the glass look; plain in classic. */
+export function Num({ children }: { children: ReactNode }) {
+  const glass = useGlass();
+  return <>{glass ? countify(children) : children}</>;
+}
+
+/** Glass: a pill that slides under the active button of a tab row or a segmented control (R-UI-11). */
+function placeSlider(box: HTMLElement | null, el: HTMLElement | null, placed: { current: boolean }) {
+  const on = box?.querySelector<HTMLElement>(':scope > .on');
+  if (!el) return;
+  el.style.opacity = on ? '1' : '0';
+  if (!on) return;
+  if (!placed.current) el.style.transition = 'none'; // the first time it just appears in place
+  el.style.width = `${on.offsetWidth}px`;
+  el.style.transform = `translateX(${on.offsetLeft}px)`;
+  if (!placed.current) {
+    void el.offsetWidth;
+    el.style.transition = '';
+    placed.current = true;
+  }
+}
+
+function useSlider(box: RefObject<HTMLDivElement | null>): ReactNode {
+  const ind = useRef<HTMLSpanElement>(null);
+  const placed = useRef(false);
+  // every render: counts in the labels can change the widths
+  useLayoutEffect(() => placeSlider(box.current, ind.current, placed));
+  useEffect(() => {
+    const f = () => placeSlider(box.current, ind.current, placed);
+    const ro = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(f); // e.g. when the font arrives
+    if (box.current) ro?.observe(box.current);
+    window.addEventListener('resize', f);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener('resize', f);
+    };
+  }, [box]);
+  return <span ref={ind} className="slide-ind" aria-hidden="true" />;
 }
 
 /**
@@ -117,6 +207,7 @@ function useScrolledPast<T extends Element>() {
 
 export function TopBar({ title, miniTitle, backTo, children, stats, sub, lead, cover }: { title: ReactNode; /** Text for the compact bar when `title` is an input. */ miniTitle?: string; backTo?: string | true; children?: ReactNode; stats?: HeadStat[]; sub?: ReactNode; lead?: ReactNode; cover?: string }) {
   const [sentinel, past] = useScrolledPast<HTMLDivElement>();
+  const glass = useGlass();
   const goBack = () => back(typeof backTo === 'string' ? backTo : '/');
   return (
     <header className={`shead ${cover ? 'cover' : ''}`} style={cover ? { backgroundImage: `linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.78)), url(${cover})` } : undefined}>
@@ -158,12 +249,26 @@ export function TopBar({ title, miniTitle, backTo, children, stats, sub, lead, c
       </div>
       {stats && stats.length > 0 && (
         <div className="shead-stats">
-          {stats.map((s, i) => (
-            <span key={i}>
-              <b>{s.v}</b>
-              {s.k}
-            </span>
-          ))}
+          {stats.map((s, i) =>
+            glass ? (
+              <span key={i} className="gstat">
+                {s.icon && (
+                  <i className="sic">
+                    <Icon name={s.icon} size="sm" />
+                  </i>
+                )}
+                <span>
+                  <b>{countify(s.v)}</b>
+                  {s.k}
+                </span>
+              </span>
+            ) : (
+              <span key={i}>
+                <b>{s.v}</b>
+                {s.k}
+              </span>
+            ),
+          )}
         </div>
       )}
       {/* R-UI-4: this week's number, outlined, behind the header */}
@@ -178,6 +283,8 @@ export function TopBar({ title, miniTitle, backTo, children, stats, sub, lead, c
 /** R-UI-2: a long tab row scrolls, fades at the hidden edge, and keeps the active tab visible. */
 export function Tabs<T extends string>({ value, onChange, items }: { value: T; onChange: (v: T) => void; items: { id: T; label: ReactNode; count?: number }[] }) {
   const ref = useRef<HTMLDivElement>(null);
+  const glass = useGlass();
+  const slider = useSlider(ref);
   const [fade, setFade] = useState({ start: false, end: false });
   const measure = useCallback(() => {
     const el = ref.current;
@@ -195,7 +302,13 @@ export function Tabs<T extends string>({ value, onChange, items }: { value: T; o
     return () => window.removeEventListener('resize', measure);
   }, [measure]);
   return (
-    <div ref={ref} className={`tabs ${fade.start ? 'fade-s' : ''} ${fade.end ? 'fade-e' : ''}`} role="tablist" onScroll={measure}>
+    <div
+      ref={ref}
+      className={`tabs ${fade.start ? 'fade-s' : ''} ${fade.end ? 'fade-e' : ''}`}
+      role="tablist"
+      onScroll={measure}
+    >
+      {glass && slider}
       {items.map((it) => (
         <button key={it.id} type="button" role="tab" aria-selected={value === it.id} className={value === it.id ? 'on' : ''} onClick={() => onChange(it.id)}>
           {it.label}
@@ -258,8 +371,12 @@ export function Btn({ why, onClick, className, children, ...rest }: ButtonHTMLAt
 }
 
 export function Seg<T extends string>({ value, onChange, items }: { value: T; onChange: (v: T) => void; items: { id: T; label: ReactNode }[] }) {
+  const glass = useGlass();
+  const box = useRef<HTMLDivElement>(null);
+  const slider = useSlider(box);
   return (
-    <div className="seg">
+    <div ref={box} className="seg">
+      {glass && slider}
       {items.map((it) => (
         <button key={it.id} type="button" className={value === it.id ? 'on' : ''} onClick={() => onChange(it.id)}>
           {it.label}
