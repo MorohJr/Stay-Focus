@@ -1,6 +1,8 @@
 import { useState, type ReactNode } from 'react';
 import { addDays, dayOfWeek, formatDMY, HE_DAYS, HE_MONTHS } from '../../domain/dates';
+import { niceTicks, type Trend, type TrendPeriod } from '../../domain/trend';
 import { yearFraction, type ProjectSpan } from '../../domain/yearReview';
+import { Seg } from './common';
 
 /**
  * Small charts for the year summary (R-YIR-2). Plain HTML/SVG, one hue (the accent) for magnitude,
@@ -234,6 +236,175 @@ export function Donut({ rows, total, unit, center }: { rows: { key: string; labe
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// R-DSK-3 (glass look, desktop): big bars with an axis, grid lines and a hover card
+// ---------------------------------------------------------------------------
+
+export interface RichRow {
+  label: string;
+  title: string;
+  /** One value per series. */
+  parts: number[];
+  prev?: number;
+  future?: boolean;
+}
+
+/** Stacked bars on a value axis. Hover (or keyboard focus) shows the value, the split by series and the period before. */
+export function RichBars({ rows, series, unit, prevLabel, labelEvery = 1, highlight }: { rows: RichRow[]; series: { name: string; color: string }[]; unit: string; prevLabel?: string; labelEvery?: number; highlight?: number }) {
+  const [hov, setHov] = useState<number>();
+  const totals = rows.map((r) => r.parts.reduce((a, b) => a + b, 0));
+  const ticks = niceTicks(Math.max(0, ...totals, ...rows.map((r) => r.prev ?? 0)));
+  const top = ticks[ticks.length - 1]!;
+  const pos = (v: number) => `${(v / top) * 100}%`;
+  // the hover card sits beside the bar, never on it
+  const h = hov === undefined ? undefined : rows[hov];
+  return (
+    <figure className="rchart" onMouseLeave={() => setHov(undefined)}>
+      <div className="rc-plot">
+        <div className="rc-y" aria-hidden="true">
+          {ticks.map((t) => (
+            <span key={t} className="num" style={{ bottom: pos(t) }}>
+              {t}
+            </span>
+          ))}
+        </div>
+        <div className="rc-area">
+          {ticks.map((t) => (
+            <i key={t} className="rc-grid" style={{ bottom: pos(t) }} />
+          ))}
+          <div className="rc-bars" role="list">
+            {rows.map((r, i) => (
+              <button
+                key={i}
+                type="button"
+                role="listitem"
+                className={`rc-col${i === hov ? ' on' : ''}${r.future ? ' fut' : ''}${i === highlight ? ' hi' : ''}`}
+                aria-label={`${r.title}: ${totals[i]} ${unit}`}
+                onMouseEnter={() => setHov(i)}
+                onFocus={() => setHov(i)}
+                onBlur={() => setHov(undefined)}
+                onClick={() => setHov(i)}
+                style={{ ['--i' as string]: Math.min(i, 20) }}
+              >
+                <span className="rc-stack" style={{ height: pos(totals[i]!) }}>
+                  {r.parts.map((v, k) => (v > 0 ? <i key={k} style={{ flexGrow: v, background: series[k]!.color }} /> : null))}
+                </span>
+                {r.prev !== undefined && r.prev > 0 && <b className="rc-prev" style={{ bottom: pos(r.prev) }} />}
+              </button>
+            ))}
+          </div>
+          {h && hov !== undefined && (
+            <div className="rc-tip" role="status" style={(hov + 0.5) / rows.length < 0.6 ? { insetInlineStart: `calc(${((hov + 1) / rows.length) * 100}% + 8px)` } : { insetInlineEnd: `calc(${((rows.length - hov) / rows.length) * 100}% + 8px)` }}>
+              <b>{h.title}</b>
+              <div className="rc-tip-v">
+                <span className="num">{totals[hov]}</span> {unit}
+              </div>
+              {series.length > 1 &&
+                series.map((sr, k) =>
+                  h.parts[k] ? (
+                    <div key={sr.name} className="rc-tip-r">
+                      <i style={{ background: sr.color }} />
+                      <span className="grow">{sr.name}</span>
+                      <b className="num">{h.parts[k]}</b>
+                    </div>
+                  ) : null,
+                )}
+              {h.prev !== undefined && prevLabel && (
+                <div className="rc-tip-p">
+                  {prevLabel}: <b className="num">{h.prev}</b>
+                  {h.prev > 0 && <Delta now={totals[hov]!} before={h.prev} />}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="rc-x" aria-hidden="true">
+        {rows.map((r, i) => (
+          <span key={i} className={i === hov ? 'on' : ''}>
+            {i % labelEvery === 0 || i === hov ? r.label : ''}
+          </span>
+        ))}
+      </div>
+    </figure>
+  );
+}
+
+function Delta({ now, before }: { now: number; before: number }) {
+  const pct = Math.round(((now - before) / before) * 100);
+  return <span className={`rc-d ${pct >= 0 ? 'up' : 'down'}`}>{pct >= 0 ? '▲' : '▼'} {Math.abs(pct)}%</span>;
+}
+
+const PERIODS: { id: TrendPeriod; label: string }[] = [
+  { id: 'week', label: 'שבועות' },
+  { id: 'month', label: 'חודשים' },
+  { id: 'year', label: 'שנים' },
+];
+
+/** R-DSK-3: completed tasks by week / month / year, by area, against the period before. */
+export function TrendChart({ trend, year, onPeriod }: { trend: Trend; year: number; onPeriod: (p: TrendPeriod) => void }) {
+  const p = trend.period;
+  const dm = (d: string) => formatDMY(d).slice(0, 5);
+  const rows: RichRow[] = trend.buckets.map((b, i) => ({
+    label: p === 'month' ? HE_MONTHS[i]!.slice(0, 3) : p === 'week' ? String(i + 1) : b.from.slice(0, 4),
+    title: p === 'month' ? `${HE_MONTHS[i]} ${year}` : p === 'week' ? `שבוע ${i + 1} · ${dm(b.from)}–${dm(b.to)}` : b.from.slice(0, 4),
+    parts: b.byArea,
+    prev: b.prev,
+    future: b.future,
+  }));
+  const totals = trend.buckets.map((b) => b.total);
+  const series = trend.areas.map((a) => ({ name: a.name, color: trend.areas.length > 1 ? a.color : 'var(--blue)' }));
+  const hasPrev = rows.some((r) => r.prev !== undefined && r.prev > 0);
+  return (
+    <div className="tchart">
+      <div className="tc-head">
+        <div>
+          <div className="tc-big">
+            <span className="num">{trend.total}</span>
+            <small>משימות ב-{year}</small>
+          </div>
+          {trend.change !== null && (
+            <div className="tc-cmp">
+              <span className={`tag ${trend.change >= 0 ? 'ok' : 'red'}`}>
+                {trend.change >= 0 ? '▲' : '▼'} {Math.abs(trend.change)}%
+              </span>
+              <span className="muted">
+                מול {trend.prevTotal} ב-{year - 1}, עד אותו תאריך
+              </span>
+            </div>
+          )}
+        </div>
+        <Seg value={p} onChange={onPeriod} items={PERIODS} />
+      </div>
+      <RichBars
+        rows={rows}
+        series={series}
+        unit="משימות"
+        prevLabel={p === 'year' ? 'שנה קודמת' : `ב-${year - 1}`}
+        labelEvery={p === 'week' ? 4 : 1}
+        highlight={totals.indexOf(Math.max(...totals))}
+      />
+      {(series.length > 1 || hasPrev) && (
+        <div className="tc-leg">
+          {series.length > 1 &&
+            trend.areas.map((a) => (
+              <span key={a.id || 'none'}>
+                <i style={{ background: a.color }} />
+                {a.name}
+              </span>
+            ))}
+          {hasPrev && (
+            <span>
+              <b className="tc-prev-key" />
+              {p === 'year' ? 'השנה הקודמת' : year - 1}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

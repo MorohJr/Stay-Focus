@@ -37,7 +37,7 @@ export function MoreScreen() {
     </button>
   );
   return (
-    <div className="page">
+    <div className="page dgrid">
       <TopBar title="עוד" backTo="/" stats={[{ v: counts.notes, k: 'פתקים', icon: 'note' }, { v: counts.people, k: 'אנשים', icon: 'users' }, { v: counts.challenges, k: 'אתגרים', icon: 'shield' }]} />
       <section className="card">
         {row('/summaries', 'chart', 'סיכומים: שנתיים ושבועיים', undefined, true)}
@@ -175,7 +175,7 @@ export function BackupScreen() {
   };
 
   return (
-    <div className="page sub">
+    <div className="page sub dcols">
       <TopBar
         title="גיבוי וסנכרון"
         backTo="/more"
@@ -263,7 +263,7 @@ export function WeatherScreen() {
   };
   const cache = settings?.weatherCache;
   return (
-    <div className="page sub">
+    <div className="page sub dcols">
       <TopBar title="מזג אוויר" sub={settings?.weather?.placeName ?? 'לא נבחר מיקום'} backTo="/more" stats={cache ? [{ v: <span className="ltr">{cache.tempC}°</span>, k: describeWeather(cache.code).text }] : undefined} />
       {settings?.weather && (
         <section className="card">
@@ -357,7 +357,7 @@ export function SettingsScreen() {
   const design = useDesign();
   if (!settings) return <div className="page sub" />;
   return (
-    <div className="page sub">
+    <div className="page sub dcols">
       <TopBar title="הגדרות" backTo="/more" />
       <section className="card">
         <div className="field">
@@ -465,7 +465,7 @@ export function AreasScreen() {
   const areas = useLive(Q.areas) ?? [];
   const [name, setName] = useState('');
   return (
-    <div className="page sub">
+    <div className="page sub dcols">
       <TopBar title="תחומים" backTo="/more" />
       <p className="muted small" style={{ margin: '0 4px 10px' }}>
         תחומים מקבצים פרויקטים ומטרות (אישי, עבודה, משפחה…).

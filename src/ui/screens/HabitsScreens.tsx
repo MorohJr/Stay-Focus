@@ -24,7 +24,7 @@ export function ChallengesScreen() {
   const { today } = useClock();
   const phaseLabel = { active: 'פעיל', future: 'עתידי', ended: 'הסתיים' };
   return (
-    <div className="page">
+    <div className="page dgrid">
       <TopBar
         title="אתגרים"
         backTo="/more"
@@ -160,7 +160,7 @@ function ChallengeDetail({ id, today }: { id: string; today: string }) {
   const markDate = ph === 'ended' ? c.endDate : today;
   const s = dayStats(c, logs, markDate);
   return (
-    <div className="page sub">
+    <div className="page sub dcols">
       <TopBar
         backTo="/challenges"
         miniTitle={c.name}
@@ -288,7 +288,7 @@ export function RoutinesScreen() {
     </div>
   );
   return (
-    <div className="page sub">
+    <div className="page sub dcols">
       <TopBar
         title="שגרות"
         sub={`בוקר ${r.morningStart}–${r.morningEnd} · ערב ${r.eveningStart}–${r.eveningEnd}`}
@@ -455,7 +455,7 @@ function RecurringForm({ existing, today }: { existing?: Recurring; today: strin
     back('/recurring');
   };
   return (
-    <div className="page sub">
+    <div className="page sub dcols">
       <TopBar title={existing ? 'משימה חוזרת' : 'משימה חוזרת חדשה'} backTo="/recurring">
         {existing && (
           <button

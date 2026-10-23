@@ -55,7 +55,7 @@ export function PeopleScreen() {
       </form>
       {!list.length && <Empty icon="users">עוד אין אנשים ברשימה.</Empty>}
       {list.length > 0 && (
-        <section className="card">
+        <section className="card dlist">
           {list.map((p) => {
             const open = agenda.filter((a) => a.personId === p.id && !a.doneAt).length;
             const waiting = tasks.filter((t) => t.waitingPersonId === p.id && isOpen(t)).length;
@@ -100,7 +100,7 @@ export function PersonScreen({ id }: { id: string }) {
   }
   const waiting = tasks.filter((t) => t.waitingPersonId === p.id && isOpen(t));
   return (
-    <div className="page sub">
+    <div className="page sub dcols">
       <TopBar
         backTo="/people"
         lead={

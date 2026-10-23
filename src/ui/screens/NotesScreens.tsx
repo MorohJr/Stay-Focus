@@ -53,7 +53,7 @@ export function NotesScreen() {
       </div>
       {!list.length && <Empty icon="note">{notes.length ? 'לא נמצאו פתקים.' : 'עוד אין פתקים. אפשר לרשום מהר עם כפתור + ולבחור "פתק".'}</Empty>}
       {list.length > 0 && (
-        <section className="card">
+        <section className="card dlist">
           {list.map((n) => {
             const proj = projects.filter((p) => n.projectIds.includes(p.id));
             return (
@@ -87,7 +87,7 @@ export function NewNoteScreen({ preset }: { preset?: string }) {
     replace(`/note/${n.id}`);
   };
   return (
-    <div className="page sub">
+    <div className="page sub dcols">
       <TopBar title="פתק חדש" backTo="/notes" />
       <section className="card">
         <button type="button" className="listrow" onClick={() => void make()}>
@@ -124,7 +124,7 @@ export function NoteScreen({ id }: { id: string }) {
   const set = (patch: Parameters<typeof updateNote>[1]) => void updateNote(n.id, patch);
   const linked = projects.filter((p) => n.projectIds.includes(p.id));
   return (
-    <div className="page sub">
+    <div className="page sub dcols">
       <TopBar
         backTo="/notes"
         miniTitle={n.title || 'פתק'}

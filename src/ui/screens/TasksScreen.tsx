@@ -83,7 +83,7 @@ export function InboxTab({ tasks }: { tasks: Task[] }) {
       <p className="muted small" style={{ margin: '0 4px 10px' }}>
         תן לכל פריט תאריך, פרויקט או ספרינט, והוא יעבור למקום שלו.
       </p>
-      <section className="card">
+      <section className="card dlist">
         {list.map((t) => (
           <div key={t.id}>
             <TaskRow task={t} today={today} meta={`נרשם ${formatRelative(localDate(t.createdAt), today)}`} />
@@ -186,7 +186,7 @@ function CalendarTab({ tasks }: { tasks: Task[] }) {
           היום
         </button>
       </div>
-      <section className="card">
+      <section className="card dlist">
         {dayTasks.map((t) => (
           <TaskRow key={t.id} task={t} projects={projects} />
         ))}
@@ -240,7 +240,7 @@ function ByProjectTab({ tasks }: { tasks: Task[] }) {
             </button>
             <span className="num">{g.list.length}</span>
           </div>
-          <section className="card">
+          <section className="card dlist">
             {g.list.sort(compareForDay).map((t) => (
               <TaskRow key={t.id} task={t} today={today} />
             ))}
@@ -308,7 +308,7 @@ function WaitingTab({ tasks }: { tasks: Task[] }) {
             </button>
             <span className="num">{l.length}</span>
           </div>
-          <section className="card">
+          <section className="card dlist">
             {l.map((t) => (
               <TaskRow
                 key={t.id}
@@ -347,7 +347,7 @@ function SomedayTab({ tasks }: { tasks: Task[] }) {
       <p className="muted small" style={{ margin: '0 4px 10px' }}>
         רעיונות בלי התחייבות. הם לא מופיעים בשום רשימה אחרת עד ש"מפעילים" אותם.
       </p>
-      <section className="card">
+      <section className="card dlist">
         {list.map((t) => (
           <TaskRow
             key={t.id}
@@ -371,7 +371,7 @@ function DoneTab({ tasks }: { tasks: Task[] }) {
   const list = tasks.filter((t) => t.status === 'done').sort((a, b) => (b.completedAt ?? '').localeCompare(a.completedAt ?? ''));
   if (!list.length) return <Empty icon="flag">עוד לא סיימת משימות. זה יגיע.</Empty>;
   return (
-    <section className="card">
+    <section className="card dlist">
       {list.slice(0, limit).map((t) => (
         <TaskRow key={t.id} task={t} projects={projects} meta={t.completedAt ? `בוצעה ${formatShort(localDate(t.completedAt))}` : undefined} />
       ))}
