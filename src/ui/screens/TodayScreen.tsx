@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { activeChallenge, challengeDay, dayStats, ruleValue, rulesCardVisible, streak } from '../../domain/challenge';
-import { dayOfWeek, diffDays, formatLong, formatRelative, HE_DAYS, hhmmOf, weekNumber, weeksInYear, localDate } from '../../domain/dates';
+import { addDays, dayOfWeek, diffDays, formatLong, formatRelative, HE_DAYS, hhmmOf, weekNumber, weeksInYear, localDate } from '../../domain/dates';
 import { focusGoal, goalProgress, projectCompletion } from '../../domain/goals';
 import { describeRule } from '../../domain/recurring';
 import { routineCard, routineDayStats, itemsOf, ROUTINE_LABEL } from '../../domain/routine';
@@ -9,7 +9,7 @@ import { sprintNeedingReview, sprintStatus } from '../../domain/sprints';
 import { completion, isInbox } from '../../domain/tasks';
 import { yearBanner } from '../../domain/yearReview';
 import { markYearSeen } from '../../services/yearReview';
-import { DAY_END, DAY_START, dayBlocks, dayCloseCard, formatDuration, freeMinutes, greeting, moreToday, nextTask, nowCard, overdue, regulars, ring, ringsAverage, top3 } from '../../domain/today';
+import { dayBlocks, dayBounds, dayCloseCard, dayFrame, formatDuration, freeMinutes, stripHours, greeting, moreToday, nextTask, nowCard, overdue, regulars, ring, ringsAverage, top3 } from '../../domain/today';
 import { updateSettings } from '../../services/entity';
 import { cycleRule, toggleRoutineItem } from '../../services/habits';
 import { Q } from '../../services/queries';
@@ -53,8 +53,12 @@ export function TodayScreen() {
   const more = moreToday(tasks, today);
   const goal = focusGoal(goals);
   const hasItems = { morning: itemsOf(routineItems, 'morning').length > 0, evening: itemsOf(routineItems, 'evening').length > 0 };
-  const blocks = dayBlocks(tasks, today, settings.routines, hasItems);
-  const free = freeMinutes(blocks, nowMin);
+  // R-SLP: the strip runs from wake to bedtime; after midnight it is still the previous night.
+  const frame = dayFrame(settings.routines, today, nowMin);
+  const blocks = dayBlocks(tasks, frame.date, settings.routines, hasItems);
+  const free = freeMinutes(blocks, frame.now, frame);
+  const span = frame.bed - frame.wake;
+  const pos = (min: number) => `${((Math.min(Math.max(min, frame.wake), frame.bed) - frame.wake) / span) * 100}%`;
   const curSprint = sprints.find((s) => sprintStatus(s, today) === 'current');
   const sprintC = completion(tasks.filter((t) => curSprint && t.sprintId === curSprint.id));
   const rStats = routineDayStats(routineItems, routineLogs, today);
@@ -437,19 +441,23 @@ export function TodayScreen() {
           <small>{blocks.filter((b) => b.kind !== 'routine').length} מתוזמנים</small>
         </h4>
         <div className="strip">
-          {blocks.map((b, i) => (
-            <b
-              key={i}
-              className={`${b.kind} ${b.open ? '' : 'closed'}`}
-              title={`${b.title} ${hhmmOf(b.start)}–${hhmmOf(b.end)}`}
-              style={{ right: `${((Math.max(b.start, DAY_START) - DAY_START) / (DAY_END - DAY_START)) * 100}%`, width: `${((Math.min(b.end, DAY_END) - Math.max(b.start, DAY_START)) / (DAY_END - DAY_START)) * 100}%` }}
-            />
-          ))}
-          {nowMin >= DAY_START && <span className="now" style={{ right: `${((nowMin - DAY_START) / (DAY_END - DAY_START)) * 100}%` }} />}
+          {blocks
+            .filter((b) => b.end > frame.wake && b.start < frame.bed)
+            .map((b, i) => (
+              <b
+                key={i}
+                className={`${b.kind} ${b.open ? '' : 'closed'}`}
+                title={`${b.title} ${hhmmOf(b.start)}–${hhmmOf(b.end)}`}
+                style={{ right: pos(b.start), width: `calc(${pos(b.end)} - ${pos(b.start)})` }}
+              />
+            ))}
+          {!frame.asleep && <span className="now" style={{ right: pos(frame.now) }} />}
         </div>
         <div className="hours">
-          {[24, 21, 18, 15, 12, 9, 6].map((h) => (
-            <span key={h}>{h}</span>
+          {stripHours(frame).map((h) => (
+            <span key={h.min} style={{ right: pos(h.min) }}>
+              {h.label}
+            </span>
           ))}
         </div>
         <div className="lg">
@@ -465,9 +473,15 @@ export function TodayScreen() {
             משימות
           </span>
         </div>
-        <div className="free">
-          <Icon name="clock" size="sm" /> נשארו היום <b className="num">{formatDuration(free)}</b> פנויות
-        </div>
+        {frame.asleep ? (
+          <div className="free">
+            <Icon name="moon" size="sm" /> זמן לישון · <span className="muted">{frame.date === today ? 'מחר ' : ''}מ-<span className="ltr num">{hhmmOf(dayBounds(settings.routines, frame.date === today ? addDays(today, 1) : today).wake)}</span></span>
+          </div>
+        ) : (
+          <div className="free">
+            <Icon name="clock" size="sm" /> נשארו היום <b className="num">{formatDuration(free)}</b> פנויות
+          </div>
+        )}
       </section>
 
       {/* 12. Rings (R-TOD-9) */}

@@ -1,4 +1,4 @@
-import { localDate, minutesOf } from './dates';
+import { addDays, localDate, minutesOf } from './dates';
 import { routineWindows } from './routine';
 import type { RoutineSettings, Task } from './schemas';
 import { compareForDay, isOpen } from './tasks';
@@ -6,8 +6,39 @@ import { compareForDay, isOpen } from './tasks';
 /** Selectors for the Today screen (SPEC 4). All pure; the screen only renders what they return. */
 
 export const DEFAULT_DURATION = 30;
-export const DAY_START = 6 * 60;
-export const DAY_END = 24 * 60;
+const DAY = 24 * 60;
+
+/** R-SLP-1/2: wake and bedtime of a date, in minutes from that date's midnight (bed may pass 24:00). */
+export interface DayBounds {
+  wake: number;
+  bed: number;
+}
+
+export function dayBounds(r: RoutineSettings, date: string): DayBounds {
+  const wins = routineWindows(r, date);
+  const wake = minutesOf(wins[0]!.start);
+  let bed = minutesOf(wins[1]!.end);
+  if (bed <= wake) bed += DAY;
+  return { wake, bed };
+}
+
+/** The card's day: `date` and `now` (minutes from that date's midnight, may pass 24:00). */
+export interface DayFrame extends DayBounds {
+  date: string;
+  now: number;
+  /** R-SLP-4: between bedtime and the next wake. */
+  asleep: boolean;
+}
+
+/** R-SLP-3: until wake time, the hours after midnight belong to the previous night. */
+export function dayFrame(r: RoutineSettings, today: string, nowMin: number): DayFrame {
+  const own = dayBounds(r, today);
+  if (nowMin >= own.wake) return { date: today, ...own, now: nowMin, asleep: nowMin >= own.bed };
+  const date = addDays(today, -1);
+  const b = dayBounds(r, date);
+  const now = nowMin + DAY;
+  return { date, ...b, now, asleep: now >= b.bed };
+}
 
 /** R-TOD-1 */
 export function greeting(nowMin: number): string {
@@ -102,12 +133,15 @@ export interface DayBlock {
   open: boolean;
 }
 
-/** R-TOD-8: blocks on the 06:00–24:00 strip. */
+/** R-TOD-8: blocks on the wake–bedtime strip. */
 export function dayBlocks(tasks: Task[], today: string, routines: RoutineSettings, hasRoutineItems: { morning: boolean; evening: boolean }): DayBlock[] {
   const blocks: DayBlock[] = [];
   for (const w of routineWindows(routines, today)) {
     if (!hasRoutineItems[w.kind]) continue;
-    blocks.push({ start: minutesOf(w.start), end: minutesOf(w.end), kind: 'routine', title: w.kind === 'morning' ? 'שגרת בוקר' : 'שגרת ערב', open: true });
+    const start = minutesOf(w.start);
+    let end = minutesOf(w.end);
+    if (end <= start) end += DAY; // R-SLP-2: the evening may end after midnight
+    blocks.push({ start, end, kind: 'routine', title: w.kind === 'morning' ? 'שגרת בוקר' : 'שגרת ערב', open: true });
   }
   for (const t of tasks) {
     if (!onDay(t, today) || !t.startTime) continue;
@@ -117,13 +151,19 @@ export function dayBlocks(tasks: Task[], today: string, routines: RoutineSetting
   return blocks;
 }
 
-/** R-TOD-8: free minutes from now until midnight, minus the remaining busy parts (a union), rounded to 30. */
-export function freeMinutes(blocks: DayBlock[], nowMin: number): number {
-  const from = Math.max(nowMin, DAY_START);
-  if (from >= DAY_END) return 0;
+/** R-TOD-8: free minutes from now until bedtime, minus the remaining busy parts (a union), rounded to 30. */
+export function freeMinutes(blocks: DayBlock[], nowMin: number, bounds: DayBounds): number {
+  const from = Math.max(nowMin, bounds.wake);
+  const to = bounds.bed;
+  if (from >= to) return 0;
+  return Math.round(freeBetween(blocks.filter((b) => b.open), from, to) / 30) * 30;
+}
+
+/** Minutes in [from, to) not covered by any block (the union of blocks, no double counting). */
+export function freeBetween(blocks: { start: number; end: number }[], from: number, to: number): number {
+  if (from >= to) return 0;
   const busy = blocks
-    .filter((b) => b.open)
-    .map((b) => [Math.max(b.start, from), Math.min(b.end, DAY_END)] as const)
+    .map((b) => [Math.max(b.start, from), Math.min(b.end, to)] as const)
     .filter(([s, e]) => e > s)
     .sort((a, b) => a[0] - b[0]);
   let used = 0;
@@ -137,7 +177,21 @@ export function freeMinutes(blocks: DayBlock[], nowMin: number): number {
     } else curE = Math.max(curE, e);
   }
   if (curE > curS) used += curE - curS;
-  return Math.round((DAY_END - from - used) / 30) * 30;
+  return to - from - used;
+}
+
+/** R-TOD-8: hour labels under the strip: wake, every third whole hour, bedtime (no crowding at the edges). */
+export function stripHours(b: DayBounds): { min: number; label: string }[] {
+  const label = (m: number) => {
+    const h = Math.floor(m / 60) % 24;
+    return m % 60 ? `${h}:${String(m % 60).padStart(2, '0')}` : String(h === 0 ? 24 : h);
+  };
+  const out = [{ min: b.wake, label: label(b.wake) }];
+  for (let m = Math.ceil(b.wake / 180) * 180; m < b.bed; m += 180) {
+    if (m - b.wake >= 120 && b.bed - m >= 120) out.push({ min: m, label: label(m) });
+  }
+  out.push({ min: b.bed, label: label(b.bed) });
+  return out;
 }
 
 export interface Ring {

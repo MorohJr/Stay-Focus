@@ -7,7 +7,7 @@ import { birthdayInfo, describeBirthday } from './people';
 import { activeRoutineWindow, routineCard, routineDayStats } from './routine';
 import { challengeDay, dayMark, nextRuleValue, rulesCardVisible, streak } from './challenge';
 import { focusGoal, goalProgress } from './goals';
-import { dayBlocks, dayCloseCard, freeMinutes, greeting, moreToday, nextTask, nowCard, overdue, regulars, ringsAverage, ring, top3 } from './today';
+import { dayBlocks, dayBounds, dayCloseCard, dayFrame, freeMinutes, stripHours, greeting, moreToday, nextTask, nowCard, overdue, regulars, ringsAverage, ring, top3 } from './today';
 import { DEFAULT_ROUTINES, type Challenge, type ChallengeLog, type Goal, type Project, type Recurring, type RoutineItem, type RoutineLog, type Sprint, type Task } from './schemas';
 
 const T0 = '2026-09-01T00:00:00.000Z';
@@ -285,13 +285,34 @@ describe('today', () => {
     const yesterday = task({ id: 'y', dueDate: '2026-09-29' });
     expect(overdue([parent, child, recLate, doneLate, yesterday, plain], TODAY).map((t) => t.id)).toEqual(['p', 'y']);
   });
-  it('R-TOD-8: free time subtracts the union of remaining busy blocks', () => {
+  it('R-TOD-8: free time subtracts the union of remaining busy blocks, until bedtime', () => {
     const blocks = dayBlocks(all, TODAY, DEFAULT_ROUTINES, { morning: true, evening: true });
+    const b = dayBounds(DEFAULT_ROUTINES, TODAY); // 06:00–22:30
     // at 08:30: morning 08:30–09:30 (60), plan 08:30–09:00 overlaps, web 10:00–12:00 (120), evening 18:00–22:30 (270)
-    // 15.5h left − 7.5h busy = 8h
-    expect(freeMinutes(blocks, m('08:30'))).toBe(480);
-    expect(freeMinutes(blocks, m('23:59'))).toBe(0);
-    expect(freeMinutes([], m('03:00'))).toBe(18 * 60);
+    // 14h left until 22:30 − 7.5h busy = 6.5h
+    expect(freeMinutes(blocks, m('08:30'), b)).toBe(390);
+    expect(freeMinutes(blocks, m('22:40'), b)).toBe(0);
+    expect(freeMinutes([], m('03:00'), b)).toBe(16.5 * 60);
+  });
+  it('R-SLP-1/2: wake = morning start, bed = evening end, also after midnight', () => {
+    expect(dayBounds(DEFAULT_ROUTINES, TODAY)).toEqual({ wake: m('06:00'), bed: m('22:30') });
+    const late = { ...DEFAULT_ROUTINES, morningStart: '07:00', eveningEnd: '00:30' };
+    expect(dayBounds(late, TODAY)).toEqual({ wake: m('07:00'), bed: 24 * 60 + 30 });
+    const blocks = dayBlocks([], TODAY, late, { morning: false, evening: true });
+    expect(blocks[0]).toMatchObject({ start: m('18:00'), end: 24 * 60 + 30 });
+  });
+  it('R-SLP-3/4: after midnight is the previous night; between bed and wake it is time to sleep', () => {
+    expect(dayFrame(DEFAULT_ROUTINES, TODAY, m('12:00'))).toMatchObject({ date: TODAY, now: m('12:00'), asleep: false });
+    expect(dayFrame(DEFAULT_ROUTINES, TODAY, m('23:00'))).toMatchObject({ date: TODAY, asleep: true });
+    expect(dayFrame(DEFAULT_ROUTINES, TODAY, m('03:00'))).toMatchObject({ date: '2026-09-29', now: 27 * 60, asleep: true });
+    const late = { ...DEFAULT_ROUTINES, eveningEnd: '01:00' };
+    expect(dayFrame(late, TODAY, m('00:30'))).toMatchObject({ date: '2026-09-29', now: 24 * 60 + 30, asleep: false });
+    const f = dayFrame(late, TODAY, m('00:30'));
+    expect(freeMinutes([], f.now, f)).toBe(30);
+  });
+  it('R-TOD-8: strip hour labels', () => {
+    expect(stripHours({ wake: m('06:00'), bed: m('22:30') }).map((h) => h.label)).toEqual(['6', '9', '12', '15', '18', '22:30']);
+    expect(stripHours({ wake: m('07:00'), bed: 24 * 60 + 30 }).map((h) => h.label)).toEqual(['7', '9', '12', '15', '18', '21', '0:30']);
   });
   it('R-TOD-9: rings average only rings with data', () => {
     expect(ring(0, 0).pct).toBeNull();
