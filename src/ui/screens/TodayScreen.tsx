@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { activeChallenge, challengeDay, dayStats, ruleValue, rulesCardVisible, streak } from '../../domain/challenge';
 import { addDays, dayOfWeek, diffDays, formatLong, formatRelative, HE_DAYS, hhmmOf, weekNumber, weeksInYear, localDate } from '../../domain/dates';
 import { focusGoal, goalProgress, projectCompletion } from '../../domain/goals';
+import { eventsOn, occurrenceTime } from '../../domain/events';
 import { describeRule } from '../../domain/recurring';
 import { routineCard, routineDayStats, itemsOf, ROUTINE_LABEL } from '../../domain/routine';
 import type { Project, Task } from '../../domain/schemas';
@@ -35,6 +36,8 @@ export function TodayScreen() {
   const challengeLogs = useLive(Q.allChallengeLogs) ?? [];
   const recurring = useLive(Q.recurring) ?? [];
   const yearReviews = useLive(Q.yearReviews) ?? [];
+  const events = useLive(Q.events) ?? [];
+  const people = useLive(Q.people) ?? [];
   const [postpone, setPostpone] = useState<Task | undefined>();
   const [picking, setPicking] = useState(false);
 
@@ -55,7 +58,8 @@ export function TodayScreen() {
   const hasItems = { morning: itemsOf(routineItems, 'morning').length > 0, evening: itemsOf(routineItems, 'evening').length > 0 };
   // R-SLP: the strip runs from wake to bedtime; after midnight it is still the previous night.
   const frame = dayFrame(settings.routines, today, nowMin);
-  const blocks = dayBlocks(tasks, frame.date, settings.routines, hasItems);
+  const blocks = dayBlocks(tasks, frame.date, settings.routines, hasItems, eventsOn(events, frame.date));
+  const todayEvents = eventsOn(events, today);
   const free = freeMinutes(blocks, frame.now, frame);
   const span = frame.bed - frame.wake;
   const pos = (min: number) => `${((Math.min(Math.max(min, frame.wake), frame.bed) - frame.wake) / span) * 100}%`;
@@ -197,6 +201,37 @@ export function TodayScreen() {
           </span>
           <span className="when ltr num">{next.startTime}</span>
         </button>
+      )}
+
+      {/* 3a. Today's events (R-TOD-12), only when there are some */}
+      {todayEvents.length > 0 && (
+        <section className="card">
+          <h4>
+            <span className="t">
+              <Icon name="cal" size="sm" /> היום ביומן
+            </span>
+            <button type="button" className="minibtn" onClick={() => go('/week')}>
+              שבוע
+            </button>
+          </h4>
+          {todayEvents.map((o) => {
+            const who = people.find((p) => p.id === o.event.personId);
+            const past = o.end !== undefined && o.end <= nowMin;
+            return (
+              <button key={o.event.id} type="button" className={`evrow ${past ? 'past' : ''}`} onClick={() => go(`/event/${o.event.id}`)}>
+                <span className="when ltr num">{occurrenceTime(o)}</span>
+                <span className="grow">
+                  <b className="gt">{o.event.title}</b>
+                  {(o.event.location || who) && (
+                    <small>
+                      {[o.event.location, who && `${who.emoji} ${who.name}`].filter(Boolean).join(' · ')}
+                    </small>
+                  )}
+                </span>
+              </button>
+            );
+          })}
+        </section>
       )}
 
       {/* 4. Routine (R-RTN-1..5) */}
@@ -438,7 +473,7 @@ export function TodayScreen() {
           <span className="t">
             <Icon name="clock" size="sm" /> היום שלך
           </span>
-          <small>{blocks.filter((b) => b.kind !== 'routine').length} מתוזמנים</small>
+          <small>{blocks.filter((b) => b.kind === 'task' || b.kind === 'top3').length} מתוזמנים</small>
         </h4>
         <div className="strip">
           {blocks
@@ -472,6 +507,12 @@ export function TodayScreen() {
             <i style={{ background: 'var(--ink)' }} />
             משימות
           </span>
+          {blocks.some((b) => b.kind === 'event') && (
+            <span>
+              <i style={{ boxShadow: 'inset 0 0 0 2px var(--blue)' }} />
+              יומן
+            </span>
+          )}
         </div>
         {frame.asleep ? (
           <div className="free">

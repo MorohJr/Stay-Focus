@@ -1,8 +1,9 @@
 import { useState, type ReactNode } from 'react';
-import { addDays, formatRelative, formatShort } from '../../domain/dates';
+import { addDays, formatRelative, formatShort, hhmmOf, minutesOf } from '../../domain/dates';
 import type { Project, Sprint, Task } from '../../domain/schemas';
 import { sprintStatus, SPRINT_STATUS_LABEL } from '../../domain/sprints';
 import { isActiveOpen, isOpen, isStuck } from '../../domain/tasks';
+import { saveEvent } from '../../services/events';
 import { createNote } from '../../services/planning';
 import { Q } from '../../services/queries';
 import { createTask, postponeTask, toggleDone, type Postpone } from '../../services/tasks';
@@ -274,16 +275,22 @@ export function TaskPickerSheet({ open, onClose, onPick, exclude, title }: { ope
 
 export function QuickCapture({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [text, setText] = useState('');
-  const [kind, setKind] = useState<'task' | 'note'>('task');
+  const [kind, setKind] = useState<'task' | 'note' | 'event'>('task');
   const [forToday, setForToday] = useState(false);
   const [forSprint, setForSprint] = useState(false);
   const { today } = useClock();
+  const [evDate, setEvDate] = useState('');
+  const [evTime, setEvTime] = useState('');
   const sprints = useLive(Q.sprints) ?? [];
   const toast = useToast();
   const save = async () => {
     const title = text.trim();
     if (!title) return;
-    if (kind === 'note') {
+    if (kind === 'event') {
+      // 5.1 (1.16): an hour from the chosen time, or all day
+      const e = await saveEvent({ title, date: evDate || today, allDay: !evTime, startTime: evTime || undefined, endTime: evTime ? hhmmOf(Math.min(minutesOf(evTime) + 60, 23 * 60 + 59)) : undefined });
+      toast({ message: 'האירוע נשמר', action: { label: 'פתח', run: () => go(`/event/${e.id}`) } });
+    } else if (kind === 'note') {
       const n = await createNote({ title });
       toast({ message: 'הפתק נשמר', action: { label: 'פתח', run: () => go(`/note/${n.id}`) } });
     } else {
@@ -295,7 +302,7 @@ export function QuickCapture({ open, onClose }: { open: boolean; onClose: () => 
   };
   return (
     <Sheet open={open} onClose={onClose} title="רישום מהיר">
-      <Seg value={kind} onChange={setKind} items={[{ id: 'task', label: 'משימה' }, { id: 'note', label: 'פתק' }]} />
+      <Seg value={kind} onChange={setKind} items={[{ id: 'task', label: 'משימה' }, { id: 'note', label: 'פתק' }, { id: 'event', label: 'אירוע' }]} />
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -303,7 +310,7 @@ export function QuickCapture({ open, onClose }: { open: boolean; onClose: () => 
         }}
         style={{ marginTop: 12 }}
       >
-        <input className="input" autoFocus placeholder={kind === 'task' ? 'מה צריך לעשות?' : 'מה רצית לזכור?'} value={text} onChange={(e) => setText(e.target.value)} enterKeyHint="done" />
+        <input className="input" autoFocus placeholder={kind === 'task' ? 'מה צריך לעשות?' : kind === 'event' ? 'איזו פגישה או אירוע?' : 'מה רצית לזכור?'} value={text} onChange={(e) => setText(e.target.value)} enterKeyHint="done" />
         {kind === 'task' && (
           <div className="chips" style={{ marginTop: 10 }}>
             <button type="button" className={`chip ${forToday ? 'on' : 'out'}`} onClick={() => setForToday(!forToday)}>
@@ -314,8 +321,14 @@ export function QuickCapture({ open, onClose }: { open: boolean; onClose: () => 
             </button>
           </div>
         )}
+        {kind === 'event' && (
+          <div className="chips" style={{ marginTop: 10 }}>
+            <input type="date" aria-label="תאריך" className="mini-input" value={evDate || today} onChange={(e) => setEvDate(e.target.value)} />
+            <input type="time" aria-label="שעה" className="mini-input ltr" value={evTime} onChange={(e) => setEvTime(e.target.value)} />
+          </div>
+        )}
         <p className="muted small" style={{ margin: '10px 2px' }}>
-          {kind === 'task' ? 'בלי תאריך, פרויקט או ספרינט, המשימה נכנסת לדואר הנכנס לסידור אחר כך.' : 'הפתק נשמר ברשימת הפתקים.'}
+          {kind === 'event' ? 'בלי שעה האירוע הוא לכל היום. אפשר להשלים מיקום ופרטים ב"פתח".' : kind === 'task' ? 'בלי תאריך, פרויקט או ספרינט, המשימה נכנסת לדואר הנכנס לסידור אחר כך.' : 'הפתק נשמר ברשימת הפתקים.'}
         </p>
         <Btn type="submit" className="btn primary block" why={!text.trim() && 'צריך לכתוב משהו קודם'}>
           שמור

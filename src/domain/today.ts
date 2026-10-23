@@ -128,13 +128,13 @@ export function nextTask(tasks: Task[], today: string, nowMin: number): Task | u
 export interface DayBlock {
   start: number;
   end: number;
-  kind: 'routine' | 'task' | 'top3';
+  kind: 'routine' | 'task' | 'top3' | 'event';
   title: string;
   open: boolean;
 }
 
 /** R-TOD-8: blocks on the wake–bedtime strip. */
-export function dayBlocks(tasks: Task[], today: string, routines: RoutineSettings, hasRoutineItems: { morning: boolean; evening: boolean }): DayBlock[] {
+export function dayBlocks(tasks: Task[], today: string, routines: RoutineSettings, hasRoutineItems: { morning: boolean; evening: boolean }, events: { start?: number; end?: number; event: { title: string } }[] = []): DayBlock[] {
   const blocks: DayBlock[] = [];
   for (const w of routineWindows(routines, today)) {
     if (!hasRoutineItems[w.kind]) continue;
@@ -148,6 +148,8 @@ export function dayBlocks(tasks: Task[], today: string, routines: RoutineSetting
     const span = taskSpan(t)!;
     blocks.push({ ...span, kind: t.top3Date === today ? 'top3' : 'task', title: t.title, open: isOpen(t) });
   }
+  // 1.16: timed events (R-EVT-1) are busy too
+  for (const o of events) if (o.start !== undefined) blocks.push({ start: o.start, end: o.end!, kind: 'event', title: o.event.title, open: true });
   return blocks;
 }
 

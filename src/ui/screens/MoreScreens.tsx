@@ -53,6 +53,7 @@ export function MoreScreen() {
         {row('/projects/goals', 'mountain', 'מטרות')}
         {row('/cleanup', 'archive', 'ניקוי משימות ישנות')}
         {row('/areas', 'tag', 'תחומים')}
+        {row('/work-hours', 'clock', 'שעות עבודה')}
       </section>
       <section className="card">
         {row('/backup', 'download', 'גיבוי וסנכרון')}
@@ -70,8 +71,8 @@ export function MoreScreen() {
 // Search (SPEC 5.8)
 // ---------------------------------------------------------------------------
 
-const HIT_LABEL: Record<SearchHit['kind'], string> = { task: 'משימות', project: 'פרויקטים', note: 'פתקים', goal: 'מטרות', person: 'אנשים' };
-const HIT_PATH: Record<SearchHit['kind'], string> = { task: '/task/', project: '/project/', note: '/note/', goal: '/goal/', person: '/person/' };
+const HIT_LABEL: Record<SearchHit['kind'], string> = { task: 'משימות', project: 'פרויקטים', note: 'פתקים', goal: 'מטרות', person: 'אנשים', event: 'אירועים' };
+const HIT_PATH: Record<SearchHit['kind'], string> = { task: '/task/', project: '/project/', note: '/note/', goal: '/goal/', person: '/person/', event: '/event/' };
 
 export function SearchScreen() {
   const [q, setQ] = useState('');
@@ -468,7 +469,7 @@ export function AreasScreen() {
     <div className="page sub">
       <TopBar title="תחומים" backTo="/more" />
       <p className="muted small" style={{ margin: '0 4px 10px' }}>
-        תחומים מקבצים פרויקטים ומטרות (אישי, עבודה, משפחה…).
+        תחומים מקבצים פרויקטים ומטרות (אישי, עבודה, משפחה…). "עבודה" מסמן שהמשימות של הפרויקטים בתחום נספרות כעבודה במסך "שבוע".
       </p>
       <section className="card">
         {areas.map((a) => (
@@ -483,6 +484,10 @@ export function AreasScreen() {
               </select>
               <DraftInput className="mini-input grow" value={a.name} onSave={(v) => v.trim() && void saveArea({ ...a, name: v.trim() })} ariaLabel="שם התחום" />
             </span>
+            {/* R-ARE-1 */}
+            <button type="button" className={`chip ${a.work ? 'on' : 'out'}`} aria-pressed={a.work} onClick={() => void saveArea({ ...a, work: !a.work })}>
+              עבודה
+            </button>
             <button type="button" className="muted" aria-label="מחק" onClick={() => confirmAction(`למחוק את "${a.name}"? הפרויקטים יישארו בלי תחום.`) && void deleteArea(a.id)}>
               <Icon name="trash" size="sm" />
             </button>

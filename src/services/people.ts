@@ -18,9 +18,10 @@ export async function updatePerson(id: string, patch: Partial<Person>): Promise<
 
 /** Removes the person and their talking points; tasks stay but stop waiting. */
 export async function deletePerson(id: string): Promise<void> {
-  await db.transaction('rw', db.people, db.agenda, db.tasks, async () => {
+  await db.transaction('rw', [db.people, db.agenda, db.tasks, db.events], async () => {
     await db.agenda.where('personId').equals(id).delete();
     await db.tasks.where('waitingPersonId').equals(id).modify({ waitingPersonId: undefined });
+    await db.events.filter((e) => e.personId === id).modify({ personId: undefined }); // R-EVT-3
     await db.people.delete(id);
   });
 }

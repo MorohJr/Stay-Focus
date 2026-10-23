@@ -61,7 +61,7 @@ describe('year review (R-YIR)', () => {
   });
 
   it('R-YIR-2 step 8: by area of the project, "no area" last', () => {
-    const areas: Area[] = [{ id: 'w', name: 'עבודה', color: '#111', order: 0, createdAt: T0, updatedAt: T0 }];
+    const areas: Area[] = [{ id: 'w', name: 'עבודה', color: '#111', order: 0, work: false, createdAt: T0, updatedAt: T0 }];
     const ps = [project({ id: 'p1', areaId: 'w' })];
     const r = areaBreakdown([doneOn('2026-01-01'), doneOn('2026-01-02', { projectIds: ['p1'] }), doneOn('2026-01-03', { projectIds: ['p1'] })], ps, areas);
     expect(r.map((x) => [x.name, x.count, x.pct])).toEqual([['עבודה', 2, 67], ['בלי תחום', 1, 33]]);
@@ -69,8 +69,8 @@ describe('year review (R-YIR)', () => {
 
   it('R-YIR-5: per month by area, in the same order as the area breakdown', () => {
     const areas: Area[] = [
-      { id: 'w', name: 'עבודה', color: '#111', order: 0, createdAt: T0, updatedAt: T0 },
-      { id: 'h', name: 'בית', color: '#222', order: 1, createdAt: T0, updatedAt: T0 },
+      { id: 'w', name: 'עבודה', color: '#111', order: 0, work: false, createdAt: T0, updatedAt: T0 },
+      { id: 'h', name: 'בית', color: '#222', order: 1, work: false, createdAt: T0, updatedAt: T0 },
     ];
     const ps = [project({ id: 'p1', areaId: 'w' }), project({ id: 'p2', areaId: 'h' })];
     const done = [doneOn('2026-01-05', { projectIds: ['p1'] }), doneOn('2026-01-20', { projectIds: ['p1'] }), doneOn('2026-03-02', { projectIds: ['p2'] }), doneOn('2026-03-03')];

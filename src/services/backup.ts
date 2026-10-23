@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CURRENT_SCHEMA_VERSION, TABLE_NAMES, USER_DATA_TABLES, db, type TableName } from '../db/db';
+import { CURRENT_SCHEMA_VERSION, TABLE_NAMES, USER_DATA_TABLES, db, isWorkAreaByDefault, type TableName } from '../db/db';
 import * as S from '../domain/schemas';
 import { SETTINGS_ID } from '../domain/schemas';
 import { nowIso } from './entity';
@@ -32,6 +32,7 @@ const ROW_SCHEMAS: Record<TableName, z.ZodType> = {
   agenda: S.AgendaItem,
   milestones: S.Milestone,
   yearReviews: S.YearReview,
+  events: S.CalEvent,
 };
 
 type BackupData = Partial<Record<string, unknown[]>>;
@@ -118,6 +119,15 @@ export const MIGRATIONS: Record<number, (data: BackupData) => BackupData> = {
     goals: (data.goals ?? []).map((g) => {
       const x = g as { status?: string; achievedAt?: string; updatedAt?: string };
       return x.status === 'achieved' && !x.achievedAt ? { ...x, achievedAt: x.updatedAt } : x;
+    }),
+  }),
+  // v6 → v7 (SPEC 1.16): events are new; the default work area is marked work (R-ARE-1). settings.work stays empty = defaults.
+  6: (data) => ({
+    ...data,
+    events: data.events ?? [],
+    areas: (data.areas ?? []).map((a) => {
+      const x = a as { id: string; name: string; work?: boolean };
+      return { ...x, work: x.work ?? isWorkAreaByDefault(x) };
     }),
   }),
 };

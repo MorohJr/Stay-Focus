@@ -23,10 +23,12 @@ import { ReviewScreen, SprintScreen, SprintViewScreen } from './screens/SprintSc
 import { NewTaskScreen, TaskScreen } from './screens/TaskScreen';
 import { TasksScreen } from './screens/TasksScreen';
 import { TodayScreen } from './screens/TodayScreen';
+import { EventScreen, WeekScreen, WorkHoursScreen } from './screens/WeekScreens';
 import { SummariesScreen, YearScreen } from './screens/YearScreens';
 
 const TABS = [
   { id: '', label: 'היום', icon: 'today' },
+  { id: 'week', label: 'שבוע', icon: 'cal' },
   { id: 'tasks', label: 'משימות', icon: 'tasks' },
   { id: 'sprint', label: 'ספרינט', icon: 'sprint' },
   { id: 'projects', label: 'פרויקטים', icon: 'target' },
@@ -46,7 +48,7 @@ const RAIL = [
   { to: '/settings', label: 'הגדרות', icon: 'settings' },
 ] as const;
 /** Screens that show the bottom nav and the + button. */
-const MAIN = new Set(['', 'tasks', 'sprint', 'projects', 'more', 'notes', 'challenges', 'recurring', 'people', 'summaries']);
+const MAIN = new Set(['', 'week', 'tasks', 'sprint', 'projects', 'more', 'notes', 'challenges', 'recurring', 'people', 'summaries']);
 const OWNER: Record<string, string> = { notes: 'more', challenges: 'more', recurring: 'more', people: 'more', summaries: 'more' };
 
 function screenFor(r: string[]): ReactNode {
@@ -54,6 +56,12 @@ function screenFor(r: string[]): ReactNode {
   switch (a) {
     case '':
       return <TodayScreen />;
+    case 'week':
+      return <WeekScreen date={b} />;
+    case 'event':
+      return b === 'new' ? <EventScreen id="new" date={c} time={r[3]} /> : <EventScreen id={b!} />;
+    case 'work-hours':
+      return <WorkHoursScreen />;
     case 'tasks':
       return <TasksScreen tab={b} />;
     case 'task':
@@ -170,7 +178,7 @@ export function App() {
         <div className={top === '' ? 'today-wrap' : 'inner'}>{screenFor(route)}</div>
         {main && (
           <>
-            {/* R-NAV-1: two tabs, the + in the middle, two tabs */}
+            {/* R-NAV-1: two tabs, the + in the middle, three tabs */}
             <nav className="nav" aria-label="ניווט ראשי">
               {TABS.map((t, i) => [
                 i === 2 && (

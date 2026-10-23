@@ -12,7 +12,7 @@ export function defaultAreas(now: string): Area[] {
     ['area-work', 'עבודה', '#3346c4'],
     ['area-family', 'משפחה', '#ea580c'],
     ['area-study', 'לימודים', '#7c3aed'],
-  ].map(([id, name, color], i) => ({ id: id!, name: name!, color: color!, order: i, createdAt: now, updatedAt: now }));
+  ].map(([id, name, color], i) => ({ id: id!, name: name!, color: color!, order: i, work: id === 'area-work', createdAt: now, updatedAt: now }));
 }
 
 /** R-NOT-2 + a project template (the Notion "New Project" page). */

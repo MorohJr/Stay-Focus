@@ -140,7 +140,8 @@ export const YearReview = z.object({
 });
 export type YearReview = z.infer<typeof YearReview>;
 
-export const Area = z.object({ ...base, name: z.string(), color: z.string(), order: z.number() });
+/** R-ARE-1: `work` marks a work area (1.16). */
+export const Area = z.object({ ...base, name: z.string(), color: z.string(), order: z.number(), work: z.boolean().default(false) });
 export type Area = z.infer<typeof Area>;
 
 export const RoutineKind = z.enum(['morning', 'evening']);
@@ -217,6 +218,39 @@ export const Template = z.object({
 });
 export type Template = z.infer<typeof Template>;
 
+/** 3.17 (1.16): a meeting or event. Never "done" (R-EVT-2). */
+export const EventRepeat = z.enum(['none', 'weekly', 'monthly', 'yearly']);
+export type EventRepeat = z.infer<typeof EventRepeat>;
+
+export const CalEvent = z.object({
+  ...base,
+  title: z.string(),
+  date: isoDate,
+  allDay: z.boolean().default(false),
+  startTime: hhmm.optional(),
+  endTime: hhmm.optional(),
+  location: z.string().default(''),
+  body: z.string().default(''),
+  projectId: z.string().optional(),
+  personId: z.string().optional(),
+  repeat: EventRepeat.default('none'),
+});
+export type CalEvent = z.infer<typeof CalEvent>;
+
+/** 3.18 (1.16): work hours per weekday (0 = Sunday; null = off) and per-date overrides. */
+export const WorkSpan = z.object({ start: hhmm, end: hhmm });
+export type WorkSpan = z.infer<typeof WorkSpan>;
+export const WorkOverride = z.object({ date: isoDate, off: z.boolean(), start: hhmm.optional(), end: hhmm.optional(), note: z.string().default('') });
+export type WorkOverride = z.infer<typeof WorkOverride>;
+export const WorkSettings = z.object({ days: z.array(WorkSpan.nullable()).length(7), overrides: z.array(WorkOverride).default([]) });
+export type WorkSettings = z.infer<typeof WorkSettings>;
+
+/** R-WRK-1 */
+export const DEFAULT_WORK: WorkSettings = {
+  days: [0, 1, 2, 3, 4, 5, 6].map((d) => (d <= 4 ? { start: '09:00', end: '18:00' } : null)),
+  overrides: [],
+};
+
 export const RoutineSettings = z.object({
   morningStart: hhmm,
   morningEnd: hhmm,
@@ -241,6 +275,8 @@ export const Settings = z.object({
   dayClosedOn: isoDate.optional(),
   /** When the first-run intro was finished or skipped (R-ONB-1). */
   onboardedAt: z.string().optional(),
+  /** 3.18: work hours; missing = DEFAULT_WORK. */
+  work: WorkSettings.optional(),
   updatedAt: z.string(),
 });
 export type Settings = z.infer<typeof Settings>;
