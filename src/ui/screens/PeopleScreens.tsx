@@ -12,6 +12,7 @@ import { DayMonthPicker, DraftInput, DraftTextarea } from '../components/edit';
 import { Icon } from '../components/Icon';
 import { projectName, TaskRow } from '../components/tasks';
 import { useClock, useLive } from '../hooks';
+import { LinkedEvents } from '../components/events';
 import { back, go } from '../router';
 
 export const PERSON_EMOJIS = ['🙂', '❤️', '👩', '👨', '👵', '👴', '👧', '👦', '🧑‍💼', '🤝', '⭐', '🐶'];
@@ -190,6 +191,8 @@ export function PersonScreen({ id }: { id: string }) {
           <input className="input" placeholder={`+ משהו שאתה מחכה ל${p.name}`} value={taskText} onChange={(e) => setTaskText(e.target.value)} />
         </form>
       </section>
+
+      <LinkedEvents personId={p.id} />
 
       <div className="section-title">יום הולדת</div>
       <BirthdayCard person={p} today={today} />

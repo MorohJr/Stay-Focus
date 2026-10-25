@@ -218,7 +218,7 @@ export function TodayScreen() {
             const who = people.find((p) => p.id === o.event.personId);
             const past = o.end !== undefined && o.end <= nowMin;
             return (
-              <button key={o.event.id} type="button" className={`evrow ${past ? 'past' : ''}`} onClick={() => go(`/event/${o.event.id}`)}>
+              <button key={o.event.id} type="button" className={`evrow ${past ? 'past' : ''}`} onClick={() => go(`/event/${o.event.id}/${today}`)}>
                 <span className="when ltr num">{occurrenceTime(o)}</span>
                 <span className="grow">
                   <b className="gt">{o.event.title}</b>

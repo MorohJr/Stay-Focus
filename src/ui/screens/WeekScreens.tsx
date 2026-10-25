@@ -1,14 +1,15 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { addDays, formatDMY, formatLong, formatShort, HE_DAYS, HE_DAYS_SHORT, hhmmOf, minutesOf } from '../../domain/dates';
-import { occurrenceTime, REPEAT_LABEL } from '../../domain/events';
+import { eventOccursOn, lastOccurrence, nextOccurrence, occurrenceTime, REPEAT_LABEL } from '../../domain/events';
 import { itemsOf } from '../../domain/routine';
 import { DEFAULT_WORK, type CalEvent, type EventRepeat, type Task, type WorkOverride, type WorkSettings } from '../../domain/schemas';
 import { findSprintFor, sprintName } from '../../domain/sprints';
 import { DEFAULT_DURATION } from '../../domain/today';
 import { dayPlan, isWorkTask, layoutLanes, snapMinutes, toSchedule, weekDays, workOverrideOf, type DayPlan, type PlanInput } from '../../domain/week';
-import { deleteEvent, restoreEvent, saveEvent, saveWork, scheduleTask, unschedule } from '../../services/events';
+import { deleteEvent, detachOccurrence, meetingNoteFor, restoreEvent, saveEvent, saveWork, scheduleTask, skipOccurrence, unschedule } from '../../services/events';
+import { noteTitle } from '../../services/planning';
 import { Q } from '../../services/queries';
-import { Btn, Empty, Seg, Switch, TopBar, useToast } from '../components/common';
+import { Btn, Empty, Seg, Sheet, Switch, TopBar, useToast } from '../components/common';
 import { Icon } from '../components/Icon';
 import { ProjectPicker } from '../components/tasks';
 import { reducedMotion } from '../design';
@@ -291,7 +292,8 @@ export function WeekScreen({ date }: { date?: string }) {
           {!list.length && <p className="muted small" style={{ margin: 0 }}>{sprint ? 'כל המשימות של הספרינט משובצות או סגורות.' : 'אין ספרינט לשבוע הזה.'}</p>}
           <div className="wk-chips">
             {list.map((t) => {
-              const work = isWorkTask(t, projects, areas);
+              const parent = t.parentId ? tasks.find((x) => x.id === t.parentId) : undefined;
+              const work = isWorkTask(parent && !t.projectIds.length ? parent : t, projects, areas);
               return (
                 <button
                   key={t.id}
@@ -302,6 +304,7 @@ export function WeekScreen({ date }: { date?: string }) {
                   aria-pressed={selected === t.id}
                 >
                   <span className="gt">{t.title}</span>
+                  {parent && <small className="gt">↳ {parent.title}</small>}
                   <small>
                     <i className={work ? 'w' : 'p'} />
                     {work ? 'עבודה' : 'אישי'} · {short(t.durationMin ?? DEFAULT_DURATION)}
@@ -401,7 +404,7 @@ function DayHead({ plan: p, today, wide, work }: { plan: DayPlan; today: string;
         </small>
       )}
       {p.allDay.map((o2) => (
-        <button key={o2.event.id} type="button" className="wk-allday" onClick={() => go(`/event/${o2.event.id}`)}>
+        <button key={o2.event.id} type="button" className="wk-allday" onClick={() => go(`/event/${o2.event.id}/${p.date}`)}>
           {o2.event.title}
         </button>
       ))}
@@ -425,7 +428,7 @@ function DayColumn({ plan: p, today, nowMin, preview, picking, onTap, onDragTask
         <i key={`s${i}`} className="wk-bg wk-sleep" style={{ top: pxOf(r.start), height: pxOf(r.end - r.start) }} />
       ))}
       {p.events.map((o) => (
-        <button key={o.event.id} type="button" title={`${o.event.title} ${occurrenceTime(o)}`} className={`wk-b wk-ev ${o.end - o.start < 45 ? 'short' : ''}`} style={box(`e:${o.event.id}`, o.start, o.end)} onClick={() => go(`/event/${o.event.id}`)}>
+        <button key={o.event.id} type="button" title={`${o.event.title} ${occurrenceTime(o)}`} className={`wk-b wk-ev ${o.end - o.start < 45 ? 'short' : ''}`} style={box(`e:${o.event.id}`, o.start, o.end)} onClick={() => go(`/event/${o.event.id}/${p.date}`)}>
           <b className="gt">{o.event.title}</b>
           <small className="ltr num">{occurrenceTime(o)}</small>
         </button>
@@ -459,7 +462,7 @@ function DayColumn({ plan: p, today, nowMin, preview, picking, onTap, onDragTask
 // Event (R-EVT-4)
 // ---------------------------------------------------------------------------
 
-/** /event/<id> or /event/new/<date>[/<HH:mm>] */
+/** /event/<id>[/<occurrence date>] or /event/new/<date>[/<HH:mm>] */
 export function EventScreen({ id, date, time }: { id: string; date?: string; time?: string }) {
   const isNew = id === 'new';
   const existing = useLive(() => (isNew ? Promise.resolve(null) : Q.event(id)), [id]);
@@ -473,15 +476,21 @@ export function EventScreen({ id, date, time }: { id: string; date?: string; tim
       </div>
     );
   }
-  return <EventForm key={existing?.id ?? `new-${date}-${time}`} existing={existing ?? undefined} date={date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : today} time={time && /^\d{2}:\d{2}$/.test(time) ? time : undefined} />;
+  const okDate = date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : undefined;
+  // R-EVT-5: opened from a day of a repeating event = that occurrence
+  const occ = existing && existing.repeat !== 'none' && okDate && eventOccursOn(existing, okDate) ? okDate : undefined;
+  return <EventForm key={existing?.id ?? `new-${date}-${time}`} existing={existing ?? undefined} occ={occ} date={okDate ?? today} time={time && /^\d{2}:\d{2}$/.test(time) ? time : undefined} />;
 }
 
-function EventForm({ existing, date: date0, time }: { existing?: CalEvent; date: string; time?: string }) {
+function EventForm({ existing, occ, date: date0, time }: { existing?: CalEvent; occ?: string; date: string; time?: string }) {
   const projects = useLive(Q.projects) ?? [];
   const people = useLive(Q.people) ?? [];
+  const notes = useLive(Q.notes) ?? [];
+  const { today } = useClock();
   const toast = useToast();
+  const [ask, setAsk] = useState<'save' | 'delete' | undefined>();
   const [title, setTitle] = useState(existing?.title ?? '');
-  const [date, setDate] = useState(existing?.date ?? date0);
+  const [date, setDate] = useState(occ ?? existing?.date ?? date0);
   const [allDay, setAllDay] = useState(existing?.allDay ?? false);
   const [start, setStart] = useState(existing?.startTime ?? time ?? '09:00');
   const [end, setEnd] = useState(existing?.endTime ?? hhmmOf(Math.min(minutesOf(time ?? '09:00') + 60, 23 * 60 + 59)));
@@ -492,25 +501,46 @@ function EventForm({ existing, date: date0, time }: { existing?: CalEvent; date:
   const [personId, setPersonId] = useState(existing?.personId);
   const [pick, setPick] = useState(false);
   const badTime = !allDay && minutesOf(end) <= minutesOf(start);
-  const save = async () => {
+  const fields = () => ({ title: title.trim(), date, allDay, startTime: allDay ? undefined : start, endTime: allDay ? undefined : end, repeat, location: location.trim(), body, projectId, personId });
+  const save = async (only?: boolean) => {
     if (!title.trim() || badTime) return;
-    await saveEvent({ id: existing?.id, title: title.trim(), date, allDay, startTime: allDay ? undefined : start, endTime: allDay ? undefined : end, repeat, location: location.trim(), body, projectId, personId });
+    if (existing && occ && only === undefined) return setAsk('save');
+    if (existing && occ && only) await detachOccurrence(existing.id, occ, fields());
+    // the whole series: an unchanged date keeps the series start (R-EVT-5)
+    else await saveEvent({ id: existing?.id, ...fields(), date: existing && occ && date === occ ? existing.date : date });
     back('/week');
+  };
+  const remove = async (only?: boolean) => {
+    if (!existing) return;
+    if (occ && only === undefined) return setAsk('delete');
+    if (occ && only) {
+      const undo = await skipOccurrence(existing.id, occ);
+      back('/week');
+      toast({ message: `האירוע של ${formatShort(occ)} נמחק`, action: { label: 'בטל', run: () => void undo() } });
+      return;
+    }
+    const gone = await deleteEvent(existing.id);
+    back('/week');
+    if (gone) toast({ message: 'האירוע נמחק', action: { label: 'בטל', run: () => void restoreEvent(gone) } });
+  };
+  // R-EVT-7: the summaries of this event, newest first; the button opens the one of this occurrence
+  const summaries = existing ? notes.filter((n) => n.eventId === existing.id).sort((a, b) => (b.eventDate ?? '').localeCompare(a.eventDate ?? '')) : [];
+  const summaryDate = existing && (occ ?? (eventOccursOn(existing, today) ? today : (lastOccurrence(existing, today) ?? nextOccurrence(existing, today) ?? existing.date)));
+  const openSummary = async () => {
+    if (!existing || !summaryDate) return;
+    const n = await meetingNoteFor(existing, summaryDate);
+    go(`/note/${n.id}`);
   };
   const project = projects.find((p) => p.id === projectId);
   return (
     <div className="page sub">
-      <TopBar title={existing ? 'אירוע' : 'אירוע חדש'} backTo="/week">
+      <TopBar title={existing ? 'אירוע' : 'אירוע חדש'} backTo="/week" sub={occ ? `${REPEAT_LABEL[existing!.repeat]} · המופע של ${formatShort(occ)}` : undefined}>
         {existing && (
           <button
             type="button"
             className="iconbtn"
             aria-label="מחק"
-            onClick={async () => {
-              const gone = await deleteEvent(existing.id);
-              back('/week');
-              if (gone) toast({ message: 'האירוע נמחק', action: { label: 'בטל', run: () => void restoreEvent(gone) } });
-            }}
+            onClick={() => void remove()}
           >
             <Icon name="trash" />
           </button>
@@ -567,7 +597,56 @@ function EventForm({ existing, date: date0, time }: { existing?: CalEvent; date:
       <Btn type="button" className="btn primary block" why={!title.trim() ? 'צריך לכתוב שם לאירוע' : badTime && 'שעת הסיום צריכה להיות אחרי ההתחלה'} onClick={() => void save()}>
         שמור
       </Btn>
+      {/* R-EVT-7 */}
+      {existing && (
+        <>
+          <div className="section-title">סיכומי פגישה</div>
+          <section className="card">
+            {summaries.map((n) => (
+              <button key={n.id} type="button" className="listrow" onClick={() => go(`/note/${n.id}`)}>
+                <span className="ic">
+                  <Icon name="note" size="sm" />
+                </span>
+                <span className="grow">{noteTitle(n)}</span>
+                <span className="end num">{n.eventDate ? formatShort(n.eventDate) : ''}</span>
+              </button>
+            ))}
+            <button type="button" className="addline" onClick={() => void openSummary()}>
+              <Icon name="note" size="sm" /> סיכום פגישה{summaryDate ? ` · ${formatShort(summaryDate)}` : ''}
+            </button>
+          </section>
+        </>
+      )}
       <ProjectPicker open={pick} onClose={() => setPick(false)} multi={false} selected={projectId ? [projectId] : []} onChange={(ids) => setProjectId(ids[0])} />
+      {/* R-EVT-5: only this date, or the whole series */}
+      <Sheet open={!!ask} onClose={() => setAsk(undefined)} title={ask === 'delete' ? 'למחוק את האירוע?' : 'לשמור את השינוי?'}>
+        <p className="small muted" style={{ marginTop: 0 }}>
+          זה אירוע חוזר ({REPEAT_LABEL[existing?.repeat ?? 'none']}).
+        </p>
+        <button
+          type="button"
+          className="btn primary block"
+          onClick={() => {
+            const a = ask;
+            setAsk(undefined);
+            void (a === 'delete' ? remove(true) : save(true));
+          }}
+        >
+          רק הפעם הזאת ({occ ? formatShort(occ) : ''})
+        </button>
+        <button
+          type="button"
+          className="btn block"
+          style={{ marginTop: 8 }}
+          onClick={() => {
+            const a = ask;
+            setAsk(undefined);
+            void (a === 'delete' ? remove(false) : save(false));
+          }}
+        >
+          כל הסדרה
+        </button>
+      </Sheet>
     </div>
   );
 }

@@ -12,6 +12,7 @@ import { Icon } from '../components/Icon';
 import { ProjectPicker, SprintPicker, TaskRow } from '../components/tasks';
 import { ProjectIcon } from '../components/ProjectIcon';
 import { useClock, useLive } from '../hooks';
+import { eventOccursOn, eventsOn, occurrenceTime } from '../../domain/events';
 import { go, replace } from '../router';
 
 type Tab = TaskTab;
@@ -142,7 +143,9 @@ function CalendarTab({ tasks }: { tasks: Task[] }) {
   const lastDay = days[41]!;
   const future = occurrencesBetween(recurring, addDays(today, 1), lastDay);
   const milestones = useLive(Q.milestones) ?? [];
-  const has = (d: string) => tasks.some((t) => t.dueDate === d && t.status !== 'archived') || future.some((o) => o.date === d) || milestones.some((m) => m.dueDate === d);
+  const events = useLive(Q.events) ?? [];
+  const dayEvents = eventsOn(events, sel);
+  const has = (d: string) => events.some((e) => eventOccursOn(e, d)) || tasks.some((t) => t.dueDate === d && t.status !== 'archived') || future.some((o) => o.date === d) || milestones.some((m) => m.dueDate === d);
   const dayMilestones = milestones.filter((m) => m.dueDate === sel);
   const dayTasks = tasks.filter((t) => t.dueDate === sel && t.status !== 'archived' && !t.parentId).sort(compareForDay);
   const dayRecurring = future.filter((o) => o.date === sel);
@@ -187,6 +190,16 @@ function CalendarTab({ tasks }: { tasks: Task[] }) {
         </button>
       </div>
       <section className="card">
+        {/* R-EVT-6: the day's events before its tasks */}
+        {dayEvents.map((o) => (
+          <button key={o.event.id} type="button" className="evrow" onClick={() => go(`/event/${o.event.id}/${sel}`)}>
+            <span className="when ltr num">{occurrenceTime(o)}</span>
+            <span className="grow">
+              <b className="gt">{o.event.title}</b>
+              {o.event.location && <small>{o.event.location}</small>}
+            </span>
+          </button>
+        ))}
         {dayTasks.map((t) => (
           <TaskRow key={t.id} task={t} projects={projects} />
         ))}
@@ -212,7 +225,7 @@ function CalendarTab({ tasks }: { tasks: Task[] }) {
             </button>
           </div>
         ))}
-        {!dayTasks.length && !dayRecurring.length && !dayMilestones.length && <p className="muted small" style={{ margin: 4 }}>אין משימות ביום הזה.</p>}
+        {!dayEvents.length && !dayTasks.length && !dayRecurring.length && !dayMilestones.length && <p className="muted small" style={{ margin: 4 }}>אין משימות או אירועים ביום הזה.</p>}
       </section>
     </>
   );

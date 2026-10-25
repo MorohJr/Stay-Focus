@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formatRelative, localDate } from '../../domain/dates';
+import { formatRelative, formatShort, localDate } from '../../domain/dates';
 import type { NoteKind } from '../../domain/schemas';
 import { createNote, deleteEmptyNotes, deleteNote, noteTitle, updateNote } from '../../services/planning';
 import { Q } from '../../services/queries';
@@ -112,6 +112,7 @@ export function NoteScreen({ id }: { id: string }) {
   const { today } = useClock();
   const projects = useLive(Q.projects) ?? [];
   const [pick, setPick] = useState(false);
+  const event = useLive(() => (n?.eventId ? Q.event(n.eventId) : Promise.resolve(null)), [n?.eventId]);
   if (n === undefined) return <div className="page sub" />;
   if (n === null) {
     return (
@@ -156,6 +157,13 @@ export function NoteScreen({ id }: { id: string }) {
         <button type="button" className="chip out" onClick={() => setPick(true)}>
           <Icon name="folder" size="xs" /> {linked.length ? linked.map((p) => p.name).join(', ') : 'פרויקט'}
         </button>
+        {/* R-EVT-7 */}
+        {event && (
+          <button type="button" className="chip out" onClick={() => go(`/event/${event.id}/${n.eventDate ?? event.date}`)}>
+            <Icon name="cal" size="xs" /> מהפגישה: {event.title}
+            {n.eventDate ? ` · ${formatShort(n.eventDate)}` : ''}
+          </button>
+        )}
       </div>
       <DraftTextarea value={n.body} onSave={(v) => set({ body: v })} placeholder="כתוב כאן…" rows={14} />
       <div className="section-title">קישורים</div>

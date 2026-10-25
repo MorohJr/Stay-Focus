@@ -51,10 +51,10 @@ export function isWorkTask(t: Pick<Task, 'projectIds'>, projects: Pick<Project, 
   return projects.some((p) => t.projectIds.includes(p.id) && !!p.areaId && workAreas.has(p.areaId));
 }
 
-/** R-WEK-4: open tasks of the sprint without a start time (no sub-tasks, no "someday"). */
+/** R-WEK-4: open tasks of the sprint without a start time (sub-tasks included, no "someday"). */
 export function toSchedule(tasks: Task[], sprintId: string | undefined): Task[] {
   if (!sprintId) return [];
-  return tasks.filter((t) => t.sprintId === sprintId && isOpen(t) && !t.someday && !t.parentId && !t.startTime).sort((a, b) => a.sortOrder - b.sortOrder || a.seq - b.seq);
+  return tasks.filter((t) => t.sprintId === sprintId && isOpen(t) && !t.someday && !t.startTime).sort((a, b) => a.sortOrder - b.sortOrder || a.seq - b.seq);
 }
 
 /** R-WEK-5: drop position → start minute, 15-minute steps, inside the day. */

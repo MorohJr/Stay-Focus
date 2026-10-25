@@ -293,7 +293,7 @@ export async function generateDemo(today: string, now: Date = new Date()): Promi
   // Events (3.17): a few meetings and plans this week and next, some repeating, one today.
   const ws = weekStart(today);
   const workProject = projects.find((p) => p.areaId === 'area-work' && p.status === 'active');
-  const E = (title: string, p: Partial<CalEvent>): CalEvent => ({ ...st(), title, date: today, allDay: false, location: '', body: '', repeat: 'none', ...p });
+  const E = (title: string, p: Partial<CalEvent>): CalEvent => ({ ...st(), title, date: today, allDay: false, location: '', body: '', repeat: 'none', ...p, skipDates: p.skipDates ?? [] });
   const friend = people[0];
   const events: CalEvent[] = [
     E('פגישת צוות שבועית', { date: addDays(ws, 1), startTime: '10:00', endTime: '11:00', location: 'חדר ישיבות', repeat: 'weekly', projectId: workProject?.id }),

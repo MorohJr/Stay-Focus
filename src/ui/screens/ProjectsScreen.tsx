@@ -17,6 +17,7 @@ import { Icon } from '../components/Icon';
 import { TaskRow } from '../components/tasks';
 import { useGlass } from '../design';
 import { useClock, useLive } from '../hooks';
+import { LinkedEvents } from '../components/events';
 import { back, go, replace } from '../router';
 
 type Tab = 'active' | 'planning' | 'goals' | 'archive';
@@ -415,6 +416,7 @@ export function ProjectScreen({ id }: { id: string }) {
         ))}
         {!linkedNotes.length && <p className="muted small" style={{ margin: 4 }}>אין פתקים מקושרים.</p>}
       </section>
+      <LinkedEvents projectId={p.id} />
 
       <Sheet open={iconOpen} onClose={() => setIconOpen(false)} title="לוגו או אייקון">
         <div className="row" style={{ marginBottom: 12 }}>

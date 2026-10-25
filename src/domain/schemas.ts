@@ -112,6 +112,9 @@ export const Note = z.object({
   links: z.array(Link).default([]),
   attachmentIds: z.array(z.string()).default([]),
   pinned: z.boolean().default(false),
+  /** R-EVT-7: a meeting summary of an event occurrence. */
+  eventId: z.string().optional(),
+  eventDate: isoDate.optional(),
 });
 export type Note = z.infer<typeof Note>;
 
@@ -234,6 +237,8 @@ export const CalEvent = z.object({
   projectId: z.string().optional(),
   personId: z.string().optional(),
   repeat: EventRepeat.default('none'),
+  /** R-EVT-5: dates a repeating event skips. */
+  skipDates: z.array(isoDate).default([]),
 });
 export type CalEvent = z.infer<typeof CalEvent>;
 

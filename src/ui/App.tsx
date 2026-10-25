@@ -59,7 +59,7 @@ function screenFor(r: string[]): ReactNode {
     case 'week':
       return <WeekScreen date={b} />;
     case 'event':
-      return b === 'new' ? <EventScreen id="new" date={c} time={r[3]} /> : <EventScreen id={b!} />;
+      return b === 'new' ? <EventScreen id="new" date={c} time={r[3]} /> : <EventScreen id={b!} date={c} />;
     case 'work-hours':
       return <WorkHoursScreen />;
     case 'tasks':

@@ -15,7 +15,7 @@ import Dexie from 'dexie';
 import { SCHEMA_V4, SCHEMA_V5, StayFocusDB } from '../db/db';
 import { updateGoal, updateProject } from './planning';
 import { markYearSeen, saveYearAnswers } from './yearReview';
-import { deleteEvent, saveEvent, scheduleTask, unschedule } from './events';
+import { deleteEvent, detachOccurrence, meetingNoteFor, restoreEvent, saveEvent, scheduleTask, skipOccurrence, unschedule } from './events';
 import { searchAll } from './search';
 
 const TODAY = '2026-09-30';
@@ -446,5 +446,33 @@ describe('events and the week (1.16)', () => {
     await unschedule(t.id, before!);
     const back = (await db.tasks.get(t.id))!;
     expect([back.dueDate, back.startTime]).toEqual([undefined, undefined]);
+  });
+});
+
+describe('repeating events and meeting summaries (1.16, 25/10)', () => {
+  it('R-EVT-5: only this date — skip with undo, or detach with that day\'s summary', async () => {
+    const e = await saveEvent({ title: 'צוות', date: '2026-09-28', startTime: '10:00', endTime: '11:00', repeat: 'weekly' });
+    const undo = await skipOccurrence(e.id, '2026-10-05');
+    expect((await db.events.get(e.id))!.skipDates).toEqual(['2026-10-05']);
+    await undo();
+    expect((await db.events.get(e.id))!.skipDates).toEqual([]);
+    const note = await meetingNoteFor(e, '2026-10-12');
+    const one = (await detachOccurrence(e.id, '2026-10-12', { title: 'צוות (מוזז)', date: '2026-10-13', startTime: '12:00', endTime: '13:00' }))!;
+    expect(one.repeat).toBe('none');
+    expect((await db.events.get(e.id))!.skipDates).toEqual(['2026-10-12']);
+    expect(await db.notes.get(note.id)).toMatchObject({ eventId: one.id, eventDate: '2026-10-13' });
+  });
+
+  it('R-EVT-7: one summary per occurrence; deleting the series keeps it, undo relinks', async () => {
+    const p = await createProject({ name: 'p', status: 'active' });
+    const e = await saveEvent({ title: 'סטטוס', date: TODAY, startTime: '09:00', endTime: '09:30', projectId: p.id });
+    const a = await meetingNoteFor(e, TODAY);
+    expect(a).toMatchObject({ kinds: ['meeting'], projectIds: [p.id], eventId: e.id, eventDate: TODAY });
+    expect(a.title).toBe('פגישה: סטטוס · 30/9');
+    expect((await meetingNoteFor(e, TODAY)).id).toBe(a.id);
+    const gone = (await deleteEvent(e.id))!;
+    expect((await db.notes.get(a.id))!.eventId).toBeUndefined();
+    await restoreEvent(gone);
+    expect((await db.notes.get(a.id))!.eventId).toBe(e.id);
   });
 });

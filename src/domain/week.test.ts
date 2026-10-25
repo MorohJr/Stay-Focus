@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { minutesOf as m } from './dates';
-import { eventOccursOn, eventsOn, eventSpan, occurrenceTime } from './events';
+import { eventOccursOn, eventsOn, eventSpan, eventsTimeline, occurrenceTime } from './events';
 import { DEFAULT_ROUTINES, DEFAULT_WORK, type Area, type CalEvent, type Project, type Task } from './schemas';
 import { dayBlocks, dayBounds, freeMinutes } from './today';
 import { dayPlan, isWorkTask, layoutLanes, sleepRanges, snapMinutes, toSchedule, weekDays, workWindow, type PlanInput } from './week';
@@ -17,7 +17,7 @@ function task(p: Partial<Task> = {}): Task {
 }
 function ev(p: Partial<CalEvent> = {}): CalEvent {
   n++;
-  return { id: `e${n}`, createdAt: T0, updatedAt: T0, title: `event ${n}`, date: TODAY, allDay: false, startTime: '10:00', endTime: '11:00', location: '', body: '', repeat: 'none', ...p };
+  return { id: `e${n}`, createdAt: T0, updatedAt: T0, title: `event ${n}`, date: TODAY, allDay: false, startTime: '10:00', endTime: '11:00', location: '', body: '', repeat: 'none', skipDates: [], ...p };
 }
 const areas: Area[] = [
   { id: 'aw', name: 'עבודה', color: '#111', order: 0, work: true, createdAt: T0, updatedAt: T0 },
@@ -40,6 +40,18 @@ describe('events (3.17)', () => {
     expect(eventOccursOn({ date: '2024-02-29', repeat: 'yearly' }, '2025-02-28')).toBe(true);
     expect(eventOccursOn({ date: '2024-02-29', repeat: 'yearly' }, '2028-02-29')).toBe(true);
     expect(eventOccursOn({ date: '2024-02-29', repeat: 'yearly' }, '2028-02-28')).toBe(false);
+  });
+  it('R-EVT-5: a skipped date is not an occurrence', () => {
+    expect(eventOccursOn({ date: TODAY, repeat: 'weekly', skipDates: ['2026-10-07'] }, '2026-10-07')).toBe(false);
+    expect(eventOccursOn({ date: TODAY, repeat: 'weekly', skipDates: ['2026-10-07'] }, '2026-10-14')).toBe(true);
+  });
+  it('R-EVT-6: upcoming by next date, then the last past ones', () => {
+    const weekly = ev({ id: 'w', date: '2026-09-02', repeat: 'weekly' }); // Wednesdays
+    const once = ev({ id: 'o', date: '2026-10-05' });
+    const old = ev({ id: 'x', date: '2026-09-10' });
+    const t = eventsTimeline([once, weekly, old], TODAY);
+    expect(t.upcoming.map((o) => [o.event.id, o.date])).toEqual([['w', TODAY], ['o', '2026-10-05']]);
+    expect(t.past.map((o) => [o.event.id, o.date])).toEqual([['w', '2026-09-23'], ['x', '2026-09-10']]);
   });
   it('R-EVT-3: the end is after the start, otherwise one hour', () => {
     expect(eventSpan({ allDay: false, startTime: '10:00', endTime: '11:30' })).toEqual({ start: m('10:00'), end: m('11:30') });
@@ -82,7 +94,7 @@ describe('work hours and the week (3.18, 5.15)', () => {
   });
   it('R-WEK-4: open sprint tasks without a time', () => {
     const list = [task({ id: 'a', sprintId: 's' }), task({ id: 'b', sprintId: 's', startTime: '10:00', dueDate: TODAY }), task({ id: 'c', sprintId: 's', status: 'done' }), task({ id: 'd', sprintId: 's', parentId: 'a' }), task({ id: 'e', sprintId: 'x' }), task({ id: 'f', sprintId: 's', dueDate: TODAY })];
-    expect(toSchedule(list, 's').map((t) => t.id)).toEqual(['a', 'f']);
+    expect(toSchedule(list, 's').map((t) => t.id)).toEqual(['a', 'd', 'f']); // sub-tasks too (25/10)
     expect(toSchedule(list, undefined)).toEqual([]);
   });
   it('R-WEK-5: drops snap to 15 minutes inside the day', () => {
