@@ -71,3 +71,10 @@ export function useWide(): boolean {
     () => typeof matchMedia === 'function' && matchMedia(WIDE).matches,
   );
 }
+
+/** R-DSK-3 / R-DSK-4: the big charts show only in the glass look on a desktop. */
+export function useRich(): boolean {
+  const glass = useGlass();
+  const wide = useWide();
+  return glass && wide;
+}

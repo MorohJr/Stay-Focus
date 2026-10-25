@@ -8,6 +8,7 @@ import { getSettings, updateSettings } from '../../services/entity';
 import { addRoutineItem, createChallenge, cycleRule, deleteChallenge, deleteRecurring, deleteRoutineItem, moveRoutineItem, newRule, saveRecurring, updateChallenge, updateRoutineItem } from '../../services/habits';
 import { Q } from '../../services/queries';
 import { Btn, confirmAction, Empty, Seg, Switch, TopBar } from '../components/common';
+import { RoutineCard, StreaksCard } from '../components/deskCards';
 import { DayMonthPicker, DraftInput } from '../components/edit';
 import { Icon } from '../components/Icon';
 import { ProjectPicker } from '../components/tasks';
@@ -72,6 +73,7 @@ export function ChallengesScreen() {
           </button>
         );
       })}
+      <StreaksCard challenges={list} logs={logs} today={today} />
     </div>
   );
 }
@@ -273,6 +275,8 @@ function ChallengeDetail({ id, today }: { id: string; today: string }) {
 export function RoutinesScreen() {
   const settings = useLive(Q.settings);
   const items = useLive(Q.routineItems) ?? [];
+  const logs = useLive(Q.routineLogs) ?? [];
+  const { today } = useClock();
   if (!settings) return <div className="page sub" />;
   const r = settings.routines;
   const setR = async (patch: Partial<RoutineSettings>) => {
@@ -298,6 +302,7 @@ export function RoutinesScreen() {
           { v: items.filter((i) => i.routine === 'evening' && i.active).length, k: 'בערב' },
         ]}
       />
+      <RoutineCard items={items} logs={logs} today={today} />
       <section className="card">
         <h4>
           <span className="t">

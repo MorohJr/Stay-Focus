@@ -8,6 +8,7 @@ import { occurrencesBetween } from '../../services/planning';
 import { Q } from '../../services/queries';
 import { deleteTask, restoreTasks, setSomeday, setWaiting, updateTask } from '../../services/tasks';
 import { Empty, Tabs, TopBar, useToast } from '../components/common';
+import { FlowCard } from '../components/deskCards';
 import { Icon } from '../components/Icon';
 import { ProjectPicker, SprintPicker, TaskRow } from '../components/tasks';
 import { ProjectIcon } from '../components/ProjectIcon';
@@ -56,6 +57,7 @@ export function TasksScreen({ tab }: { tab?: string }) {
       {t === 'waiting' && <WaitingTab tasks={tasks} />}
       {t === 'someday' && <SomedayTab tasks={tasks} />}
       {t === 'done' && <DoneTab tasks={tasks} />}
+      <FlowCard tasks={tasks} today={today} />
     </div>
   );
 }
