@@ -32,6 +32,8 @@ export function TodayScreen() {
   const settings = useLive(Q.settings);
   const routineItems = useLive(Q.routineItems) ?? [];
   const routineLogs = useLive(() => Q.routineLogsFor(today), [today]) ?? [];
+  // R-RTN-2: after midnight a late evening routine still ticks yesterday
+  const lateLogs = useLive(() => Q.routineLogsFor(addDays(today, -1)), [today]) ?? [];
   const challenges = useLive(Q.challenges) ?? [];
   const challengeLogs = useLive(Q.allChallengeLogs) ?? [];
   const recurring = useLive(Q.recurring) ?? [];
@@ -47,7 +49,7 @@ export function TodayScreen() {
   const pname = (t: Task) => projectName(t.projectIds, projects);
   const now = nowCard(tasks, today, nowMin);
   const next = nextTask(tasks, today, nowMin);
-  const rCard = routineCard(settings.routines, routineItems, routineLogs, today, nowMin);
+  const rCard = routineCard(settings.routines, routineItems, [...routineLogs, ...lateLogs], today, nowMin);
   const close = dayCloseCard(tasks, today, nowMin, settings.dayClosedOn);
   const ch = activeChallenge(challenges, today);
   const top = top3(tasks, today);
@@ -254,7 +256,7 @@ export function TodayScreen() {
               </h4>
               <div className="chips">
                 {rCard.items.map(({ item, done }) => (
-                  <button key={item.id} type="button" className={`chip ${done ? 'ok' : ''}`} aria-pressed={done} onClick={() => void toggleRoutineItem(today, item.id)}>
+                  <button key={item.id} type="button" className={`chip ${done ? 'ok' : ''}`} aria-pressed={done} onClick={() => void toggleRoutineItem(rCard.date, item.id)}>
                     {done && '✓ '}
                     {item.title}
                   </button>

@@ -4,7 +4,7 @@ import { activeBlockers, completion, isInbox, quadrantOf, taskTabsOrder, titleSi
 import { missingSprintWeeks, sprintName, sprintNeedingReview, sprintRange, sprintStatus } from './sprints';
 import { describeRule, occursOn } from './recurring';
 import { birthdayInfo, describeBirthday } from './people';
-import { activeRoutineWindow, routineCard, routineDayStats } from './routine';
+import { activeRoutine, activeRoutineWindow, routineCard, routineDayStats } from './routine';
 import { challengeDay, dayMark, nextRuleValue, rulesCardVisible, streak } from './challenge';
 import { focusGoal, goalProgress } from './goals';
 import { dayBlocks, dayBounds, dayCloseCard, dayFrame, freeMinutes, stripHours, greeting, moreToday, nextTask, nowCard, overdue, regulars, ringsAverage, ring, top3 } from './today';
@@ -166,6 +166,16 @@ describe('routine', () => {
     expect(activeRoutineWindow(DEFAULT_ROUTINES, TODAY, m('14:10'))).toBeUndefined();
     expect(activeRoutineWindow(DEFAULT_ROUTINES, TODAY, m('21:15'))?.kind).toBe('evening');
     expect(activeRoutineWindow(DEFAULT_ROUTINES, TODAY, m('22:30'))).toBeUndefined();
+  });
+  it('R-RTN-2: an evening that ends after midnight shows until then and belongs to the day before', () => {
+    const late = { ...DEFAULT_ROUTINES, eveningEnd: '00:30' };
+    expect(activeRoutineWindow(late, TODAY, m('23:45'))?.kind).toBe('evening');
+    expect(activeRoutine(late, TODAY, m('00:15'))).toMatchObject({ window: { kind: 'evening' }, date: '2026-09-29' });
+    expect(activeRoutine(late, TODAY, m('00:30'))).toBeUndefined();
+    expect(activeRoutine(DEFAULT_ROUTINES, TODAY, m('00:15'))).toBeUndefined();
+    const yLogs: RoutineLog[] = [{ id: '2026-09-29:e1', date: '2026-09-29', itemId: 'e1', done: true }];
+    const card = routineCard(late, items, yLogs, TODAY, m('00:10'))!;
+    expect([card.date, card.done, card.complete]).toEqual(['2026-09-29', 1, true]);
   });
   it('weekend morning end applies on Friday and Saturday only when enabled', () => {
     const s = { ...DEFAULT_ROUTINES, weekendDifferent: true };
