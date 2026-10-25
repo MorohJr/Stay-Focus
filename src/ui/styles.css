@@ -388,6 +388,22 @@ dialog.sheet::backdrop { background: rgba(0,0,0,.32); }
 .opt { display: flex; align-items: center; gap: 12px; width: 100%; text-align: start; padding: 13px 4px; font-size: 15.5px; }
 .opt + .opt { border-top: 1px solid var(--line); }
 .opt .check { margin-inline-start: auto; color: var(--blue); }
+/* 1.13: new project inside the picker (R-PRJ-7) and the task link picker (R-PRJ-8) */
+.opt.newproj { color: var(--blue-text); font-weight: 600; }
+form.opt.newproj { padding: 9px 0; gap: 8px; }
+form.opt.newproj .input { min-width: 0; color: var(--ink); font-weight: 400; }
+.np-ic { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: var(--blue-soft); flex: none; }
+.linklist { margin-top: 6px; }
+.opt .lt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.opt .lt .tt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; unicode-bidi: plaintext; text-align: right; }
+.opt .lt .small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; unicode-bidi: plaintext; text-align: right; }
+.selc { width: 22px; height: 22px; flex: none; border-radius: 50%; border: 1.7px solid var(--track2); display: grid; place-items: center; color: var(--on-ink); }
+.selc.on { background: var(--blue); border-color: var(--blue); }
+.selc .ico { width: 13px; height: 13px; stroke-width: 3; }
+.tlist { display: flex; flex-direction: column; }
+.tlist .opt { padding: 9px 4px; font-size: 14.5px; }
+.rmbtn { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); flex: none; }
+.rmbtn:active { background: var(--surface2); }
 .toast { position: fixed; inset-inline: 0; bottom: calc(var(--nav-h) + var(--safe-b) + 84px); z-index: 50; display: flex; justify-content: center; padding: 0 16px; pointer-events: none; }
 .toast > div { pointer-events: auto; display: flex; align-items: center; gap: 12px; background: var(--hero); border: 1px solid var(--hero-line); color: #fff; border-radius: 16px; padding: 10px 16px; min-height: 48px; font-size: 14px; max-width: 480px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
 .toast button { color: var(--hero-k); font-weight: 700; margin-inline-start: auto; }

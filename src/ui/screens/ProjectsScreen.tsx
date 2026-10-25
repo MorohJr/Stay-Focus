@@ -5,7 +5,7 @@ import type { Area, Goal, Priority, Project, ProjectStatus, Task } from '../../d
 import { activeBlockers, compareForDay, isOpen, PRIORITY_LABEL } from '../../domain/tasks';
 import { createGoal, createProject, deleteGoal, deleteProject, noteTitle, setFocusGoal, updateGoal, updateProject } from '../../services/planning';
 import { Q } from '../../services/queries';
-import { createTask } from '../../services/tasks';
+import { createTask, linkTasksToProject } from '../../services/tasks';
 import { addMilestone, deleteMilestone, moveMilestone, toggleMilestone, updateMilestone } from '../../services/people';
 import { isMilestoneLate, milestoneStats, nextMilestone } from '../../domain/review';
 import { removeProjectImage, setProjectImage } from '../../services/misc';
@@ -14,7 +14,7 @@ import { ProjectCover, ProjectIcon, useBlobUrl } from '../components/ProjectIcon
 import { Bar, Btn, confirmAction, Empty, Num, Seg, Sheet, Tabs, TopBar } from '../components/common';
 import { DraftInput, DraftTextarea } from '../components/edit';
 import { Icon } from '../components/Icon';
-import { TaskRow } from '../components/tasks';
+import { TaskLinkPicker, TaskRow } from '../components/tasks';
 import { useGlass } from '../design';
 import { useClock, useLive } from '../hooks';
 import { back, go, replace } from '../router';
@@ -260,6 +260,8 @@ export function ProjectScreen({ id }: { id: string }) {
   const logoRef = useRef<HTMLInputElement>(null);
   const coverRef = useRef<HTMLInputElement>(null);
   const [showDone, setShowDone] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [linkSel, setLinkSel] = useState<string[]>([]);
   if (p === undefined) return <div className="page sub" />;
   if (p === null) {
     return (
@@ -390,6 +392,9 @@ export function ProjectScreen({ id }: { id: string }) {
         >
           <input className="input" placeholder="+ משימה לפרויקט" value={newTask} onChange={(e) => setNewTask(e.target.value)} />
         </form>
+        <button type="button" className="linkbtn" style={{ marginTop: 10 }} onClick={() => setLinkOpen(true)}>
+          <Icon name="link" size="xs" /> קשר משימה קיימת
+        </button>
         {done.length > 0 && (
           <button type="button" className="linkbtn" style={{ marginTop: 10 }} onClick={() => setShowDone(!showDone)}>
             {showDone ? 'הסתר' : 'הצג'} {done.length} שבוצעו
@@ -416,6 +421,17 @@ export function ProjectScreen({ id }: { id: string }) {
         {!linkedNotes.length && <p className="muted small" style={{ margin: 4 }}>אין פתקים מקושרים.</p>}
       </section>
 
+      <TaskLinkPicker
+        open={linkOpen}
+        projectId={p.id}
+        selected={linkSel}
+        onChange={setLinkSel}
+        onClose={() => {
+          void linkTasksToProject(p.id, linkSel);
+          setLinkSel([]);
+          setLinkOpen(false);
+        }}
+      />
       <Sheet open={iconOpen} onClose={() => setIconOpen(false)} title="לוגו או אייקון">
         <div className="row" style={{ marginBottom: 12 }}>
           <button type="button" className="btn grow" onClick={() => logoRef.current?.click()}>
@@ -514,11 +530,21 @@ export function ProjectScreen({ id }: { id: string }) {
 /** /project/new (SPEC 5.4). */
 export function NewProjectScreen() {
   const areas = useLive(Q.areas) ?? [];
+  const tasks = useLive(Q.tasks) ?? [];
   const [name, setName] = useState('');
   const [areaId, setAreaId] = useState('');
   const [status, setStatus] = useState<ProjectStatus>('planning');
+  const [linkIds, setLinkIds] = useState<string[]>([]);
+  const [newTasks, setNewTasks] = useState<string[]>([]);
+  const [draft, setDraft] = useState('');
+  const [linkOpen, setLinkOpen] = useState(false);
   const ref = useRef<HTMLInputElement>(null);
   useEffect(() => ref.current?.focus(), []);
+  const addDraft = () => {
+    if (draft.trim()) setNewTasks([...newTasks, draft.trim()]);
+    setDraft('');
+  };
+  const linked = linkIds.map((id) => tasks.find((t) => t.id === id)).filter((t): t is Task => !!t);
   return (
     <div className="page sub">
       <TopBar title="פרויקט חדש" backTo="/projects" />
@@ -527,6 +553,8 @@ export function NewProjectScreen() {
           e.preventDefault();
           if (!name.trim()) return;
           const p = await createProject({ name: name.trim(), areaId: areaId || undefined, status });
+          await linkTasksToProject(p.id, linkIds); // R-PRJ-8
+          for (const title of [...newTasks, draft].filter((x) => x.trim())) await createTask({ title, projectIds: [p.id] });
           replace(`/project/${p.id}`);
         }}
       >
@@ -551,10 +579,54 @@ export function NewProjectScreen() {
             </select>
           </div>
         </section>
+
+        <div className="section-title">
+          <span>משימות</span>
+          {linked.length + newTasks.length > 0 && <span className="num">{linked.length + newTasks.length}</span>}
+        </div>
+        <section className="card tlist">
+          {linked.map((t) => (
+            <div key={t.id} className="opt">
+              <Icon name="link" size="sm" />
+              <span className="grow lt"><span className="tt">{t.title}</span></span>
+              <button type="button" className="rmbtn" aria-label="הסר" onClick={() => setLinkIds(linkIds.filter((x) => x !== t.id))}>
+                <Icon name="x" size="sm" />
+              </button>
+            </div>
+          ))}
+          {newTasks.map((title, i) => (
+            <div key={i} className="opt">
+              <Icon name="plus" size="sm" />
+              <span className="grow lt"><span className="tt">{title}</span></span>
+              <button type="button" className="rmbtn" aria-label="הסר" onClick={() => setNewTasks(newTasks.filter((_, j) => j !== i))}>
+                <Icon name="x" size="sm" />
+              </button>
+            </div>
+          ))}
+          <div className="addrow">
+            <input
+              className="input"
+              placeholder="+ משימה חדשה (Enter להוספה)"
+              value={draft}
+              enterKeyHint="enter"
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter' || e.nativeEvent.isComposing) return;
+                e.preventDefault();
+                addDraft();
+              }}
+            />
+          </div>
+          <button type="button" className="linkbtn" style={{ marginTop: 10 }} onClick={() => setLinkOpen(true)}>
+            <Icon name="link" size="xs" /> קשר משימות קיימות
+          </button>
+        </section>
+
         <Btn type="submit" className="btn primary block" why={!name.trim() && 'צריך לכתוב שם לפרויקט'}>
           צור פרויקט
         </Btn>
       </form>
+      <TaskLinkPicker open={linkOpen} selected={linkIds} onChange={setLinkIds} onClose={() => setLinkOpen(false)} />
     </div>
   );
 }

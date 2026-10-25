@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import * as D from './dates';
-import { activeBlockers, completion, isInbox, quadrantOf, taskTabsOrder, titleSize, withStatus } from './tasks';
+import { activeBlockers, completion, isInbox, linkableTasks, quadrantOf, taskTabsOrder, titleSize, withStatus } from './tasks';
 import { missingSprintWeeks, sprintName, sprintNeedingReview, sprintRange, sprintStatus } from './sprints';
 import { describeRule, occursOn } from './recurring';
 import { birthdayInfo, describeBirthday } from './people';
@@ -72,6 +72,21 @@ describe('tasks', () => {
     expect(quadrantOf({ urgent: false, important: true })).toBe('plan');
     expect(quadrantOf({ urgent: true, important: false })).toBe('delegate');
     expect(quadrantOf({ urgent: false, important: false })).toBe('drop');
+  });
+
+  it('R-PRJ-8: linkable tasks are open, top-level, not in the project; no-project and newest first', () => {
+    const free = task({ title: 'Buy paint', createdAt: '2026-09-02T00:00:00.000Z' });
+    const newer = task({ title: 'Call Dana', createdAt: '2026-09-05T00:00:00.000Z' });
+    const other = task({ title: 'paint wall', projectIds: ['b'], createdAt: '2026-09-09T00:00:00.000Z' });
+    const mine = task({ projectIds: ['a'] });
+    const done = task({ status: 'done' });
+    const sub = task({ parentId: free.id });
+    const someday = task({ someday: true, createdAt: '2026-09-01T00:00:00.000Z' });
+    const all = [free, newer, other, mine, done, sub, someday];
+    expect(linkableTasks(all, 'a', '').map((t) => t.id)).toEqual([newer.id, free.id, someday.id, other.id]);
+    expect(linkableTasks(all, 'a', 'PAINT').map((t) => t.id)).toEqual([free.id, other.id]);
+    expect(linkableTasks(all, 'a', `#${newer.seq}`).map((t) => t.id)).toEqual([newer.id]);
+    expect(linkableTasks(all, undefined, '')).toContain(mine);
   });
 });
 

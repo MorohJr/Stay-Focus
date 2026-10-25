@@ -92,3 +92,12 @@ export function titleSize(title: string): 'l' | 'm' | 's' {
   const n = title.trim().length;
   return n <= 22 ? 'l' : n <= 50 ? 'm' : 's';
 }
+
+/** R-PRJ-8: open top-level tasks not yet in `projectId`, matching `query` (title or seq); no-project first, newest first. */
+export function linkableTasks(tasks: Task[], projectId: string | undefined, query: string): Task[] {
+  const q = query.trim().toLowerCase().replace(/^#/, '');
+  return tasks
+    .filter((t) => isOpen(t) && !t.parentId && !(projectId && t.projectIds.includes(projectId)))
+    .filter((t) => !q || t.title.toLowerCase().includes(q) || String(t.seq) === q)
+    .sort((a, b) => (a.projectIds.length ? 1 : 0) - (b.projectIds.length ? 1 : 0) || b.createdAt.localeCompare(a.createdAt));
+}

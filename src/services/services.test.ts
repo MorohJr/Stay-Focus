@@ -7,7 +7,7 @@ import { ensureSeed, getSettings } from './entity';
 import { addAttachment, removeProjectImage, setProjectImage } from './misc';
 import { createProject, deleteProject, ensureSprints, materializeRecurring, reviewSprint, setFocusGoal, createGoal } from './planning';
 import { cycleRule, createChallenge, toggleRoutineItem, saveRecurring } from './habits';
-import { addToTop3, createTask, deleteTask, moveTop3, moveToTomorrow, postponeAllOverdue, postponeTask, resolveStuck, restoreTasks, setSomeday, setWaiting, updateTask } from './tasks';
+import { addToTop3, createTask, deleteTask, moveTop3, moveToTomorrow, postponeAllOverdue, postponeTask, resolveStuck, restoreTasks, linkTasksToProject, setSomeday, setWaiting, updateTask } from './tasks';
 import { addAgenda, addMilestone, createPerson, deletePerson } from './people';
 import { addOnboardingTask, finishOnboarding, restartOnboarding, startChallenge } from './onboarding';
 import { wipeAll } from './backup';
@@ -75,6 +75,17 @@ describe('tasks service', () => {
     await createTask({ title: 'late2', dueDate: '2026-09-29' });
     await postponeAllOverdue(TODAY);
     expect((await db.tasks.where('dueDate').equals('2026-10-01').count())).toBe(3);
+  });
+});
+
+describe('1.13 project links', () => {
+  it('R-PRJ-8: linking adds the project and keeps the others', async () => {
+    const a = await createTask({ title: 'a', projectIds: ['old'] });
+    const b = await createTask({ title: 'b' });
+    await linkTasksToProject('new', [a.id, b.id, 'missing']);
+    await linkTasksToProject('new', [a.id]);
+    expect((await db.tasks.get(a.id))!.projectIds).toEqual(['old', 'new']);
+    expect((await db.tasks.get(b.id))!.projectIds).toEqual(['new']);
   });
 });
 

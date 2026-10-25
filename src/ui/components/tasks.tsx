@@ -2,8 +2,8 @@ import { useState, type ReactNode } from 'react';
 import { addDays, formatRelative, formatShort } from '../../domain/dates';
 import type { Project, Sprint, Task } from '../../domain/schemas';
 import { sprintStatus, SPRINT_STATUS_LABEL } from '../../domain/sprints';
-import { isActiveOpen, isOpen, isStuck } from '../../domain/tasks';
-import { createNote } from '../../services/planning';
+import { isActiveOpen, isOpen, isStuck, linkableTasks } from '../../domain/tasks';
+import { createNote, createProject } from '../../services/planning';
 import { Q } from '../../services/queries';
 import { createTask, postponeTask, toggleDone, type Postpone } from '../../services/tasks';
 import { useClock, useLive } from '../hooks';
@@ -121,12 +121,27 @@ export function StatusDot({ status, onClick, label }: { status: Task['status']; 
 // Pickers
 // ---------------------------------------------------------------------------
 
-export function ProjectPicker({ open, onClose, selected, onChange, multi = true }: { open: boolean; onClose: () => void; selected: string[]; onChange: (ids: string[]) => void; multi?: boolean }) {
+export function ProjectPicker({ open, onClose, selected, onChange, multi = true, allowCreate }: { open: boolean; onClose: () => void; selected: string[]; onChange: (ids: string[]) => void; multi?: boolean; /** R-PRJ-7: "+ פרויקט חדש" at the end. */ allowCreate?: boolean }) {
   const projects = useLive(Q.projects) ?? [];
+  const [newName, setNewName] = useState<string | null>(null);
   const list = projects.filter((p) => p.status !== 'archived' || selected.includes(p.id)).sort((a, b) => (a.status === 'done' ? 1 : 0) - (b.status === 'done' ? 1 : 0) || a.name.localeCompare(b.name, 'he'));
+  const close = () => {
+    setNewName(null);
+    onClose();
+  };
+  const create = async () => {
+    if (!newName?.trim()) return;
+    const p = await createProject({ name: newName.trim() });
+    setNewName(null);
+    if (multi) onChange([...selected, p.id]);
+    else {
+      onChange([p.id]);
+      onClose();
+    }
+  };
   return (
-    <Sheet open={open} onClose={onClose} title="פרויקט">
-      {list.length === 0 && <p className="muted">אין עדיין פרויקטים. אפשר ליצור בלשונית "פרויקטים".</p>}
+    <Sheet open={open} onClose={close} title="פרויקט">
+      {list.length === 0 && !allowCreate && <p className="muted">אין עדיין פרויקטים. אפשר ליצור בלשונית "פרויקטים".</p>}
       {list.map((p) => {
         const on = selected.includes(p.id);
         return (
@@ -148,11 +163,68 @@ export function ProjectPicker({ open, onClose, selected, onChange, multi = true 
           </button>
         );
       })}
+      {allowCreate &&
+        (newName === null ? (
+          <button type="button" className="opt newproj" onClick={() => setNewName('')}>
+            <span className="np-ic"><Icon name="plus" size="sm" /></span>
+            <span className="grow">פרויקט חדש</span>
+          </button>
+        ) : (
+          <form
+            className="opt newproj"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void create();
+            }}
+          >
+            <input className="input grow" autoFocus placeholder="שם הפרויקט" value={newName} onChange={(e) => setNewName(e.target.value)} />
+            <Btn type="submit" className="btn primary" why={!newName.trim() && 'צריך לכתוב שם לפרויקט'}>
+              צור
+            </Btn>
+          </form>
+        ))}
       {multi && (
-        <button type="button" className="btn primary block" style={{ marginTop: 12 }} onClick={onClose}>
+        <button type="button" className="btn primary block" style={{ marginTop: 12 }} onClick={close}>
           סיום
         </button>
       )}
+    </Sheet>
+  );
+}
+
+/** R-PRJ-8: multi-select of existing open tasks to link to a project. */
+export function TaskLinkPicker({ open, onClose, projectId, selected, onChange }: { open: boolean; onClose: () => void; projectId?: string; selected: string[]; onChange: (ids: string[]) => void }) {
+  const tasks = useLive(Q.tasks) ?? [];
+  const projects = useLive(Q.projects) ?? [];
+  const [q, setQ] = useState('');
+  const list = linkableTasks(tasks, projectId, q);
+  const close = () => {
+    setQ('');
+    onClose();
+  };
+  return (
+    <Sheet open={open} onClose={close} title="קשר משימות קיימות">
+      <input className="input" type="search" placeholder="חיפוש בשם או במספר" value={q} onChange={(e) => setQ(e.target.value)} />
+      <div className="linklist">
+        {list.map((t) => {
+          const on = selected.includes(t.id);
+          const where = t.projectIds.map((id) => projects.find((p) => p.id === id)?.name).filter(Boolean).join(', ');
+          return (
+            <button key={t.id} type="button" className="opt" aria-pressed={on} onClick={() => onChange(on ? selected.filter((x) => x !== t.id) : [...selected, t.id])}>
+              <span className={`selc${on ? ' on' : ''}`}>{on && <Icon name="check" />}</span>
+              <span className="grow lt">
+                <span className="tt">{t.title}</span>
+                {where && <span className="muted small">{where}</span>}
+              </span>
+              <span className="muted small">#{t.seq}</span>
+            </button>
+          );
+        })}
+        {!list.length && <p className="muted small" style={{ margin: '14px 4px' }}>{q ? 'לא נמצאו משימות.' : 'אין משימות פתוחות לקשר.'}</p>}
+      </div>
+      <button type="button" className="btn primary block" style={{ marginTop: 12 }} onClick={close}>
+        {selected.length ? `סיום (${selected.length})` : 'סיום'}
+      </button>
     </Sheet>
   );
 }

@@ -124,7 +124,7 @@ export function InboxTab({ tasks }: { tasks: Task[] }) {
           </div>
         ))}
       </section>
-      <ProjectPicker open={!!projectFor} onClose={() => setProjectFor(undefined)} selected={projectFor?.projectIds ?? []} multi={false} onChange={(ids) => projectFor && void updateTask(projectFor.id, { projectIds: ids })} />
+      <ProjectPicker open={!!projectFor} allowCreate onClose={() => setProjectFor(undefined)} selected={projectFor?.projectIds ?? []} multi={false} onChange={(ids) => projectFor && void updateTask(projectFor.id, { projectIds: ids })} />
       <SprintPicker open={!!sprintFor} onClose={() => setSprintFor(undefined)} value={sprintFor?.sprintId} onChange={(id) => sprintFor && void updateTask(sprintFor.id, { sprintId: id })} />
     </>
   );

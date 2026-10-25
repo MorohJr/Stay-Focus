@@ -203,3 +203,12 @@ export function keepTask(id: string) {
 export function setWaiting(id: string, personId: string | undefined) {
   return updateTask(id, { waitingPersonId: personId });
 }
+
+/** R-PRJ-8: adds the project to each task, keeping any other projects. */
+export async function linkTasksToProject(projectId: string, taskIds: string[]): Promise<void> {
+  const now = nowIso();
+  await db.transaction('rw', db.tasks, async () => {
+    const tasks = (await db.tasks.bulkGet(taskIds)).filter((t): t is Task => !!t && !t.projectIds.includes(projectId));
+    await db.tasks.bulkPut(tasks.map((t) => ({ ...t, projectIds: [...t.projectIds, projectId], updatedAt: now })));
+  });
+}

@@ -305,7 +305,7 @@ export function TaskScreen({ id }: { id: string }) {
       </p>
 
       <PersonPicker open={pickPerson} onClose={() => setPickPerson(false)} value={task.waitingPersonId} onChange={(id) => void setWaiting(task.id, id)} />
-      <ProjectPicker open={pickProject} onClose={() => setPickProject(false)} selected={task.projectIds} onChange={(projectIds) => set({ projectIds })} />
+      <ProjectPicker open={pickProject} allowCreate onClose={() => setPickProject(false)} selected={task.projectIds} onChange={(projectIds) => set({ projectIds })} />
       <SprintPicker open={pickSprint} onClose={() => setPickSprint(false)} value={task.sprintId} onChange={(sprintId) => set({ sprintId })} />
     </div>
   );
