@@ -48,12 +48,17 @@ export const SCHEMA_V5 = SCHEMA_V4;
 /** v6 (14/10/2026, SPEC 1.9): year reviews (R-YIR). Project.doneAt / Goal.achievedAt need no index. */
 export const SCHEMA_V6 = { ...SCHEMA_V5, yearReviews: 'id' } as const;
 
-/** Tables whose rows mean "someone already uses this device" (R-ONB-1). */
-export const USER_DATA_TABLES = ['tasks', 'projects', 'notes', 'goals', 'challenges', 'routineItems', 'recurring', 'people'] as const;
+/** v7 (24/10/2026, SPEC 1.16): events (3.17). Area.work (R-ARE-1) and settings.work (3.18) need no index. */
+export const SCHEMA_V7 = { ...SCHEMA_V6, events: 'id, date' } as const;
 
-export type TableName = keyof typeof SCHEMA_V6;
-export const TABLE_NAMES = Object.keys(SCHEMA_V6) as TableName[];
-export const CURRENT_SCHEMA_VERSION = 6;
+/** Tables whose rows mean "someone already uses this device" (R-ONB-1). */
+export const USER_DATA_TABLES = ['tasks', 'projects', 'notes', 'goals', 'challenges', 'routineItems', 'recurring', 'people', 'events'] as const;
+/** The same list as it was at db v5 (its upgrade must not see later tables). */
+const USER_DATA_TABLES_V5 = USER_DATA_TABLES.filter((t) => t !== 'events');
+
+export type TableName = keyof typeof SCHEMA_V7;
+export const TABLE_NAMES = Object.keys(SCHEMA_V7) as TableName[];
+export const CURRENT_SCHEMA_VERSION = 7;
 
 export class StayFocusDB extends Dexie {
   tasks!: EntityTable<D.Task, 'id'>;
@@ -74,6 +79,7 @@ export class StayFocusDB extends Dexie {
   agenda!: EntityTable<D.AgendaItem, 'id'>;
   milestones!: EntityTable<D.Milestone, 'id'>;
   yearReviews!: EntityTable<D.YearReview, 'id'>;
+  events!: EntityTable<D.CalEvent, 'id'>;
 
   constructor(name = DB_NAME) {
     super(name);
@@ -88,7 +94,7 @@ export class StayFocusDB extends Dexie {
         const settings = tx.table('settings');
         const s = await settings.get('settings');
         if (!s || s.onboardedAt) return;
-        for (const name of USER_DATA_TABLES) {
+        for (const name of USER_DATA_TABLES_V5) {
           if ((await tx.table(name).count()) > 0) {
             await settings.update('settings', { onboardedAt: s.updatedAt });
             return;
@@ -106,7 +112,20 @@ export class StayFocusDB extends Dexie {
           if (g.status === 'achieved' && !g.achievedAt) g.achievedAt = g.updatedAt;
         });
       });
+    // R-ARE-1: the default "work" area (or one named עבודה) counts as work.
+    this.version(7)
+      .stores(SCHEMA_V7)
+      .upgrade(async (tx) => {
+        await tx.table('areas').toCollection().modify((a) => {
+          a.work = isWorkAreaByDefault(a);
+        });
+      });
   }
+}
+
+/** R-ARE-1: before 1.16 there was no flag; the default work area gets it. */
+export function isWorkAreaByDefault(a: { id: string; name: string }): boolean {
+  return a.id === 'area-work' || a.name.trim() === 'עבודה';
 }
 
 export const db = new StayFocusDB();

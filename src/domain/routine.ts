@@ -1,4 +1,4 @@
-import { isWeekend, minutesOf } from './dates';
+import { addDays, isWeekend, minutesOf } from './dates';
 import type { RoutineItem, RoutineKind, RoutineLog, RoutineSettings } from './schemas';
 
 export interface RoutineWindow {
@@ -16,9 +16,21 @@ export function routineWindows(s: RoutineSettings, date: string): RoutineWindow[
   ];
 }
 
-/** R-RTN-1/2: which routine is showing right now (by minutes since midnight), if any. */
+/** R-RTN-1/2: which routine is showing right now, and the day it belongs to: an evening that ends after midnight belongs to the day before. */
+export function activeRoutine(s: RoutineSettings, today: string, nowMin: number): { window: RoutineWindow; date: string } | undefined {
+  for (const w of routineWindows(s, today)) {
+    const a = minutesOf(w.start);
+    const b = minutesOf(w.end);
+    if (b < a ? nowMin >= a : a <= nowMin && nowMin < b) return { window: w, date: today };
+  }
+  const prev = addDays(today, -1);
+  const evening = routineWindows(s, prev)[1]!;
+  if (minutesOf(evening.end) < minutesOf(evening.start) && nowMin < minutesOf(evening.end)) return { window: evening, date: prev };
+  return undefined;
+}
+
 export function activeRoutineWindow(s: RoutineSettings, date: string, nowMin: number): RoutineWindow | undefined {
-  return routineWindows(s, date).find((w) => minutesOf(w.start) <= nowMin && nowMin < minutesOf(w.end));
+  return activeRoutine(s, date, nowMin)?.window;
 }
 
 export function itemsOf(items: RoutineItem[], kind: RoutineKind): RoutineItem[] {
@@ -31,6 +43,8 @@ export function isItemDone(logs: RoutineLog[], date: string, itemId: string): bo
 
 export interface RoutineCardModel {
   window: RoutineWindow;
+  /** The day the ticks are saved on (yesterday after midnight, R-RTN-2). */
+  date: string;
   items: { item: RoutineItem; done: boolean }[];
   done: number;
   total: number;
@@ -40,12 +54,13 @@ export interface RoutineCardModel {
 
 /** R-RTN-1..3/5: the routine card for "now", or undefined when none is showing. */
 export function routineCard(s: RoutineSettings, allItems: RoutineItem[], logs: RoutineLog[], date: string, nowMin: number): RoutineCardModel | undefined {
-  const w = activeRoutineWindow(s, date, nowMin);
-  if (!w) return undefined;
-  const items = itemsOf(allItems, w.kind).map((item) => ({ item, done: isItemDone(logs, date, item.id) }));
+  const active = activeRoutine(s, date, nowMin);
+  if (!active) return undefined;
+  const w = active.window;
+  const items = itemsOf(allItems, w.kind).map((item) => ({ item, done: isItemDone(logs, active.date, item.id) }));
   if (items.length === 0) return undefined; // R-RTN-3
   const done = items.filter((x) => x.done).length;
-  return { window: w, items, done, total: items.length, complete: done === items.length };
+  return { window: w, date: active.date, items, done, total: items.length, complete: done === items.length };
 }
 
 /** Routine ring (R-TOD-9): items ticked today ÷ all active items of both routines. */

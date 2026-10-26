@@ -2,8 +2,8 @@ import Dexie, { type EntityTable } from 'dexie';
 import { db, TABLE_NAMES } from '../db/db';
 import { defaultAreas, defaultTemplates } from '../db/seed';
 import { logId } from '../domain/challenge';
-import { addDays, dayOfWeek, hhmmOf, nowMinutes, weekStart } from '../domain/dates';
-import { SETTINGS_ID, type AgendaItem, type Challenge, type ChallengeLog, type Goal, type Milestone, type Note, type Person, type Project, type Recurring, type RoutineItem, type RoutineLog, type Sprint, type Task } from '../domain/schemas';
+import { addDays, dayOfWeek, hhmmOf, minutesOf, nowMinutes, weekStart } from '../domain/dates';
+import { SETTINGS_ID, type AgendaItem, type CalEvent, type Challenge, type ChallengeLog, type Goal, type Milestone, type Note, type Person, type Project, type Recurring, type RoutineItem, type RoutineLog, type Sprint, type Task } from '../domain/schemas';
 import { sprintName, sprintRange } from '../domain/sprints';
 import { exportBackup, parseBackup, restoreBackup } from './backup';
 import { getSettings, newId, nowIso } from './entity';
@@ -290,6 +290,22 @@ export async function generateDemo(today: string, now: Date = new Date()): Promi
     { ...st(), title: 'ניקיון יסודי', body: '', projectIds: [], labels: [], rule: { type: 'weekly', days: [5] }, startDate: addDays(today, -90), active: true },
   ];
 
+  // Events (3.17): a few meetings and plans this week and next, some repeating, one today.
+  const ws = weekStart(today);
+  const workProject = projects.find((p) => p.areaId === 'area-work' && p.status === 'active');
+  const E = (title: string, p: Partial<CalEvent>): CalEvent => ({ ...st(), title, date: today, allDay: false, location: '', body: '', repeat: 'none', ...p, skipDates: p.skipDates ?? [] });
+  const friend = people[0];
+  const events: CalEvent[] = [
+    E('פגישת צוות שבועית', { date: addDays(ws, 1), startTime: '10:00', endTime: '11:00', location: 'חדר ישיבות', repeat: 'weekly', projectId: workProject?.id }),
+    E(pick(['שיחת היכרות עם לקוח', 'פגישה עם המעצבת', 'שיחת ייעוץ']), { date: addDays(today, 1), startTime: '14:00', endTime: '14:45', location: 'זום' }),
+    E(pick(['ארוחת ערב עם חברים', 'ערב משחקי קופסה', 'הופעה בפארק']), { date: addDays(ws, 4), startTime: '20:00', endTime: '22:30' }),
+    E(pick(['תור לרופא שיניים', 'תור לתספורת', 'טיפול לרכב']), { date: addDays(today, 2), startTime: '08:30', endTime: '09:15' }),
+    E(`קפה עם ${friend?.name ?? 'נועה'}`, { startTime: slot(150), endTime: hhmmOf(minutesOf(slot(150)) + 45), location: 'בית הקפה בפינה', personId: friend?.id }),
+    E(pick(['יום הולדת לאחות', 'יום הולדת לסבא', 'יום נישואים להורים']), { date: addDays(today, 3), allDay: true, repeat: 'yearly' }),
+    E(pick(['הרצאה בספרייה', 'סדנת צילום', 'מפגש קהילה']), { date: addDays(ws, 9), startTime: '19:00', endTime: '20:30' }),
+    E('ישיבת תכנון חודשית', { date: addDays(today, -20), startTime: '09:30', endTime: '10:30', repeat: 'monthly', projectId: workProject?.id }),
+  ];
+
   await db.transaction('rw', db.tables, async () => {
     for (const name of TABLE_NAMES) await db.table(name).clear();
     await db.settings.add({ ...settings, id: SETTINGS_ID, lastBackupAt: ts, seqCounter: seq, updatedAt: ts });
@@ -308,6 +324,7 @@ export async function generateDemo(today: string, now: Date = new Date()): Promi
     await db.people.bulkAdd(people);
     await db.agenda.bulkAdd(agenda);
     await db.milestones.bulkAdd(milestones);
+    await db.events.bulkAdd(events);
   });
   await runDaily(today);
 }

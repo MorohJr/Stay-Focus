@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { activeChallenge, challengeDay, dayStats, ruleValue, rulesCardVisible, streak } from '../../domain/challenge';
-import { dayOfWeek, diffDays, formatLong, formatRelative, HE_DAYS, hhmmOf, weekNumber, weeksInYear, localDate } from '../../domain/dates';
+import { addDays, dayOfWeek, diffDays, formatLong, formatRelative, HE_DAYS, hhmmOf, weekNumber, weeksInYear, localDate } from '../../domain/dates';
 import { focusGoal, goalProgress, projectCompletion } from '../../domain/goals';
+import { eventsOn, occurrenceTime } from '../../domain/events';
 import { describeRule } from '../../domain/recurring';
 import { routineCard, routineDayStats, itemsOf, ROUTINE_LABEL } from '../../domain/routine';
 import type { Project, Task } from '../../domain/schemas';
@@ -9,7 +10,7 @@ import { sprintNeedingReview, sprintStatus } from '../../domain/sprints';
 import { completion, isInbox } from '../../domain/tasks';
 import { yearBanner } from '../../domain/yearReview';
 import { markYearSeen } from '../../services/yearReview';
-import { DAY_END, DAY_START, dayBlocks, dayCloseCard, formatDuration, freeMinutes, greeting, moreToday, nextTask, nowCard, overdue, regulars, ring, ringsAverage, top3 } from '../../domain/today';
+import { dayBlocks, dayBounds, dayCloseCard, dayFrame, formatDuration, freeMinutes, stripHours, greeting, moreToday, nextTask, nowCard, overdue, regulars, ring, ringsAverage, top3 } from '../../domain/today';
 import { updateSettings } from '../../services/entity';
 import { cycleRule, toggleRoutineItem } from '../../services/habits';
 import { Q } from '../../services/queries';
@@ -31,10 +32,14 @@ export function TodayScreen() {
   const settings = useLive(Q.settings);
   const routineItems = useLive(Q.routineItems) ?? [];
   const routineLogs = useLive(() => Q.routineLogsFor(today), [today]) ?? [];
+  // R-RTN-2: after midnight a late evening routine still ticks yesterday
+  const lateLogs = useLive(() => Q.routineLogsFor(addDays(today, -1)), [today]) ?? [];
   const challenges = useLive(Q.challenges) ?? [];
   const challengeLogs = useLive(Q.allChallengeLogs) ?? [];
   const recurring = useLive(Q.recurring) ?? [];
   const yearReviews = useLive(Q.yearReviews) ?? [];
+  const events = useLive(Q.events) ?? [];
+  const people = useLive(Q.people) ?? [];
   const [postpone, setPostpone] = useState<Task | undefined>();
   const [picking, setPicking] = useState(false);
 
@@ -44,7 +49,7 @@ export function TodayScreen() {
   const pname = (t: Task) => projectName(t.projectIds, projects);
   const now = nowCard(tasks, today, nowMin);
   const next = nextTask(tasks, today, nowMin);
-  const rCard = routineCard(settings.routines, routineItems, routineLogs, today, nowMin);
+  const rCard = routineCard(settings.routines, routineItems, [...routineLogs, ...lateLogs], today, nowMin);
   const close = dayCloseCard(tasks, today, nowMin, settings.dayClosedOn);
   const ch = activeChallenge(challenges, today);
   const top = top3(tasks, today);
@@ -53,8 +58,13 @@ export function TodayScreen() {
   const more = moreToday(tasks, today);
   const goal = focusGoal(goals);
   const hasItems = { morning: itemsOf(routineItems, 'morning').length > 0, evening: itemsOf(routineItems, 'evening').length > 0 };
-  const blocks = dayBlocks(tasks, today, settings.routines, hasItems);
-  const free = freeMinutes(blocks, nowMin);
+  // R-SLP: the strip runs from wake to bedtime; after midnight it is still the previous night.
+  const frame = dayFrame(settings.routines, today, nowMin);
+  const blocks = dayBlocks(tasks, frame.date, settings.routines, hasItems, eventsOn(events, frame.date));
+  const todayEvents = eventsOn(events, today);
+  const free = freeMinutes(blocks, frame.now, frame);
+  const span = frame.bed - frame.wake;
+  const pos = (min: number) => `${((Math.min(Math.max(min, frame.wake), frame.bed) - frame.wake) / span) * 100}%`;
   const curSprint = sprints.find((s) => sprintStatus(s, today) === 'current');
   const sprintC = completion(tasks.filter((t) => curSprint && t.sprintId === curSprint.id));
   const rStats = routineDayStats(routineItems, routineLogs, today);
@@ -195,6 +205,37 @@ export function TodayScreen() {
         </button>
       )}
 
+      {/* 3a. Today's events (R-TOD-12), only when there are some */}
+      {todayEvents.length > 0 && (
+        <section className="card">
+          <h4>
+            <span className="t">
+              <Icon name="cal" size="sm" /> היום ביומן
+            </span>
+            <button type="button" className="minibtn" onClick={() => go('/week')}>
+              שבוע
+            </button>
+          </h4>
+          {todayEvents.map((o) => {
+            const who = people.find((p) => p.id === o.event.personId);
+            const past = o.end !== undefined && o.end <= nowMin;
+            return (
+              <button key={o.event.id} type="button" className={`evrow ${past ? 'past' : ''}`} onClick={() => go(`/event/${o.event.id}/${today}`)}>
+                <span className="when ltr num">{occurrenceTime(o)}</span>
+                <span className="grow">
+                  <b className="gt">{o.event.title}</b>
+                  {(o.event.location || who) && (
+                    <small>
+                      {[o.event.location, who && `${who.emoji} ${who.name}`].filter(Boolean).join(' · ')}
+                    </small>
+                  )}
+                </span>
+              </button>
+            );
+          })}
+        </section>
+      )}
+
       {/* 4. Routine (R-RTN-1..5) */}
       {rCard && (
         <section className="card">
@@ -215,7 +256,7 @@ export function TodayScreen() {
               </h4>
               <div className="chips">
                 {rCard.items.map(({ item, done }) => (
-                  <button key={item.id} type="button" className={`chip ${done ? 'ok' : ''}`} aria-pressed={done} onClick={() => void toggleRoutineItem(today, item.id)}>
+                  <button key={item.id} type="button" className={`chip ${done ? 'ok' : ''}`} aria-pressed={done} onClick={() => void toggleRoutineItem(rCard.date, item.id)}>
                     {done && '✓ '}
                     {item.title}
                   </button>
@@ -434,22 +475,26 @@ export function TodayScreen() {
           <span className="t">
             <Icon name="clock" size="sm" /> היום שלך
           </span>
-          <small>{blocks.filter((b) => b.kind !== 'routine').length} מתוזמנים</small>
+          <small>{blocks.filter((b) => b.kind === 'task' || b.kind === 'top3').length} מתוזמנים</small>
         </h4>
         <div className="strip">
-          {blocks.map((b, i) => (
-            <b
-              key={i}
-              className={`${b.kind} ${b.open ? '' : 'closed'}`}
-              title={`${b.title} ${hhmmOf(b.start)}–${hhmmOf(b.end)}`}
-              style={{ right: `${((Math.max(b.start, DAY_START) - DAY_START) / (DAY_END - DAY_START)) * 100}%`, width: `${((Math.min(b.end, DAY_END) - Math.max(b.start, DAY_START)) / (DAY_END - DAY_START)) * 100}%` }}
-            />
-          ))}
-          {nowMin >= DAY_START && <span className="now" style={{ right: `${((nowMin - DAY_START) / (DAY_END - DAY_START)) * 100}%` }} />}
+          {blocks
+            .filter((b) => b.end > frame.wake && b.start < frame.bed)
+            .map((b, i) => (
+              <b
+                key={i}
+                className={`${b.kind} ${b.open ? '' : 'closed'}`}
+                title={`${b.title} ${hhmmOf(b.start)}–${hhmmOf(b.end)}`}
+                style={{ right: pos(b.start), width: `calc(${pos(b.end)} - ${pos(b.start)})` }}
+              />
+            ))}
+          {!frame.asleep && <span className="now" style={{ right: pos(frame.now) }} />}
         </div>
         <div className="hours">
-          {[24, 21, 18, 15, 12, 9, 6].map((h) => (
-            <span key={h}>{h}</span>
+          {stripHours(frame).map((h) => (
+            <span key={h.min} style={{ right: pos(h.min) }}>
+              {h.label}
+            </span>
           ))}
         </div>
         <div className="lg">
@@ -464,10 +509,22 @@ export function TodayScreen() {
             <i style={{ background: 'var(--ink)' }} />
             משימות
           </span>
+          {blocks.some((b) => b.kind === 'event') && (
+            <span>
+              <i style={{ boxShadow: 'inset 0 0 0 2px var(--blue)' }} />
+              יומן
+            </span>
+          )}
         </div>
-        <div className="free">
-          <Icon name="clock" size="sm" /> נשארו היום <b className="num">{formatDuration(free)}</b> פנויות
-        </div>
+        {frame.asleep ? (
+          <div className="free">
+            <Icon name="moon" size="sm" /> זמן לישון · <span className="muted">{frame.date === today ? 'מחר ' : ''}מ-<span className="ltr num">{hhmmOf(dayBounds(settings.routines, frame.date === today ? addDays(today, 1) : today).wake)}</span></span>
+          </div>
+        ) : (
+          <div className="free">
+            <Icon name="clock" size="sm" /> נשארו היום <b className="num">{formatDuration(free)}</b> פנויות
+          </div>
+        )}
       </section>
 
       {/* 12. Rings (R-TOD-9) */}

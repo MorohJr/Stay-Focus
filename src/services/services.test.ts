@@ -15,6 +15,8 @@ import Dexie from 'dexie';
 import { SCHEMA_V4, SCHEMA_V5, StayFocusDB } from '../db/db';
 import { updateGoal, updateProject } from './planning';
 import { markYearSeen, saveYearAnswers } from './yearReview';
+import { deleteEvent, detachOccurrence, meetingNoteFor, restoreEvent, saveEvent, scheduleTask, skipOccurrence, unschedule } from './events';
+import { searchAll } from './search';
 
 const TODAY = '2026-09-30';
 
@@ -293,8 +295,9 @@ describe('backup and demo', () => {
     expect(await db.challenges.count()).toBe(2);
     expect(await db.people.count()).toBe(5);
     expect(await db.milestones.count()).toBeGreaterThan(5);
+    expect(await db.events.count()).toBe(8);
     // R-DEM-1: nothing about fitness or money
-    const text = JSON.stringify(await db.tasks.toArray()) + JSON.stringify(await db.projects.toArray()) + JSON.stringify(await db.notes.toArray());
+    const text = JSON.stringify(await db.tasks.toArray()) + JSON.stringify(await db.projects.toArray()) + JSON.stringify(await db.notes.toArray()) + JSON.stringify(await db.events.toArray());
     for (const word of ['אימון', 'כושר', 'תזונה', 'חלבון', 'תקציב', 'משכורת', 'השקע', 'חיסכון', 'מניות']) expect(text).not.toContain(word);
     await exitDemo();
     expect(await isDemoMode()).toBe(false);
@@ -414,5 +417,73 @@ describe('year review data (1.9)', () => {
     expect((await v6.goals.get('g'))!.achievedAt).toBe('2026-04-01T00:00:00.000Z');
     v6.close();
     await Dexie.delete(name);
+  });
+});
+
+describe('events and the week (1.16)', () => {
+  it('R-ARE-1: the default work area is work; a v6 backup migrates to v7', async () => {
+    expect((await db.areas.get('area-work'))!.work).toBe(true);
+    expect((await db.areas.get('area-personal'))!.work).toBe(false);
+    const file = JSON.parse(await exportBackup());
+    file.schemaVersion = 6;
+    delete file.data.events;
+    for (const a of file.data.areas) delete a.work;
+    await restoreBackup(await parseBackup(JSON.stringify(file)));
+    expect((await db.areas.get('area-work'))!.work).toBe(true);
+    expect(await db.events.count()).toBe(0);
+  });
+
+  it('R-EVT: save, all-day has no hours, search, unlink on delete, backup round trip', async () => {
+    const p = await createProject({ name: 'p', status: 'active' });
+    const person = await createPerson('דנה');
+    const e = await saveEvent({ title: 'פגישת צוות', date: TODAY, startTime: '10:00', endTime: '11:00', location: 'חדר ישיבות', projectId: p.id, personId: person.id });
+    expect((await searchAll('ישיבות')).map((h) => h.kind)).toEqual(['event']);
+    await saveEvent({ id: e.id, title: e.title, date: TODAY, allDay: true });
+    expect((await db.events.get(e.id))!.startTime).toBeUndefined();
+    await deleteProject(p.id);
+    await deletePerson(person.id);
+    const after = (await db.events.get(e.id))!;
+    expect([after.projectId, after.personId]).toEqual([undefined, undefined]);
+    await restoreBackup(await parseBackup(await exportBackup()));
+    expect(await db.events.count()).toBe(1);
+    await deleteEvent(e.id);
+    expect(await db.events.count()).toBe(0);
+  });
+
+  it('R-WEK-5: scheduling a task and undo', async () => {
+    const t = await createTask({ title: 'x', sprintId: 's' });
+    const before = await scheduleTask(t.id, TODAY, '14:15', 45);
+    expect(await db.tasks.get(t.id)).toMatchObject({ dueDate: TODAY, startTime: '14:15', durationMin: 45 });
+    await unschedule(t.id, before!);
+    const back = (await db.tasks.get(t.id))!;
+    expect([back.dueDate, back.startTime]).toEqual([undefined, undefined]);
+  });
+});
+
+describe('repeating events and meeting summaries (1.16, 25/10)', () => {
+  it('R-EVT-5: only this date — skip with undo, or detach with that day\'s summary', async () => {
+    const e = await saveEvent({ title: 'צוות', date: '2026-09-28', startTime: '10:00', endTime: '11:00', repeat: 'weekly' });
+    const undo = await skipOccurrence(e.id, '2026-10-05');
+    expect((await db.events.get(e.id))!.skipDates).toEqual(['2026-10-05']);
+    await undo();
+    expect((await db.events.get(e.id))!.skipDates).toEqual([]);
+    const note = await meetingNoteFor(e, '2026-10-12');
+    const one = (await detachOccurrence(e.id, '2026-10-12', { title: 'צוות (מוזז)', date: '2026-10-13', startTime: '12:00', endTime: '13:00' }))!;
+    expect(one.repeat).toBe('none');
+    expect((await db.events.get(e.id))!.skipDates).toEqual(['2026-10-12']);
+    expect(await db.notes.get(note.id)).toMatchObject({ eventId: one.id, eventDate: '2026-10-13' });
+  });
+
+  it('R-EVT-7: one summary per occurrence; deleting the series keeps it, undo relinks', async () => {
+    const p = await createProject({ name: 'p', status: 'active' });
+    const e = await saveEvent({ title: 'סטטוס', date: TODAY, startTime: '09:00', endTime: '09:30', projectId: p.id });
+    const a = await meetingNoteFor(e, TODAY);
+    expect(a).toMatchObject({ kinds: ['meeting'], projectIds: [p.id], eventId: e.id, eventDate: TODAY });
+    expect(a.title).toBe('פגישה: סטטוס · 30/9');
+    expect((await meetingNoteFor(e, TODAY)).id).toBe(a.id);
+    const gone = (await deleteEvent(e.id))!;
+    expect((await db.notes.get(a.id))!.eventId).toBeUndefined();
+    await restoreEvent(gone);
+    expect((await db.notes.get(a.id))!.eventId).toBe(e.id);
   });
 });

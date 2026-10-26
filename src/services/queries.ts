@@ -35,5 +35,7 @@ export const Q = {
   yearReviews: () => db.yearReviews.toArray(),
   yearReview: (year: number) => db.yearReviews.get(String(year)).then((x) => x ?? null),
   routineLogs: () => db.routineLogs.toArray(),
+  events: () => db.events.toArray(),
+  event: (id: string) => db.events.get(id).then((x) => x ?? null),
   demo: () => isDemoMode(),
 };

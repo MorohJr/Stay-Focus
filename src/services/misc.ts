@@ -9,7 +9,7 @@ import { nowIso, stamps } from './entity';
 export async function saveArea(input: Partial<Area> & { name: string }): Promise<void> {
   const existing = input.id ? await db.areas.get(input.id) : undefined;
   const order = existing?.order ?? (await db.areas.count());
-  await db.areas.put(existing ? { ...existing, ...input, updatedAt: nowIso() } : { ...stamps(), color: '#3346c4', order, ...input });
+  await db.areas.put(existing ? { ...existing, ...input, work: input.work ?? existing.work, updatedAt: nowIso() } : { ...stamps(), color: '#3346c4', order, ...input, work: input.work ?? false });
 }
 
 /** Projects and goals of a deleted area become "no area". */
