@@ -14,6 +14,7 @@ import { Icon } from '../components/Icon';
 import { projectName, StatusIcon, TaskRow } from '../components/tasks';
 import { ProjectIcon } from '../components/ProjectIcon';
 import { QuickView, useBoardDrag, useFlip } from '../components/board';
+import { SprintCharts } from '../components/deskCards';
 import { useGlass } from '../design';
 import { useClock, useLive } from '../hooks';
 import { back, go, replace } from '../router';
@@ -81,6 +82,7 @@ export function SprintScreen({ tab = 'board' }: { tab?: string }) {
       {t === 'board' && cur && <Board tasks={tasks.filter((x) => x.sprintId === cur.id && !x.parentId)} sprintId={cur.id} />}
       {t === 'plan' && <Planning tasks={tasks} cur={cur} next={next} />}
       {t === 'all' && <AllSprints sprints={sprints} tasks={tasks} />}
+      {t === 'board' && <SprintCharts sprints={sprints} tasks={tasks} today={today} cur={cur} />}
     </div>
   );
 }

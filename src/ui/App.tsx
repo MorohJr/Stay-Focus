@@ -35,7 +35,7 @@ const TABS = [
 ];
 /** Desktop tabs also show "more" (on the phone it's the gear at the top, R-NAV-1). */
 const DTABS = [...TABS, { id: 'more', label: 'עוד', icon: 'more' }];
-/** R-UI-12 (glass, desktop): quick actions on the dark rail. */
+/** R-UI-12 (glass, desktop): quick actions on the dark rail, under the tabs. */
 const RAIL = [
   { to: '/search', label: 'חיפוש', icon: 'search' },
   { to: '/tasks/inbox', label: 'דואר נכנס', icon: 'inbox' },
@@ -50,6 +50,10 @@ const RAIL = [
 /** Screens that show the bottom nav and the + button. */
 const MAIN = new Set(['', 'week', 'tasks', 'sprint', 'projects', 'more', 'notes', 'challenges', 'recurring', 'people', 'summaries']);
 const OWNER: Record<string, string> = { notes: 'more', challenges: 'more', recurring: 'more', people: 'more', summaries: 'more' };
+/** R-UI-12 (desktop): the rail marks the tab a screen belongs to; screens opened from "more" mark it. */
+const RAIL_OWNER: Record<string, string> = { task: 'tasks', 'new-task': 'tasks', project: 'projects', goal: 'projects', 'sprint-view': 'sprint', review: 'sprint' };
+/** …and a screen opened from a quick action marks that action. */
+const QUICK_OWNER: Record<string, string> = { person: '/people', note: '/notes', challenge: '/challenges' };
 
 function screenFor(r: string[]): ReactNode {
   const [a = '', b, c] = r;
@@ -174,7 +178,7 @@ export function App() {
       <div className="app">
         <UpdateBanner />
         <DemoBanner />
-        {glass && <DesktopChrome active={activeTab} onCapture={() => setCapture(true)} />}
+        {glass && <DesktopChrome active={railTab(top)} at={QUICK_OWNER[top] ?? `/${route.join('/')}`} onCapture={() => setCapture(true)} />}
         <div className={top === '' ? 'today-wrap' : 'inner'}>{screenFor(route)}</div>
         {main && (
           <>
@@ -209,50 +213,52 @@ export function App() {
   );
 }
 
-/** R-DSK-1 / R-UI-12: on a wide screen, the main tabs on top and a dark rail of quick actions. CSS shows it from 1024px. */
-function DesktopChrome({ active, onCapture }: { active: string; onCapture: () => void }) {
+/** The rail's marked tab: the screen's own tab; a quick action marks itself instead; anything else came from "more". */
+function railTab(top: string): string {
+  if (RAIL_OWNER[top]) return RAIL_OWNER[top];
+  if (QUICK_OWNER[top] || RAIL.some((r) => 'to' in r && r.to === `/${top}`)) return '';
+  return DTABS.some((t) => t.id === top) ? top : 'more';
+}
+
+/** R-DSK-1 / R-UI-12 (1.15): on a wide screen, one dark rail: brand, +, the main tabs, then quick actions. CSS shows it from 1024px. */
+function DesktopChrome({ active, at, onCapture }: { active: string; at: string; onCapture: () => void }) {
   return (
-    <>
-      <header className="dtop">
-        <span className="dbrand">
-          <i aria-hidden="true">
-            <b />
-          </i>
-          Stay Focus
-        </span>
-        <nav className="dtabs" aria-label="מסכים">
-          {DTABS.map((t) => (
-            <a
-              key={t.id}
-              href={`#/${t.id}`}
-              className={active === t.id ? 'on' : ''}
-              aria-current={active === t.id ? 'page' : undefined}
-              onClick={(e) => {
-                e.preventDefault();
-                go(`/${t.id}`);
-              }}
-            >
-              {t.label}
-            </a>
-          ))}
-        </nav>
-      </header>
-      <aside className="rail" aria-label="פעולות מהירות">
-        <button type="button" className="add" aria-label="רישום מהיר" data-tip="רישום מהיר" onClick={onCapture}>
-          <Icon name="plus" />
-        </button>
-        <i className="sep" />
-        {RAIL.map((r, i) =>
-          'sep' in r ? (
-            <i key={i} className="sep" />
-          ) : (
-            <button key={r.to} type="button" aria-label={r.label} data-tip={r.label} onClick={() => go(r.to)}>
-              <Icon name={r.icon} />
-            </button>
-          ),
-        )}
-      </aside>
-    </>
+    <aside className="rail" aria-label="ניווט">
+      <span className="rbrand" title="Stay Focus" aria-hidden="true">
+        <b />
+      </span>
+      <button type="button" className="add" aria-label="רישום מהיר" data-tip="רישום מהיר" onClick={onCapture}>
+        <Icon name="plus" />
+      </button>
+      <nav className="rtabs" aria-label="מסכים">
+        {DTABS.map((t) => (
+          <a
+            key={t.id}
+            href={`#/${t.id}`}
+            className={active === t.id ? 'on' : ''}
+            aria-current={active === t.id ? 'page' : undefined}
+            aria-label={t.label}
+            data-tip={t.label}
+            onClick={(e) => {
+              e.preventDefault();
+              go(`/${t.id}`);
+            }}
+          >
+            <Icon name={t.icon} />
+          </a>
+        ))}
+      </nav>
+      <i className="sep" />
+      {RAIL.map((r, i) =>
+        'sep' in r ? (
+          <i key={i} className="sep grow-sep" />
+        ) : (
+          <button key={r.to} type="button" className={at === r.to ? 'on' : ''} aria-label={r.label} aria-current={at === r.to ? 'page' : undefined} data-tip={r.label} onClick={() => go(r.to)}>
+            <Icon name={r.icon} />
+          </button>
+        ),
+      )}
+    </aside>
   );
 }
 

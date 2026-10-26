@@ -5,9 +5,10 @@ import { sprintStatus } from '../../domain/sprints';
 import { DAY_PART_LABEL, completedIn, yearsWithData, yearSummary, type DayPart, type EventKind, type TimelineMonth, type YearInput } from '../../domain/yearReview';
 import { Q } from '../../services/queries';
 import { markYearSeen, saveYearAnswers } from '../../services/yearReview';
-import { Bars, Donut, Gantt, Heatmap, HBars, StackedBars } from '../components/charts';
+import { trendSeries, type TrendPeriod } from '../../domain/trend';
+import { Bars, Donut, Gantt, Heatmap, HBars, RichBars, StackedBars, TrendChart } from '../components/charts';
 import { CountUp, Empty, Num, Seg, Tabs, TopBar } from '../components/common';
-import { useGlass } from '../design';
+import { useGlass, useWide } from '../design';
 import { DraftTextarea } from '../components/edit';
 import { Icon } from '../components/Icon';
 import { ProjectIcon } from '../components/ProjectIcon';
@@ -45,6 +46,11 @@ export function YearScreen({ year: param }: { year?: string }) {
   const s = useMemo(() => (input ? yearSummary(input, year, today) : undefined), [input, year, today]);
   const years = useMemo(() => (input ? yearsWithData(input, today) : [year]), [input, today, year]);
   const glass = useGlass();
+  // R-DSK-3: the big charts on a desktop (glass look); the phone keeps the small ones
+  const wide = useWide();
+  const rich = glass && wide;
+  const [period, setPeriod] = useState<TrendPeriod>('month');
+  const trend = useMemo(() => (input && rich ? trendSeries(input.tasks, input.projects, input.areas, year, period, today) : undefined), [input, rich, year, period, today]);
   useEffect(() => {
     void markYearSeen(year); // R-YIR-1
   }, [year]);
@@ -52,7 +58,7 @@ export function YearScreen({ year: param }: { year?: string }) {
   const k = s.kpi;
 
   return (
-    <div className="page sub year">
+    <div className="page sub year dgrid">
       <TopBar
         title={`${year} במבט לאחור`}
         sub={s.partial ? `עד היום, ${formatDMY(today)}` : 'השנה כולה, 1/1 עד 31/12'}
@@ -74,7 +80,7 @@ export function YearScreen({ year: param }: { year?: string }) {
       ) : (
         <>
           {/* 2. KPIs */}
-          <Section title="במספרים">
+          <Section title="במספרים" cls="dspan2">
             <div className="kpis">
               <Kpi k="משימות שהושלמו" v={k.tasks} sub={k.change !== null ? <Change pct={k.change} /> : undefined} />
               <Kpi k="פרויקטים שהושלמו" v={k.projects} />
@@ -89,7 +95,7 @@ export function YearScreen({ year: param }: { year?: string }) {
 
           {/* 3. Highlights */}
           {s.highlights.length > 0 && (
-            <Section title="רגעי שיא">
+            <Section title="רגעי שיא" cls="dspan2">
               <div className="highlights">
                 {s.highlights.map((h) => (
                   <div key={h.text} className="hl">
@@ -103,39 +109,51 @@ export function YearScreen({ year: param }: { year?: string }) {
             </Section>
           )}
 
-          {/* 4. By month */}
-          <Section title="משימות שהושלמו בכל חודש" note={s.prevMonths ? `הקו הדק: ${year - 1}` : undefined}>
-            <Bars
-              values={s.months}
-              ghost={s.prevMonths}
-              labels={HE_MONTHS.map((m) => m.slice(0, 3))}
-              highlight={s.months.indexOf(Math.max(...s.months))}
-              unit="משימות"
-              describe={(i) => `${HE_MONTHS[i]} ${year}`}
-            />
-          </Section>
-
-          {/* R-YIR-5 (glass look): the same months, split by area */}
-          {glass && s.areas.length > 1 && (
-            <Section title="בכל חודש, לפי תחום">
-              <StackedBars months={s.areaMonths} series={s.areas.map((a) => ({ key: a.id || 'none', name: a.name, color: a.color }))} labels={HE_MONTHS.map((m) => m.slice(0, 3))} describe={(i) => `${HE_MONTHS[i]} ${year}`} />
+          {/* 4. By month (R-DSK-3: on a desktop, one big chart by week / month / year, split by area) */}
+          {trend ? (
+            <Section title="משימות שהושלמו" cls="dwide">
+              <TrendChart trend={trend} year={year} onPeriod={setPeriod} />
             </Section>
+          ) : (
+            <>
+              <Section title="משימות שהושלמו בכל חודש" note={s.prevMonths ? `הקו הדק: ${year - 1}` : undefined}>
+                <Bars
+                  values={s.months}
+                  ghost={s.prevMonths}
+                  labels={HE_MONTHS.map((m) => m.slice(0, 3))}
+                  highlight={s.months.indexOf(Math.max(...s.months))}
+                  unit="משימות"
+                  describe={(i) => `${HE_MONTHS[i]} ${year}`}
+                />
+              </Section>
+
+              {/* R-YIR-5 (glass look): the same months, split by area */}
+              {glass && s.areas.length > 1 && (
+                <Section title="בכל חודש, לפי תחום">
+                  <StackedBars months={s.areaMonths} series={s.areas.map((a) => ({ key: a.id || 'none', name: a.name, color: a.color }))} labels={HE_MONTHS.map((m) => m.slice(0, 3))} describe={(i) => `${HE_MONTHS[i]} ${year}`} />
+                </Section>
+              )}
+            </>
           )}
 
           {/* 5. Heatmap */}
-          <Section title="השנה, יום אחרי יום">
+          <Section title="השנה, יום אחרי יום" cls="dspan2">
             <Heatmap year={year} daily={s.daily} today={today} />
           </Section>
 
           {/* 6. When I work */}
-          <Section title="מתי אני עובד">
-            <Bars values={s.weekdays} labels={HE_DAYS_SHORT} highlight={s.weekdays.indexOf(Math.max(...s.weekdays))} unit="משימות" describe={(i) => `יום ${HE_DAYS[i]}`} />
+          <Section title="מתי אני עובד" cls="dspan2">
+            {rich ? (
+              <RichBars rows={s.weekdays.map((v, i) => ({ label: HE_DAYS[i]!, title: `יום ${HE_DAYS[i]}`, parts: [v] }))} series={[{ name: 'משימות', color: 'var(--blue)' }]} unit="משימות" highlight={s.weekdays.indexOf(Math.max(...s.weekdays))} />
+            ) : (
+              <Bars values={s.weekdays} labels={HE_DAYS_SHORT} highlight={s.weekdays.indexOf(Math.max(...s.weekdays))} unit="משימות" describe={(i) => `יום ${HE_DAYS[i]}`} />
+            )}
             <HBars rows={(Object.keys(DAY_PART_LABEL) as DayPart[]).map((p) => ({ key: p, label: DAY_PART_LABEL[p], value: s.parts[p], pct: k.tasks ? Math.round((s.parts[p] / k.tasks) * 100) : 0 }))} />
           </Section>
 
           {/* 7. Projects along the year */}
           {s.spans.length > 0 && (
-            <Section title="פרויקטים לאורך השנה" note="פס מלא = הושלם">
+            <Section title="פרויקטים לאורך השנה" note="פס מלא = הושלם" cls="dspan2">
               <Gantt
                 spans={s.spans}
                 year={year}
@@ -182,7 +200,7 @@ export function YearScreen({ year: param }: { year?: string }) {
       )}
 
       {/* 12. My review */}
-      <Section title="הסיכום שלי">
+      <Section title="הסיכום שלי" cls="dspan2">
         <div className="card boxed reflect">
           <label>מה הלך טוב השנה?</label>
           <DraftTextarea rows={3} value={review?.wins ?? ''} onSave={(v) => void saveYearAnswers(year, { wins: v })} placeholder="ההצלחות, הרגעים הטובים…" />
@@ -199,9 +217,9 @@ export function YearScreen({ year: param }: { year?: string }) {
   );
 }
 
-function Section({ title, note, children }: { title: string; note?: string; children: ReactNode }) {
+function Section({ title, note, cls, children }: { title: string; note?: string; cls?: string; children: ReactNode }) {
   return (
-    <section className="ysec">
+    <section className={cls ? `ysec ${cls}` : 'ysec'}>
       <div className="section-title">
         <span>{title}</span>
         {note && <span className="muted">{note}</span>}

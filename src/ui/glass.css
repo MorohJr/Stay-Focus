@@ -305,6 +305,141 @@
 .dleg i { width: 9px; height: 9px; border-radius: 50%; flex: none; }
 .dleg b { font-size: 13px; }
 
+/* ---------- big desktop charts (R-DSK-3) ---------- */
+.rchart { margin: 6px 0 4px; }
+.rc-plot { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; }
+.rc-y { position: relative; width: 26px; }
+.rc-y span { position: absolute; inset-inline-start: 0; transform: translateY(50%); font-size: 11px; color: var(--muted); line-height: 1; }
+.rc-area { position: relative; height: 320px; }
+.rc-grid { position: absolute; inset-inline: 0; height: 0; border-top: 1px dashed var(--line); }
+.rc-grid:first-child { border-top-style: solid; }
+.rc-bars { position: absolute; inset: 0; display: flex; gap: 3px; }
+.rc-col { position: relative; flex: 1; min-width: 0; height: 100%; padding: 0; display: flex; align-items: flex-end; justify-content: center; border-radius: 8px; transition: background-color 0.15s; }
+.rc-col.on { background: var(--surface2); }
+.rc-col:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
+.rc-stack { width: 72%; max-width: 38px; display: flex; flex-direction: column-reverse; gap: 2px; transform-origin: bottom; animation: gl-grow-y 0.9s cubic-bezier(0.22, 1, 0.36, 1) backwards; animation-delay: calc(var(--i, 0) * 15ms + 120ms); }
+.rc-stack i { display: block; min-height: 2px; border-radius: 5px; opacity: 0.88; transition: opacity 0.15s; }
+.rc-col.on .rc-stack i,
+.rc-col.hi .rc-stack i { opacity: 1; }
+.rc-col.fut .rc-stack { opacity: 0.35; }
+.rc-prev { position: absolute; inset-inline: 10%; height: 2px; margin-bottom: -1px; border-radius: 2px; background: var(--ink); opacity: 0.45; pointer-events: none; }
+.rc-x { display: flex; gap: 3px; margin-inline-start: 36px; padding-top: 7px; }
+.rc-x span { flex: 1; min-width: 0; text-align: center; font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: visible; }
+.rc-x span.on { color: var(--ink); font-weight: 700; }
+.rc-tip { position: absolute; z-index: 5; top: 6px; min-width: 150px; padding: 10px 12px; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.1); background: #151514; color: #fff; font-size: 12.5px; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.25); pointer-events: none; white-space: nowrap; animation: gl-fade 0.15s backwards; }
+.rc-tip-v { font-size: 13px; margin: 3px 0 6px; color: #d9d7cf; }
+.rc-tip-v .num { font: 600 22px var(--font-num); color: #fff; }
+.rc-tip-r { display: flex; align-items: center; gap: 7px; padding: 2px 0; }
+.rc-tip-r i { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.rc-tip-p { border-top: 1px solid rgba(255, 255, 255, 0.15); margin-top: 6px; padding-top: 6px; color: #d9d7cf; display: flex; gap: 6px; align-items: baseline; }
+.rc-tip-p b { color: #fff; }
+.rc-d { font-weight: 700; font-size: 11.5px; }
+.rc-d.up { color: #6fe0b0; }
+.rc-d.down { color: #ff9b8f; }
+.tc-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+.tc-big { display: flex; align-items: baseline; gap: 10px; }
+.tc-big .num { font: 600 44px/1 var(--font-num); letter-spacing: -1px; }
+.tc-big small { color: var(--muted); font-size: 13.5px; }
+.tc-cmp { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 13px; }
+.tc-head .seg { min-width: 280px; }
+.tc-leg { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 12px; font-size: 12.5px; color: var(--ink2); }
+.tc-leg span { display: inline-flex; align-items: center; gap: 6px; }
+.tc-leg i { width: 9px; height: 9px; border-radius: 50%; }
+.tc-prev-key { display: inline-block; width: 14px; height: 2px; border-radius: 2px; background: var(--ink); opacity: 0.45; }
+
+/* ---------- more desktop charts, each its own shape (R-DSK-4) ---------- */
+.dchart { padding: 20px 22px 16px; }
+.dc-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+.dc-title { font-size: 13px; font-weight: 600; color: var(--ink2); margin-bottom: 6px; }
+.dc-hits { position: absolute; inset: 0; display: flex; z-index: 3; }
+.dc-hits button { flex: 1; min-width: 0; padding: 0; border-radius: 6px; }
+.dc-hits button:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
+.dc-key { display: inline-block; width: 16px; height: 0; border-top: 2.5px solid var(--c); border-radius: 2px; }
+.dc-key.dash { border-top-style: dashed; }
+.dc-key.bar { width: 10px; height: 10px; border: 0; border-radius: 3px; background: var(--c); }
+.dc-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+/* line: smooth with an area, or steps */
+.lp-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.lp-line { fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 2000; animation: gl-draw 1.4s var(--ease) backwards 0.2s; }
+.lp-line.dash { stroke-width: 1.8; stroke-dasharray: 5 5; opacity: 0.6; animation: gl-fade 0.8s backwards 0.4s; }
+.lp-area { animation: gl-fade 1s backwards 0.5s; }
+.lp-guide { position: absolute; top: 0; bottom: 0; width: 0; border-inline-start: 1px dashed var(--track2); pointer-events: none; }
+.lp-dot.end { width: 9px; height: 9px; margin: 0 -4.5px -4.5px; animation: gl-fade 0.4s backwards 1.2s; }
+.lp-dot { position: absolute; width: 11px; height: 11px; margin: 0 -5.5px -5.5px; border-radius: 50%; background: var(--sheet-bg); border: 2.5px solid; pointer-events: none; z-index: 2; }
+@keyframes gl-draw { from { stroke-dashoffset: 2000; } to { stroke-dashoffset: 0; } }
+/* lollipops */
+.lol-cols { position: absolute; inset: 0; display: flex; }
+.lol-col { position: relative; flex: 1; min-width: 0; display: flex; justify-content: center; }
+.lol-stick { position: absolute; bottom: 0; width: 3px; border-radius: 3px; background: var(--track2); transform-origin: bottom; animation: gl-grow-y 0.9s var(--ease) backwards; animation-delay: calc(var(--i, 0) * 50ms + 120ms); }
+.lol-dot { position: absolute; width: 34px; height: 34px; margin-bottom: -17px; border-radius: 50%; display: grid; place-items: center; font-size: 11.5px; font-weight: 700; background: var(--sheet-bg); border: 2.5px solid var(--blue); color: var(--ink); animation: gl-pop 0.5s var(--ease) backwards; animation-delay: calc(var(--i, 0) * 50ms + 500ms); }
+.lol-col.hi .lol-dot { background: var(--blue); color: #fff; }
+.lol-col.hi .lol-stick { background: var(--blue); }
+.lol-col.on .lol-dot { transform: scale(1.15); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18); }
+.lol-avg { position: absolute; inset-inline: 0; height: 0; border-top: 1.5px dashed var(--sand2); z-index: 1; }
+.lol-avg span { position: absolute; inset-inline-end: 0; top: -20px; font-size: 11px; color: var(--sand-ink); background: var(--sand); padding: 1px 7px; border-radius: 8px; }
+/* mirror bars */
+.mb-axis { position: absolute; inset-inline: 0; bottom: 50%; height: 0; border-top: 1.5px solid var(--track2); }
+.mb-cols { position: absolute; inset: 0; display: flex; gap: 6px; }
+.mb-col { position: relative; flex: 1; min-width: 0; border-radius: 8px; transition: background-color 0.15s; }
+.mb-col.on { background: var(--surface2); }
+.mb-up,
+.mb-down { position: absolute; inset-inline: 22%; display: block; animation: gl-grow-y 0.8s var(--ease) backwards; animation-delay: calc(var(--i, 0) * 40ms + 150ms); }
+.mb-up { bottom: 50%; background: var(--sand2); border-radius: 6px 6px 0 0; transform-origin: bottom; }
+.mb-down { top: 50%; background: var(--blue); border-radius: 0 0 6px 6px; transform-origin: top; }
+.mb-open-lab { position: absolute; z-index: 2; margin-bottom: 8px; transform: translateX(-50%); white-space: nowrap; font-size: 11.5px; color: var(--ink2); background: var(--sheet-bg); padding: 1px 7px; border-radius: 8px; border: 1px solid var(--line); pointer-events: none; }
+.mb-open { stroke: var(--ink); stroke-width: 2; opacity: 0.7; }
+/* heat matrix */
+.hm2-grid { display: grid; gap: 4px; align-items: center; }
+.hm2-d { font-size: 10.5px; color: var(--muted); text-align: center; height: 14px; }
+.hm2-d.on { color: var(--ink); font-weight: 700; }
+.hm2-name { font-size: 12.5px; padding-inline-end: 8px; unicode-bidi: plaintext; text-align: right; }
+.hm2-c { display: block; aspect-ratio: 1; max-height: 26px; border-radius: 5px; animation: gl-fade 0.5s backwards; animation-delay: calc(var(--i, 0) * 15ms + 100ms); }
+.hm2-c.y { background: var(--blue); }
+.hm2-c.n { background: var(--track); }
+.hm2-c.na { background: transparent; border: 1px dashed var(--line); }
+.hm2-c.on { outline: 2px solid var(--ink); outline-offset: 1px; }
+.hm2-p { height: 38px; padding: 0; display: flex; align-items: flex-end; justify-content: center; border-radius: 5px; background: var(--surface2); }
+.hm2-p i { display: block; width: 100%; border-radius: 5px; background: var(--deep); opacity: 0.75; }
+.hm2-p.on i { opacity: 1; }
+/* streak lanes */
+.lane { display: grid; grid-template-columns: minmax(110px, 170px) minmax(0, 1fr) 120px; gap: 14px; align-items: center; margin-bottom: 14px; }
+.lane-name { font-size: 13px; font-weight: 600; unicode-bidi: plaintext; text-align: right; }
+.lane-track { position: relative; height: 22px; }
+.lane-span { position: absolute; top: 8px; height: 6px; border-radius: 6px; background: var(--track2); opacity: 0.6; }
+.lane-run { position: absolute; top: 2px; height: 18px; padding: 0; border-radius: 9px; background: linear-gradient(90deg, var(--blue), var(--mint-hi)); transform-origin: right; animation: gl-grow-x 0.8s var(--ease) backwards; animation-delay: calc(var(--i, 0) * 12ms + 150ms); }
+.lane-run.on,
+.lane-run:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.lane-tip { position: absolute; bottom: calc(100% + 8px); inset-inline-start: 0; white-space: nowrap; background: #151514; color: #fff; font-size: 12px; padding: 5px 10px; border-radius: 9px; z-index: 4; }
+.lane-dot { position: absolute; top: 6px; width: 10px; height: 10px; margin-inline-start: -5px; border-radius: 50%; }
+.lane-dot.broken { background: var(--danger); box-shadow: 0 0 0 3px var(--sheet-bg); }
+.lane-dot.partial { background: var(--track2); }
+.lane-stat { font-size: 12.5px; white-space: nowrap; }
+.lane-stat b { font: 600 18px var(--font-num); }
+.lane-axis { margin: 2px 0 0; }
+.lane-axis .lane-track { height: 14px; }
+.lane-axis .lane-track span { position: absolute; transform: translateX(50%); font-size: 11px; color: var(--muted); white-space: nowrap; }
+
+/* ---------- desktop screens across the window (R-DSK-1) ---------- */
+@media (min-width: 1024px) {
+  /* screens of one thing (task, note, settings…): groups flow into columns */
+  .gl .dcols { columns: var(--dcols) 340px; column-gap: 18px; }
+  .gl .dcols > * { break-inside: avoid; }
+  .gl .dcols > .shead { column-span: all; margin-bottom: 18px; }
+  .gl .dcols > .section-title { break-after: avoid; }
+  .gl .dcols > .card { display: block; width: 100%; }
+  .gl .dcols > .dwide { column-span: all; margin-bottom: 16px; }
+  .gl .today-wrap .page > .dchart { grid-column: span 2; }
+  /* long lists inside a card: rows flow into columns */
+  .gl .dlist:has(> :nth-child(6)) { columns: 3 440px; column-gap: 34px; column-rule: 1px solid var(--line); }
+  .gl .dlist > * { break-inside: avoid; }
+  .gl .pgrid { grid-template-columns: repeat(var(--dcols), minmax(0, 1fr)); gap: 16px; }
+  .gl .year .ysec { margin: 0; padding: 18px 20px; border-radius: 26px; background: var(--surface); border: 1px solid var(--edge); box-shadow: var(--shadow); }
+  .gl .year > .ysec.dwide .rc-area { height: 340px; }
+  .gl .year .donut .dw,
+  .gl .year .donut .dw svg { width: 200px; height: 200px; }
+  .gl .year .bars { height: 260px; }
+}
+
 /* ---------- loading skeleton (R-UI-11) ---------- */
 .gl .skel > * { animation: none; }
 .gl .sk { display: block; border-radius: 22px; border: 1px solid var(--edge); background: linear-gradient(100deg, var(--surface) 25%, var(--surface-hi) 45%, var(--surface) 65%) 0 0 / 220% 100%; animation: gl-shim 1.1s linear infinite; }
@@ -316,46 +451,53 @@
   .gl .sk-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
-/* ---------- desktop (R-DSK-1): main tabs on top, a dark rail of quick actions ---------- */
-.dtop,
+/* ---------- desktop (R-DSK-1, R-UI-12, 1.15): one dark rail on the right, content across the whole window ---------- */
 .rail { display: none; }
 @media (min-width: 1024px) {
-  .gl .dtop { display: flex; align-items: center; gap: 22px; max-width: 1320px; margin: 0 auto; padding-block: 22px 0; padding-inline: 120px 40px; view-transition-name: gl-dtop; }
-  .gl .dbrand { display: flex; align-items: center; gap: 9px; font: 800 15px var(--font-num); direction: ltr; white-space: nowrap; }
-  .gl .dbrand i { width: 32px; height: 32px; border-radius: 10px; background: var(--ink); display: grid; place-items: center; }
-  .gl .dbrand b { width: 12px; height: 12px; border-radius: 50%; border: 3px solid var(--mint-hi); }
-  .gl .dtabs { display: flex; gap: 2px; }
-  .gl .dtabs a { padding: 10px 18px; border-radius: 99px; color: var(--ink2); font-weight: 500; font-size: 14.5px; transition: background-color 0.3s, color 0.3s; }
-  .gl .dtabs a:hover:not(.on) { background: var(--surface2); }
-  .gl .dtabs a.on { background: var(--ink); color: var(--on-ink); font-weight: 600; box-shadow: 0 8px 18px rgba(0, 0, 0, 0.16); }
-  .gl .rail { display: flex; flex-direction: column; gap: 6px; position: fixed; z-index: 40; right: 22px; top: 50%; transform: translateY(-50%); padding: 10px 7px; border-radius: 40px; background: #151514; box-shadow: 0 18px 44px rgba(0, 0, 0, 0.3); view-transition-name: gl-rail; }
-  .gl .rail button { position: relative; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; color: #bdbbb1; transition: background-color 0.2s, color 0.2s; }
-  .gl .rail button:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
-  .gl .rail .add { background: var(--blue); color: #fff; }
+  .gl { --rail-gap: 112px; --side-gap: 40px; --dcols: 3; }
+  .gl .rail { --rb: clamp(32px, calc((100dvh - 150px) / 15), 46px); display: flex; flex-direction: column; align-items: center; gap: 4px; position: fixed; z-index: 40; right: 22px; top: 18px; bottom: 18px; padding: 12px 7px; border-radius: 40px; background: #151514; box-shadow: 0 18px 44px rgba(0, 0, 0, 0.3); view-transition-name: gl-rail; }
+  .gl .rail :is(button, a) { position: relative; width: var(--rb); height: var(--rb); flex: none; border-radius: 50%; display: grid; place-items: center; color: #bdbbb1; transition: background-color 0.2s, color 0.2s; }
+  .gl .rail :is(button, a):hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+  .gl .rail :is(button, a):focus-visible { outline: 2px solid var(--mint-hi); outline-offset: 2px; }
+  .gl .rail .add { background: var(--blue); color: #fff; margin-bottom: 6px; }
   .gl .rail .add:hover { background: var(--blue); filter: brightness(1.1); }
-  .gl .rail .sep { display: block; height: 1px; background: rgba(255, 255, 255, 0.12); margin: 3px 8px; }
-  .gl .rail button:hover::after { content: attr(data-tip); position: absolute; right: calc(100% + 10px); white-space: nowrap; background: #151514; color: #fff; font-size: 12.5px; padding: 6px 11px; border-radius: 10px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25); pointer-events: none; }
+  .gl .rtabs { display: flex; flex-direction: column; gap: 4px; }
+  .gl .rail :is(button, a).on { background: #f4f2ea; color: #151514; }
+  .gl .rail .on::before { content: ''; position: absolute; right: -6px; top: 50%; width: 4px; height: 16px; margin-top: -8px; border-radius: 4px; background: var(--mint-hi); }
+  .gl .rbrand { width: var(--rb); height: var(--rb); flex: none; border-radius: 50%; display: grid; place-items: center; margin-bottom: 4px; }
+  .gl .rbrand b { width: 14px; height: 14px; border-radius: 50%; border: 3.5px solid var(--mint-hi); }
+  .gl .rail .sep { display: block; flex: none; width: 60%; height: 1px; background: rgba(255, 255, 255, 0.12); margin: 5px 0; }
+  .gl .rail .grow-sep { margin-top: auto; }
+  /* the name of this one icon only, beside it (mouse or keyboard) */
+  .gl .rail :is(button, a):is(:hover, :focus-visible)::after { content: attr(data-tip); position: absolute; right: calc(100% + 14px); top: 50%; transform: translateY(-50%); white-space: nowrap; background: #151514; color: #fff; font-size: 12.5px; font-weight: 500; padding: 6px 11px; border-radius: 10px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25); pointer-events: none; animation: gl-fade 0.15s backwards; }
   .gl .nav,
   .gl .fab { display: none; }
   .gl .page,
-  .gl .page.sub { max-width: 1320px; padding-block: 18px 60px; padding-inline: 120px 40px; }
-  .gl .inner .page { max-width: 1240px; }
+  .gl .page.sub { max-width: none; padding-block: 26px 60px; padding-inline: var(--rail-gap) var(--side-gap); }
   .gl .toast { bottom: 28px; }
-  .gl .shead-mini-in { max-width: 1320px; padding-inline: 120px 40px; }
+  .gl .shead-mini-in { max-width: none; padding-inline: var(--rail-gap) var(--side-gap); }
   /* header: the title and the numbers on one line */
   .gl .shead { display: flex; flex-wrap: wrap; align-items: flex-end; column-gap: 44px; }
   .gl .shead-bar { flex-basis: 100%; }
   .gl .shead-title { flex: 0 1 auto; }
   .gl .shead-stats { margin-top: 0; padding-bottom: 4px; }
   .gl .shead h1 { font-size: 38px; }
-  /* Today as a dashboard: the header and "now" wide, then rows of cards */
-  .gl .today-wrap .page { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-flow: row dense; gap: 16px; align-items: start; }
-  .gl .today-wrap .page > * { margin: 0; min-width: 0; }
+  /* a grid that adds columns as the window grows: Today, and screens of cards */
+  .gl :is(.today-wrap .page, .dgrid) { display: grid; grid-template-columns: repeat(var(--dcols), minmax(0, 1fr)); grid-auto-flow: row dense; gap: 16px; align-items: start; }
+  .gl :is(.today-wrap .page, .dgrid) > * { margin: 0; min-width: 0; }
   .gl .today-wrap .page > :is(.hdr, .banner) { grid-column: 1 / -1; }
   .gl .today-wrap .page > :is(.hero, .card:has(.strip)) { grid-column: span 2; }
+  .gl .dgrid > :is(.shead, .tabs, .chips, .section-title, .input, .addrow, .banner, p, dialog, .dwide) { grid-column: 1 / -1; }
+  .gl .dgrid > .dspan2 { grid-column: span 2; }
   .gl .hdr .hello { font-size: 42px; }
   .gl dialog.sheet { margin: auto; }
   .gl .sheet-in { border-radius: 30px; }
+}
+@media (min-width: 1440px) {
+  .gl { --dcols: 4; --side-gap: 48px; }
+}
+@media (min-width: 1800px) {
+  .gl { --dcols: 5; --side-gap: 56px; }
 }
 
 /* ---------- motion (R-UI-10, R-UI-11) ---------- */
@@ -393,8 +535,7 @@
 ::view-transition-old(root) { animation: gl-vt-out 0.22s ease backwards; }
 ::view-transition-new(root) { animation: gl-fade 0.3s ease backwards; }
 ::view-transition-group(gl-nav),
-::view-transition-group(gl-rail),
-::view-transition-group(gl-dtop) { animation: none; }
+::view-transition-group(gl-rail) { animation: none; }
 
 @keyframes gl-rise { from { opacity: 0; transform: translateY(22px) scale(0.985); filter: blur(8px); } }
 @keyframes gl-write { from { clip-path: inset(0 0 0 100%); filter: blur(6px); } }
@@ -423,8 +564,7 @@
 
 @media print {
   .gl body::before,
-  .gl .rail,
-  .gl .dtop { display: none !important; }
+  .gl .rail { display: none !important; }
   .gl .page > *,
   .gl .shead h1 { animation: none !important; }
 }

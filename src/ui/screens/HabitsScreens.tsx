@@ -8,6 +8,7 @@ import { getSettings, updateSettings } from '../../services/entity';
 import { addRoutineItem, createChallenge, cycleRule, deleteChallenge, deleteRecurring, deleteRoutineItem, moveRoutineItem, newRule, saveRecurring, updateChallenge, updateRoutineItem } from '../../services/habits';
 import { Q } from '../../services/queries';
 import { Btn, confirmAction, Empty, Seg, Switch, TopBar } from '../components/common';
+import { RoutineCard, StreaksCard } from '../components/deskCards';
 import { DayMonthPicker, DraftInput } from '../components/edit';
 import { Icon } from '../components/Icon';
 import { ProjectPicker } from '../components/tasks';
@@ -24,7 +25,7 @@ export function ChallengesScreen() {
   const { today } = useClock();
   const phaseLabel = { active: 'פעיל', future: 'עתידי', ended: 'הסתיים' };
   return (
-    <div className="page">
+    <div className="page dgrid">
       <TopBar
         title="אתגרים"
         backTo="/more"
@@ -72,6 +73,7 @@ export function ChallengesScreen() {
           </button>
         );
       })}
+      <StreaksCard challenges={list} logs={logs} today={today} />
     </div>
   );
 }
@@ -160,7 +162,7 @@ function ChallengeDetail({ id, today }: { id: string; today: string }) {
   const markDate = ph === 'ended' ? c.endDate : today;
   const s = dayStats(c, logs, markDate);
   return (
-    <div className="page sub">
+    <div className="page sub dcols">
       <TopBar
         backTo="/challenges"
         miniTitle={c.name}
@@ -273,6 +275,8 @@ function ChallengeDetail({ id, today }: { id: string; today: string }) {
 export function RoutinesScreen() {
   const settings = useLive(Q.settings);
   const items = useLive(Q.routineItems) ?? [];
+  const logs = useLive(Q.routineLogs) ?? [];
+  const { today } = useClock();
   if (!settings) return <div className="page sub" />;
   const r = settings.routines;
   const setR = async (patch: Partial<RoutineSettings>) => {
@@ -288,7 +292,7 @@ export function RoutinesScreen() {
     </div>
   );
   return (
-    <div className="page sub">
+    <div className="page sub dcols">
       <TopBar
         title="שגרות"
         sub={`בוקר ${r.morningStart}–${r.morningEnd} · ערב ${r.eveningStart}–${r.eveningEnd}`}
@@ -298,6 +302,7 @@ export function RoutinesScreen() {
           { v: items.filter((i) => i.routine === 'evening' && i.active).length, k: 'בערב' },
         ]}
       />
+      <RoutineCard items={items} logs={logs} today={today} />
       <section className="card">
         <h4>
           <span className="t">
@@ -455,7 +460,7 @@ function RecurringForm({ existing, today }: { existing?: Recurring; today: strin
     back('/recurring');
   };
   return (
-    <div className="page sub">
+    <div className="page sub dcols">
       <TopBar title={existing ? 'משימה חוזרת' : 'משימה חוזרת חדשה'} backTo="/recurring">
         {existing && (
           <button

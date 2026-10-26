@@ -59,7 +59,7 @@ export function TaskScreen({ id }: { id: string }) {
   };
 
   return (
-    <div className="page sub">
+    <div className="page sub dcols">
       <TopBar
         backTo="/tasks"
         miniTitle={task.title}
@@ -334,7 +334,7 @@ export function NewTaskScreen({ preset }: { preset?: string }) {
     }
   };
   return (
-    <div className="page sub">
+    <div className="page sub dcols">
       <TopBar title="משימה חדשה" sub={label} backTo="/" />
       <form
         onSubmit={(e) => {

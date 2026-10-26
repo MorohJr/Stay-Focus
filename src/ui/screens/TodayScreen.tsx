@@ -17,6 +17,7 @@ import { Q } from '../../services/queries';
 import { describeWeather } from '../../services/weather';
 import { addToTop3, moveToToday, moveToTomorrow, postponeAllOverdue, postponeTask, removeFromTop3, setStatus, toggleDone } from '../../services/tasks';
 import { Bar, MoreButton, Num, Rings } from '../components/common';
+import { TrendCard } from '../components/deskCards';
 import { Icon } from '../components/Icon';
 import { Box, PostponeSheet, projectName, TaskPickerSheet } from '../components/tasks';
 import { useClock, useLive } from '../hooks';
@@ -594,6 +595,8 @@ export function TodayScreen() {
           setPicking(false);
         }}
       />
+      {/* R-DSK-4: desktop only */}
+      <TrendCard tasks={tasks} today={today} />
     </div>
   );
 }

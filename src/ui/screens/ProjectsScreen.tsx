@@ -280,7 +280,7 @@ export function ProjectScreen({ id }: { id: string }) {
   const linkedNotes = notes.filter((n) => n.projectIds.includes(p.id));
   const blockers = activeBlockers(p, projects);
   return (
-    <div className="page sub">
+    <div className="page sub dcols">
       <TopBar
         backTo="/projects"
         cover={coverUrl}
@@ -548,7 +548,7 @@ export function NewProjectScreen() {
   };
   const linked = linkIds.map((id) => tasks.find((t) => t.id === id)).filter((t): t is Task => !!t);
   return (
-    <div className="page sub">
+    <div className="page sub dcols">
       <TopBar title="פרויקט חדש" backTo="/projects" />
       <form
         onSubmit={async (e) => {
@@ -681,7 +681,7 @@ export function GoalScreen({ id }: { id: string }) {
   const linked = projects.filter((p) => p.goalId === g.id);
   const focus = focusGoal(goals);
   return (
-    <div className="page sub">
+    <div className="page sub dcols">
       <TopBar
         backTo="/projects/goals"
         lead={<span style={{ fontSize: 30 }}>{g.status === 'achieved' ? '🏆' : '🏔️'}</span>}

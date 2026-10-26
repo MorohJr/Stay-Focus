@@ -58,3 +58,23 @@ export const useGlass = (): boolean => useDesign() === 'glass';
 export function reducedMotion(): boolean {
   return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
+
+/** R-DSK-1 / R-DSK-3: the desktop layout (same breakpoint as the CSS). */
+const WIDE = '(min-width: 1024px)';
+export function useWide(): boolean {
+  return useSyncExternalStore(
+    (cb) => {
+      const m = matchMedia(WIDE);
+      m.addEventListener('change', cb);
+      return () => m.removeEventListener('change', cb);
+    },
+    () => typeof matchMedia === 'function' && matchMedia(WIDE).matches,
+  );
+}
+
+/** R-DSK-3 / R-DSK-4: the big charts show only in the glass look on a desktop. */
+export function useRich(): boolean {
+  const glass = useGlass();
+  const wide = useWide();
+  return glass && wide;
+}
